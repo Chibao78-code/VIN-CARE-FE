@@ -12,7 +12,8 @@ import {
   FiTruck,
 } from "react-icons/fi";
 import Button from "../components/ui/Button";
-
+import ImageSlider from "../components/imgLangding/imageSlider";
+import ImageSlider_1 from "../components/imgLangding/imageSlider_1";
 const Landing = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
@@ -42,7 +43,7 @@ const Landing = () => {
                 <img
                   src="/images/Logo.png"
                   alt="EV Service Logo"
-                  className="h-16 w-auto"
+                  className="h-12 w-auto"
                 />
                 <span className="text-xl font-bold text-gray-900">
                   EV Service
@@ -91,7 +92,7 @@ const Landing = () => {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="text-center lg:text-left">
               <div className="inline-flex items-center bg-black/20 backdrop-blur-sm rounded-full px-4 py-2 mb-6">
-                <span className="text-sm font-medium text-white">
+                <span className="text-sm font-medium text-white animate-pulse">
                   CHÀO MỪNG BẠN ĐẾN VỚI EV SERVICE
                 </span>
               </div>
@@ -115,10 +116,11 @@ const Landing = () => {
                   onClick={() =>
                     window.dispatchEvent(new Event("openBookingModal"))
                   }
-                  className="bg-[#027C9D] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#02617A] transition-all transform hover:scale-105 shadow-lg"
+                  className="bg-[#027C9D] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#02617A] transition-all transform hover:scale-105 shadow-lg animate-pulse"
                 >
                   Đặt Lịch Ngay →
                 </button>
+
                 <button
                   onClick={() => navigate("/services")}
                   className="bg-white/20 backdrop-blur-sm text-black px-6 py-3 rounded-lg font-semibold hover:bg-white/30 transition-all border border-white/50"
@@ -127,17 +129,14 @@ const Landing = () => {
                 </button>
               </div>
             </div>
+
             <div className="relative">
-              <img
-                src="/images/ky-thuat-xe-dien.png"
-                alt="Đội ngũ kỹ thuật viên EV Service"
-                className="w-full object-cover rounded-xl"
-              />
+              <ImageSlider />
             </div>
           </div>
           <div className="mt-12 max-w-2xl mx-auto">
             <form onSubmit={handleSearch} className="relative">
-              <div className="bg-white rounded-full shadow-xl p-2 flex items-center">
+              <div className="bg-white rounded-full shadow-xl p-2 flex items-center animate-pulse">
                 <div className="flex-1 flex items-center px-4">
                   <FiSearch className="text-gray-400 mr-3" />
                   <input
@@ -160,54 +159,59 @@ const Landing = () => {
         </div>
       </section>
       {/* ảnh khung thứ hai */}
-      <section
-        className="relative h-[700px] bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: "url('/images/gioi-thieu.png')" }}
-      >
-        {/* Overlay làm ảnh mờ */}
-        <div className="absolute inset-0 bg-black/15"></div>
+
+      <section className="relative">
+        {/* Gọi component slider để hiển thị ảnh nền auto chạy */}
+        <ImageSlider_1 />
 
         {/* Nội dung đặt lên trên */}
-        <div
-          className="absolute top-[80px] right-[30px] text-white pr-6"
-          style={{ width: `calc(66.6667% + 10px)` }}
-        >
-          <h1 className="text-5xl font-bold mb-6 text-blue-200">
-            Tại sao bạn phải chọn chúng tôi?
+        <div className="absolute top-[80px] right-[30px] w-2/3 pr-6 bg-black/40 rounded-xl p-8 shadow-2xl">
+          <h1
+            className="text-5xl mb-6 leading-snug text-orange-500"
+            style={{ fontFamily: "'Dancing Script', cursive" }}
+          >
+            Tại sao bạn nên chọn chúng tôi?
           </h1>
-          <p className="text-xl leading-relaxed mb-4">
-            <span className="font-bold text-3xl">EV Service</span> khẳng định vị
-            thế tiên phong trong lĩnh vực chăm sóc và nâng cấp xe điện tại Việt
-            Nam. Sở hữu chuỗi hệ thống trung tâm quy mô lớn bậc nhất, trang bị
-            công nghệ hiện đại và đội ngũ kỹ thuật viên đạt chuẩn quốc tế, chúng
-            tôi không ngừng nâng tầm trải nghiệm khách hàng.
+
+          {/* Đoạn giới thiệu */}
+          <p className="text-lg md:text-xl leading-relaxed mb-4 text-gray-100 font-sans">
+            <span className="font-bold text-2xl text-white">EV Service</span>{" "}
+            khẳng định vị thế tiên phong trong lĩnh vực chăm sóc và nâng cấp xe
+            điện tại Việt Nam. Với hệ thống trung tâm quy mô lớn, công nghệ hiện
+            đại và đội ngũ kỹ thuật viên chuẩn quốc tế, chúng tôi luôn mang đến
+            trải nghiệm tốt nhất.
           </p>
-          <p className="text-4xl font-bold mb-4 text-black">
-            hơn 10.000++ khách hàng và đối tác lớn nhỏ
+
+          <p className="text-2xl font-semibold mb-4 text-black">
+            Hơn 10.000+ khách hàng & đối tác tin tưởng
           </p>
-          <p className="text-xl leading-relaxed">
-            <span className="font-bold text-3xl">EV Service</span> không chỉ
-            định hình tiêu chuẩn mới mà còn kiến tạo những giá trị bền vững cho
-            cộng đồng đam mê xe điện.
+
+          {/* Đoạn kết */}
+          <p className="text-lg md:text-xl leading-relaxed text-gray-200 font-sans">
+            <span className="font-bold text-2xl text-white">EV Service</span>{" "}
+            không chỉ định hình tiêu chuẩn mới mà còn kiến tạo giá trị bền vững
+            cho cộng đồng đam mê xe điện.
           </p>
         </div>
-        <div className="absolute bottom-[100px] right-[7px] text-right">
-          <h1 className="text-3xl font-bold leading-tight">
-            <span className="inline-block pr-[40px] text-[#F97316]">
+
+        {/* Góc phải dưới */}
+        <div className="absolute bottom-[15px] right-[10px] flex flex-col items-end text-right">
+          <h1 className="text-2xl md:text-3xl font-bold leading-tight font-sans">
+            <span className="block text-yellow-500 pr-[50px]">
               Electric Vehicle Service
             </span>
-            <br />
-            <span className="font-extrabold text-black">
+
+            <span className="block font-extrabold text-blue-200 drop-shadow-lg">
               Nhận Chăm Sóc & Sửa chữa xe
             </span>
           </h1>
         </div>
-        <button className="absolute bottom-5 left-5 bg-[#027C9D] text-black px-6 py-3 rounded-lg font-semibold hover:bg-[#02617A] transition-all transform hover:scale-105 shadow-lg">
+        <button className="absolute bottom-5 left-5 bg-[#027C9D] text-black px-6 py-3 rounded-lg font-semibold hover:bg-[#02617A] transition-all transform hover:scale-105 shadow-lg animate-pulse">
           <span className="text-base ">Hotline </span>
           <span className="text-2xl font-bold">1900 3979</span>
         </button>
       </section>
-
+      {/* Section Dịch vụ nổi bật */}
       <section className="py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
@@ -267,7 +271,151 @@ const Landing = () => {
           </div>
         </div>
       </section>
+      {/* Section Gói dịch vụ*/}
+      <section
+        className="py-20 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: "url('/images/gioi-thieu.png')" }}
+      >
+        <div className="bg-black/40 py-20">
+          <div className="max-w-7xl mx-auto px-6 lg:px-8">
+            <div className="text-center mb-16">
+              <h2 className="text-4xl font-extrabold text-white mb-4 drop-shadow-lg">
+                Gói Dịch Vụ EV Service
+              </h2>
+              <p className="text-lg text-gray-200">
+                Chọn gói phù hợp nhất để chăm sóc & bảo dưỡng xe điện của bạn
+              </p>
+            </div>
 
+            <div className="grid md:grid-cols-3 gap-8">
+              {/* Gói Cơ Bản */}
+              <div className="bg-white/90 rounded-2xl shadow-lg hover:shadow-2xl transform hover:scale-105 transition-all p-8 flex flex-col">
+                <img
+                  src="/images/goi-co-ban.png"
+                  alt="Gói cơ bản"
+                  className="w-20 h-20 mx-auto mb-6"
+                />
+                <h3 className="text-2xl font-semibold text-gray-900 mb-2 text-center">
+                  Gói Cơ Bản
+                </h3>
+                <p className="text-gray-600 text-center mb-6">
+                  Dành cho bảo dưỡng nhanh & kiểm tra cơ bản
+                </p>
+                <ul className="text-gray-700 space-y-2 flex-1">
+                  <li>✔ Kiểm tra pin & động cơ</li>
+                  <li>✔ Bảo dưỡng định kỳ</li>
+                  <li>✔ Tư vấn kỹ thuật</li>
+                </ul>
+                <button className="mt-6 bg-blue-600 text-white py-2 px-6 rounded-lg hover:bg-blue-700">
+                  Chọn gói này
+                </button>
+              </div>
+
+              {/* Gói Tiêu Chuẩn */}
+              <div className="bg-white/90 rounded-2xl shadow-lg hover:shadow-2xl transform hover:scale-105 transition-all p-8 flex flex-col border-2 border-blue-600">
+                <img
+                  src="/images/goi-tieu-chuan.png"
+                  alt="Gói tiêu chuẩn"
+                  className="w-20 h-20 mx-auto mb-6"
+                />
+                <h3 className="text-2xl font-semibold text-blue-600 mb-2 text-center">
+                  Gói Tiêu Chuẩn
+                </h3>
+                <p className="text-gray-600 text-center mb-6">
+                  Cân bằng giữa chi phí & trải nghiệm dịch vụ
+                </p>
+                <ul className="text-gray-700 space-y-2 flex-1">
+                  <li>✔ Toàn bộ dịch vụ gói cơ bản</li>
+                  <li>✔ Vệ sinh & bảo dưỡng chi tiết</li>
+                  <li>✔ Hỗ trợ cứu hộ trong thành phố</li>
+                </ul>
+                <button className="mt-6 bg-blue-600 text-white py-2 px-6 rounded-lg hover:bg-blue-700">
+                  Chọn gói này
+                </button>
+              </div>
+
+              {/* Gói Toàn Diện */}
+              <div className="bg-white/90 rounded-2xl shadow-lg hover:shadow-2xl transform hover:scale-105 transition-all p-8 flex flex-col">
+                <img
+                  src="/images/goi-toan-dien.png"
+                  alt="Gói toàn diện"
+                  className="w-20 h-20 mx-auto mb-6"
+                />
+                <h3 className="text-2xl font-semibold text-gray-900 mb-2 text-center">
+                  Gói Toàn Diện
+                </h3>
+                <p className="text-gray-600 text-center mb-6">
+                  Trọn gói cao cấp, dịch vụ ưu tiên 24/7
+                </p>
+                <ul className="text-gray-700 space-y-2 flex-1">
+                  <li>✔ Toàn bộ dịch vụ gói tiêu chuẩn</li>
+                  <li>✔ Cứu hộ toàn quốc 24/7</li>
+                  <li>✔ Bảo hành mở rộng</li>
+                  <li>✔ Hỗ trợ kỹ thuật VIP</li>
+                </ul>
+                <button className="mt-6 bg-blue-600 text-white py-2 px-6 rounded-lg hover:bg-blue-700">
+                  Chọn gói này
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+       {/* Phần lợi ích */}
+      <section className="py-20 bg-white">
+        <div className="max-w-6xl mx-auto px-6 text-center">
+          <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-6">
+            Bảo dưỡng định kỳ - Giữ xe luôn an toàn & bền bỉ
+          </h2>
+          <p className="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto mb-16">
+            Một chiếc xe điện được chăm sóc đúng cách không chỉ mang lại cảm
+            giác lái mượt mà mà còn giúp bạn tiết kiệm đáng kể chi phí về lâu
+            dài.
+          </p>
+
+          <div className="grid md:grid-cols-3 gap-12 text-left">
+            {/* Lợi ích 1 */}
+            <div className="flex items-start space-x-4">
+              <div className="text-orange-500 text-4xl">⚡</div>
+              <div>
+                <h3 className="text-xl font-semibold mb-2">
+                  An toàn tuyệt đối
+                </h3>
+                <p className="text-gray-600">
+                  Kiểm tra định kỳ giúp hệ thống phanh, lốp và điện luôn ổn
+                  định, bảo vệ bạn trên mọi hành trình.
+                </p>
+              </div>
+            </div>
+
+            {/* Lợi ích 2 */}
+            <div className="flex items-start space-x-4">
+              <div className="text-orange-500 text-4xl">💰</div>
+              <div>
+                <h3 className="text-xl font-semibold mb-2">
+                  Tiết kiệm lâu dài
+                </h3>
+                <p className="text-gray-600">
+                  Phát hiện và xử lý sớm sự cố nhỏ để tránh chi phí sửa chữa lớn
+                  sau này.
+                </p>
+              </div>
+            </div>
+
+            {/* Lợi ích 3 */}
+            <div className="flex items-start space-x-4">
+              <div className="text-orange-500 text-4xl">🚀</div>
+              <div>
+                <h3 className="text-xl font-semibold mb-2">Hiệu suất bền bỉ</h3>
+                <p className="text-gray-600">
+                  Giữ động cơ và pin ở trạng thái tối ưu, giúp xe vận hành mạnh
+                  mẽ và mượt mà hơn.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
       <section className="py-16 bg-[#A0E0ED]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-4 gap-6">
@@ -301,8 +449,8 @@ const Landing = () => {
                 <FiClock className="text-[#027C9D] text-xl" />
               </div>
               <h3 className="font-semibold text-gray-900 mb-2">GIỜ LÀM VIỆC</h3>
-              <p className="text-sm text-gray-600">T2-T7: 7:00-17:00</p>
-              <p className="text-sm text-gray-600">Chủ Nhật: 09:00-18:00</p>
+              <p className="text-sm text-gray-600">T2-T7: 7:00 - 17:00</p>
+              <p className="text-sm text-gray-600">Chủ Nhật: 09:00 - 18:00</p>
             </div>
           </div>
         </div>
