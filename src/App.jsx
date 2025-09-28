@@ -7,7 +7,7 @@ import PublicLayout from './layouts/PublicLayout';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Landing from './pages/Landing';
-
+import Contact from "./pages/Contact";
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated } = useAuthStore();
@@ -55,7 +55,7 @@ function App() {
           <Route path="/services" element={<Landing />} />
           <Route path="/stations" element={<Landing />} />
           <Route path="/about" element={<Landing />} />
-          <Route path="/contact" element={<Landing />} />
+          <Route path="/contact" element={<Contact />} />
         </Route>
         <Route 
           path="/login" 
