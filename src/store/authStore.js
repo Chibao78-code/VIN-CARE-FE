@@ -62,12 +62,25 @@ const useAuthStore = create(
 async function mockLogin(credentials) {
   return new Promise((resolve) => {
     setTimeout(() => {
+      //xem role da dung voi email dang nhap chua
+      const email = credentials.email.toLowerCase();
+      let role = 'user';
+      let name = 'Nguyễn Văn A';
+      
+      if (email.includes('admin')) {
+        role = 'admin';
+        name = 'Admin';
+      } else if (email.includes('staff') || email.includes('technician')) {
+        role = 'staff';
+        name = 'Staff Member';
+      }
+      
       resolve({
         user: {
           id: '1',
           email: credentials.email,
-          name: 'Nguyễn Văn A',
-          role: 'user',
+          name: name,
+          role: role,
           avatar: null,
         },
         token: 'mock-jwt-token-123456',
