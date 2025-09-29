@@ -88,7 +88,7 @@ const Header = () => {
               {dropdownOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1">
                   <Link
-                    to="/profile"
+                    to="/app/profile"
                     className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     onClick={() => setDropdownOpen(false)}
                   >
@@ -96,7 +96,7 @@ const Header = () => {
                     Thông tin cá nhân
                   </Link>
                   <Link
-                    to="/settings"
+                    to="/app/settings"
                     className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     onClick={() => setDropdownOpen(false)}
                   >

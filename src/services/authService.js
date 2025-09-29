@@ -30,19 +30,38 @@ export const authService = {
     return response;
   },
   
-  // quen mat khau
+  /**
+   * Gui email reset password
+   * @param {string} email - email nguoi dung
+   * @returns {Promise} response tu server
+   */
   forgotPassword: async (email) => {
-    const response = await api.post('/auth/forgot-password', { email });
-    return response;
+    try {
+      const response = await api.post('/auth/forgot-password', { email });
+      return response;
+    } catch (error) {
+      console.error('Forgot password error:', error);
+      throw error;
+    }
   },
   
-  // dat lai mat khau
+  /**
+   * Reset password voi token
+   * @param {string} token - reset token tu email
+   * @param {string} newPassword - mat khau moi
+   * @returns {Promise} response tu server
+   */
   resetPassword: async (token, newPassword) => {
-    const response = await api.post('/auth/reset-password', {
-      token,
-      password: newPassword,
-    });
-    return response;
+    try {
+      const response = await api.post('/auth/reset-password', {
+        token,
+        password: newPassword,
+      });
+      return response;
+    } catch (error) {
+      console.error('Reset password error:', error);
+      throw error;
+    }
   },
   
   // doi mat khau
@@ -60,9 +79,32 @@ export const authService = {
     return response;
   },
   
-  // gui lai ma neu user yeu cau
+  /**
+   * Gui lai email verification
+   * @returns {Promise} response tu server
+   */
   resendVerificationEmail: async () => {
-    const response = await api.post('/auth/resend-verification');
-    return response;
+    try {
+      const response = await api.post('/auth/resend-verification');
+      return response;
+    } catch (error) {
+      console.error('Resend verification error:', error);
+      throw error;
+    }
+  },
+  
+  /**
+   * Kiem tra reset token co hop le khong
+   * @param {string} token - reset token
+   * @returns {Promise} response tu server
+   */
+  verifyResetToken: async (token) => {
+    try {
+      const response = await api.get(`/auth/verify-reset-token/${token}`);
+      return response;
+    } catch (error) {
+      console.error('Verify token error:', error);
+      throw error;
+    }
   },
 };
