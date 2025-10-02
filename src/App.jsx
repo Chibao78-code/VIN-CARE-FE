@@ -8,6 +8,9 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Landing from './pages/Landing';
 import Contact from "./pages/Contact";
+import Services from './pages/Services';
+import MyBookings from './pages/MyBookings';
+
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated } = useAuthStore();
@@ -52,9 +55,6 @@ function App() {
       <Routes>
         <Route element={<PublicLayout />}>
           <Route path="/" element={<Landing />} />
-          <Route path="/services" element={<Landing />} />
-          <Route path="/stations" element={<Landing />} />
-          <Route path="/about" element={<Landing />} />
           <Route path="/contact" element={<Contact />} />
         </Route>
         <Route 
@@ -76,8 +76,8 @@ function App() {
           <Route index element={<Navigate to="/app/dashboard" replace />} />
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="vehicles" element={<div>Vehicles Page</div>} />
-          <Route path="services" element={<div>Services Page</div>} />
-          <Route path="my-bookings" element={<div>My Bookings Page</div>} />
+          <Route path="services" element={<Services />} />
+          <Route path="my-bookings" element={<MyBookings />} />
           <Route path="stations" element={<div>Stations Page</div>} />
           <Route path="stations/map" element={<div>Stations Map Page</div>} />
           <Route path="profile" element={<div>Profile Page</div>} />
