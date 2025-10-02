@@ -52,19 +52,19 @@ const Landing = () => {
             </div>
             <div className="hidden md:flex items-center space-x-16">
               <Link
-                to="/"
+                to="/services"
                 className="text-gray-700 hover:text-blue-600 transition-colors"
               >
                 Giới thiệu
               </Link>
               <Link
-                to="/services"
+                to="/login"
                 className="text-gray-700 hover:text-blue-600 transition-colors"
               >
                 Đặt lịch
               </Link>
               <Link
-                to="/services"
+                to="/login"
                 className="text-gray-700 hover:text-blue-600 transition-colors"
               >
                 Dịch vụ
@@ -306,7 +306,8 @@ const Landing = () => {
                   <li>✔ Bảo dưỡng định kỳ</li>
                   <li>✔ Tư vấn kỹ thuật</li>
                 </ul>
-                <button className="mt-6 bg-blue-600 text-white py-2 px-6 rounded-lg hover:bg-blue-700">
+                <button className="mt-6 bg-blue-600 text-white py-2 px-6 rounded-lg hover:bg-blue-700"
+                onClick={() => navigate("/login")}>
                   Chọn gói này
                 </button>
               </div>
@@ -329,7 +330,10 @@ const Landing = () => {
                   <li>✔ Vệ sinh & bảo dưỡng chi tiết</li>
                   <li>✔ Hỗ trợ cứu hộ trong thành phố</li>
                 </ul>
-                <button className="mt-6 bg-blue-600 text-white py-2 px-6 rounded-lg hover:bg-blue-700">
+                <button
+                  className="mt-6 bg-blue-600 text-white py-2 px-6 rounded-lg hover:bg-blue-700"
+                  onClick={() => navigate("/login")}
+                >
                   Chọn gói này
                 </button>
               </div>
@@ -353,7 +357,8 @@ const Landing = () => {
                   <li>✔ Bảo hành mở rộng</li>
                   <li>✔ Hỗ trợ kỹ thuật VIP</li>
                 </ul>
-                <button className="mt-6 bg-blue-600 text-white py-2 px-6 rounded-lg hover:bg-blue-700">
+                <button className="mt-6 bg-blue-600 text-white py-2 px-6 rounded-lg hover:bg-blue-700"
+                onClick={() => navigate("/login")}>
                   Chọn gói này
                 </button>
               </div>
@@ -361,7 +366,7 @@ const Landing = () => {
           </div>
         </div>
       </section>
-       {/* Phần lợi ích */}
+      {/* Phần lợi ích */}
       <section className="py-20 bg-white">
         <div className="max-w-6xl mx-auto px-6 text-center">
           <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-6">
