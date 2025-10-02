@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import Footer from '../components/layout/Footer';
-import BookingModal from '../components/BookingModal';
+import MultiStepBooking from '../components/booking/MultiStepBooking';
 
 const PublicLayout = ({ children }) => {
   const [isBookingOpen, setIsBookingOpen] = useState(false);
@@ -23,7 +23,7 @@ const PublicLayout = ({ children }) => {
         {children || <Outlet />}
       </main>
       <Footer />
-      <BookingModal 
+      <MultiStepBooking 
         isOpen={isBookingOpen}
         onClose={() => setIsBookingOpen(false)}
       />
