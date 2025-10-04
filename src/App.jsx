@@ -82,7 +82,6 @@ function App() {
           <Route path="/about" element={<Landing />} />
           <Route path="/contact" element={<Landing />} />
         </Route>
-        {/* auth routes */}
         <Route 
           path="/login" 
           element={

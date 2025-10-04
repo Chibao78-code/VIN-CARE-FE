@@ -58,7 +58,7 @@ const useAuthStore = create(
     }
   )
 );
-//mock api neu co
+//mock api login
 async function mockLogin(credentials) {
   return new Promise((resolve) => {
     setTimeout(() => {
