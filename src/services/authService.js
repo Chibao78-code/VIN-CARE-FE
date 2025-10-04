@@ -18,7 +18,7 @@ export const authService = {
     return response;
   },
   
-  // Lấy thông tin user hiện tại
+  // lay thong tin nguoi dung hien tai
   getCurrentUser: async () => {
     const response = await api.get('/auth/me');
     return response;
@@ -30,11 +30,6 @@ export const authService = {
     return response;
   },
   
-  /**
-   * Gui email reset password
-   * @param {string} email - email nguoi dung
-   * @returns {Promise} response tu server
-   */
   forgotPassword: async (email) => {
     try {
       const response = await api.post('/auth/forgot-password', { email });
@@ -44,13 +39,6 @@ export const authService = {
       throw error;
     }
   },
-  
-  /**
-   * Reset password voi token
-   * @param {string} token - reset token tu email
-   * @param {string} newPassword - mat khau moi
-   * @returns {Promise} response tu server
-   */
   resetPassword: async (token, newPassword) => {
     try {
       const response = await api.post('/auth/reset-password', {
@@ -78,11 +66,6 @@ export const authService = {
     const response = await api.post('/auth/verify-email', { token });
     return response;
   },
-  
-  /**
-   * Gui lai email verification
-   * @returns {Promise} response tu server
-   */
   resendVerificationEmail: async () => {
     try {
       const response = await api.post('/auth/resend-verification');
@@ -93,11 +76,7 @@ export const authService = {
     }
   },
   
-  /**
-   * Kiem tra reset token co hop le khong
-   * @param {string} token - reset token
-   * @returns {Promise} response tu server
-   */
+  // kiem tra token sau khi reset password
   verifyResetToken: async (token) => {
     try {
       const response = await api.get(`/auth/verify-reset-token/${token}`);
