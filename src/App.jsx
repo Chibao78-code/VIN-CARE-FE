@@ -9,9 +9,13 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import Dashboard from './pages/Dashboard';
 import Landing from './pages/Landing';
+
+import Contact from "./pages/Contact";
+import Services from './pages/Services';
+import MyBookings from './pages/MyBookings';
+
 import Profile from './pages/Profile';
 import MyVehicles from './pages/MyVehicles';
-import MyBookings from './pages/MyBookings';
 import Settings from './pages/Settings';
 
 // Admin 
@@ -41,6 +45,7 @@ const ProtectedRoute = ({ children }) => {
   } 
   return children;
 };
+
 //hien thi sau khi login thanh cong
 const PublicRoute = ({ children }) => {
   const { isAuthenticated } = useAuthStore();  
@@ -113,8 +118,9 @@ function App() {
         >
           <Route index element={<Navigate to="/app/dashboard" replace />} />
           <Route path="dashboard" element={<Dashboard />} />
-          <Route path="vehicles" element={<MyVehicles />} />
-          <Route path="services" element={<div>Services Page</div>} />
+          {/* Giữ code của bạn (HEAD) */}
+          <Route path="vehicles" element={<div>Vehicles Page</div>} />
+          <Route path="services" element={<Services />} />
           <Route path="my-bookings" element={<MyBookings />} />
           <Route path="stations" element={<div>Stations Page</div>} />
           <Route path="stations/map" element={<div>Stations Map Page</div>} />
@@ -176,4 +182,4 @@ function App() {
   );
 }
 
-export default App
+export default App;
