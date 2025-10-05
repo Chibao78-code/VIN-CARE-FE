@@ -77,10 +77,7 @@ function App() {
       <Routes>
         <Route element={<PublicLayout />}>
           <Route path="/" element={<Landing />} />
-          <Route path="/services" element={<Landing />} />
-          <Route path="/stations" element={<Landing />} />
-          <Route path="/about" element={<Landing />} />
-          <Route path="/contact" element={<Landing />} />
+          <Route path="/contact" element={<Contact />} />
         </Route>
         <Route 
           path="/login" 
