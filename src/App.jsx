@@ -5,11 +5,37 @@ import useAuthStore from './store/authStore';
 import MainLayout from './layouts/MainLayout';
 import PublicLayout from './layouts/PublicLayout';
 import Login from './pages/Login';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import Dashboard from './pages/Dashboard';
 import Landing from './pages/Landing';
+
 import Contact from "./pages/Contact";
 import Services from './pages/Services';
 import MyBookings from './pages/MyBookings';
+
+import Profile from './pages/Profile';
+import MyVehicles from './pages/MyVehicles';
+import Settings from './pages/Settings';
+
+// Admin 
+import AdminLayout from './layouts/AdminLayout';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminAnalytics from './pages/admin/AdminAnalytics';
+import AdminInventory from './pages/admin/AdminInventory';
+import AdminUsers from './pages/admin/AdminUsers';
+import AdminSettings from './pages/admin/AdminSettings';
+
+// Staff 
+import StaffLayout from './layouts/StaffLayout';
+import StaffDashboard from './pages/staff/StaffDashboard';
+import StaffCustomers from './pages/staff/StaffCustomers';
+import StaffAppointments from './pages/staff/StaffAppointments';
+
+// Technician 
+import TechnicianLayout from './layouts/TechnicianLayout';
+import TechnicianDashboard from './pages/technician/TechnicianDashboard';
+import TechnicianWorkOrders from './pages/technician/TechnicianWorkOrders';
 
 
 const ProtectedRoute = ({ children }) => {
@@ -19,11 +45,12 @@ const ProtectedRoute = ({ children }) => {
   } 
   return children;
 };
+
 //hien thi sau khi login thanh cong
 const PublicRoute = ({ children }) => {
   const { isAuthenticated } = useAuthStore();  
   if (isAuthenticated) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/app/dashboard" replace />;
   }  
   return children;
 };
@@ -65,6 +92,22 @@ function App() {
             </PublicRoute>
           } 
         />
+        <Route 
+          path="/forgot-password" 
+          element={
+            <PublicRoute>
+              <ForgotPassword />
+            </PublicRoute>
+          } 
+        />
+        <Route 
+          path="/reset-password/:token" 
+          element={
+            <PublicRoute>
+              <ResetPassword />
+            </PublicRoute>
+          } 
+        />
         <Route
           path="/app"
           element={
@@ -75,18 +118,68 @@ function App() {
         >
           <Route index element={<Navigate to="/app/dashboard" replace />} />
           <Route path="dashboard" element={<Dashboard />} />
+          {/* Giữ code của bạn (HEAD) */}
           <Route path="vehicles" element={<div>Vehicles Page</div>} />
           <Route path="services" element={<Services />} />
           <Route path="my-bookings" element={<MyBookings />} />
           <Route path="stations" element={<div>Stations Page</div>} />
           <Route path="stations/map" element={<div>Stations Map Page</div>} />
-          <Route path="profile" element={<div>Profile Page</div>} />
-          <Route path="settings" element={<div>Settings Page</div>} />
+          <Route path="profile" element={<Profile />} />
+          <Route path="settings" element={<Settings />} />
         </Route>
+
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute>
+              <AdminLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<Navigate to="/admin/dashboard" replace />} />
+          <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="analytics" element={<AdminAnalytics />} />
+          <Route path="inventory" element={<AdminInventory />} />
+          <Route path="users" element={<AdminUsers />} />
+          <Route path="settings" element={<AdminSettings />} />
+        </Route>
+        
+        <Route
+          path="/staff"
+          element={
+            <ProtectedRoute>
+              <StaffLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<Navigate to="/staff/dashboard" replace />} />
+          <Route path="dashboard" element={<StaffDashboard />} />
+          <Route path="customers" element={<StaffCustomers />} />
+          <Route path="appointments" element={<StaffAppointments />} />
+          <Route path="appointments/new" element={<StaffAppointments />} />
+        </Route>
+
+        <Route
+          path="/technician"
+          element={
+            <ProtectedRoute>
+              <TechnicianLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<Navigate to="/technician/dashboard" replace />} />
+          <Route path="dashboard" element={<TechnicianDashboard />} />
+          <Route path="work-orders" element={<TechnicianWorkOrders />} />
+          <Route path="work-orders/:id" element={<TechnicianWorkOrders />} />
+          <Route path="inventory" element={<div>Inventory Page</div>} />
+          <Route path="history" element={<div>Service History Page</div>} />
+          <Route path="resources" element={<div>Tools & Manuals Page</div>} />
+        </Route>
+        
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
   );
 }
 
-export default App
+export default App;

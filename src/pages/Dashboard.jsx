@@ -41,7 +41,7 @@ const Dashboard = () => {
     {
       id: 1,
       service: 'Bảo dưỡng định kỳ',
-      vehicle: 'VinFast VF8',
+      vehicle: 'VinFast Evo 200',
       date: '2024-01-15',
       status: 'completed',
       amount: 500000
@@ -49,7 +49,7 @@ const Dashboard = () => {
     {
       id: 2,
       service: 'Sạc nhanh',
-      vehicle: 'VinFast VF9',
+      vehicle: 'VinFast Evo 200 Lite',
       date: '2024-01-18',
       status: 'upcoming',
       amount: 150000
@@ -57,7 +57,7 @@ const Dashboard = () => {
     {
       id: 3,
       service: 'Kiểm tra pin',
-      vehicle: 'VinFast VF8',
+      vehicle: 'VinFast ',
       date: '2024-01-20',
       status: 'upcoming',
       amount: 300000
@@ -97,7 +97,7 @@ const Dashboard = () => {
     <div>
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900">
-          Xin chào, Nguyễn Văn A 👋
+          Xin chào, Dinh Chi Bao 👋
         </h1>
         <p className="text-gray-600 mt-1">
           Chào mừng bạn quay trở lại với EV Service
@@ -185,7 +185,7 @@ const Dashboard = () => {
                 <div className="flex-shrink-0 w-2 h-2 mt-2 bg-primary-500 rounded-full"></div>
                 <div className="flex-1">
                   <p className="text-sm text-gray-900">
-                    Lịch bảo dưỡng xe VinFast VF8 sắp tới
+                    Lịch bảo dưỡng xe VinFast Evo 200 sắp tới
                   </p>
                   <p className="text-xs text-gray-500 mt-1">
                     2 giờ trước
@@ -197,7 +197,7 @@ const Dashboard = () => {
                 <div className="flex-shrink-0 w-2 h-2 mt-2 bg-green-500 rounded-full"></div>
                 <div className="flex-1">
                   <p className="text-sm text-gray-900">
-                    Sạc xe thành công - 45 kWh
+                    Sạc xe thành công 
                   </p>
                   <p className="text-xs text-gray-500 mt-1">
                     1 ngày trước

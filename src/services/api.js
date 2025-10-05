@@ -32,7 +32,7 @@ api.interceptors.response.use(
    // kiem tra loi token 
     if (response) {
       switch (response.status) {
-        //token het han, khong hop le
+        //token khong hop le
         case 401:
           localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
           localStorage.removeItem(STORAGE_KEYS.USER_DATA);
@@ -67,7 +67,7 @@ api.interceptors.response.use(
       //khong co phan hoi
     } else if (error.request) {
       toast.error('Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.');
-    } else { // loi khac neu co 
+    } else { // loi khac 
       toast.error('Đã có lỗi xảy ra. Vui lòng thử lại.');
     }
     

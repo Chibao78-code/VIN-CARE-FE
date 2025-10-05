@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { FiMail, FiLock } from 'react-icons/fi';
+import { FiMail, FiLock, FiArrowLeft, FiHome } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import useAuthStore from '../store/authStore';
 import Button from '../components/ui/Button';
@@ -26,10 +26,19 @@ const Login = () => {
   
   const onSubmit = async (data) => {
     const result = await login(data);
-    
+    //xem role da dung chua
     if (result.success) {
       toast.success('Đăng nhập thành công!');
-      navigate('/app/dashboard');
+      const email = data.email.toLowerCase();
+      if (email.includes('admin')) {
+        navigate('/admin/dashboard');
+      } else if (email.includes('staff')) {
+        navigate('/staff/dashboard');
+      } else if (email.includes('technician') || email.includes('tech')) {
+        navigate('/technician/dashboard');
+      } else {
+        navigate('/app/dashboard');
+      }
     } else {
       toast.error(result.error || 'Đăng nhập thất bại');
     }
@@ -38,7 +47,6 @@ const Login = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-teal-50 to-cyan-50 flex items-center justify-center px-4 py-12">
       <div className="max-w-md w-full">
-        {/* Logo */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-teal-600 rounded-xl mb-4">
             <span className="text-white font-bold text-2xl">EV</span>
@@ -50,6 +58,19 @@ const Login = () => {
         </div>
         
         <Card className="p-8">
+          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-sm text-blue-700 mb-2">
+              💡 Tips đăng nhập:
+            </p>
+            <ul className="text-sm text-blue-600 space-y-1">
+              <li>• Admin: email chứa "admin" (v.d: admin@evservice.com)</li>
+              <li>• Staff: email chứa "staff" (v.d: staff@evservice.com)</li>
+              <li>• Kỹ thuật: email chứa "tech" hoặc "technician" (v.d: tech@evservice.com)</li>
+              <li>• Khách hàng: email bất kỳ khác (v.d: user@gmail.com)</li>
+              <li className="text-xs">• Mật khẩu: nhập bất kỳ</li>
+            </ul>
+          </div>
+          
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <Input
               label="Email"
@@ -119,24 +140,37 @@ const Login = () => {
               </div>
               <div className="relative flex justify-center text-sm">
                 <span className="px-2 bg-white text-gray-500">
-                  Hoặc
                 </span>
               </div>
             </div>
             
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-600">
-                Bạn chưa có tài khoản?{' '}
                 <Link
                   to="/register"
                   className="font-medium text-primary-600 hover:text-primary-700"
                 >
-                  Đăng ký ngay
                 </Link>
               </p>
             </div>
           </div>
         </Card>
+        <div className="mt-6 text-center space-y-3">
+          <Link
+            to="/"
+            className="text-sm text-gray-600 hover:text-gray-800 inline-flex items-center transition-colors"
+          >
+            <FiHome className="mr-2" />
+            Về trang chủ
+          </Link>
+          
+          <p className="text-xs text-gray-500">
+            Cần hỗ trợ? Liên hệ{' '}
+            <a href="mailto:support@evservice.com" className="text-primary-600 hover:text-primary-700">
+              support@evservice.com
+            </a>
+          </p>
+        </div>
       </div>
     </div>
   );

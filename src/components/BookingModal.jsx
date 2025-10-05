@@ -6,16 +6,20 @@ import Input from './ui/Input';
 import Button from './ui/Button';
 //form booking
 const BookingModal = ({ isOpen, onClose }) => {
-  const [selectedService, setSelectedService] = useState('');
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
     reset
   } = useForm();
-// cac dich vu
+  //xem dịch vụ đã chọn
+  const selectedService = watch('service');
+
+  // danh sách dịch vụ
   const services = [
-    { id: 'test', name: 'kiểm tra xe điện' },
+    { id: 'charging', name: 'Sạc xe điện' },
+    { id: 'check', name: 'Kiểm tra xe điện' },
     { id: 'maintenance', name: 'Bảo dưỡng định kỳ' },
     { id: 'repair', name: 'Sửa chữa' },
     { id: 'battery', name: 'Kiểm tra pin' },
@@ -207,8 +211,6 @@ const BookingModal = ({ isOpen, onClose }) => {
                   </label>
                   <select 
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-                    value={selectedService}
-                    onChange={(e) => setSelectedService(e.target.value)}
                     {...register('service', {
                       required: 'Vui lòng chọn dịch vụ'
                     })}

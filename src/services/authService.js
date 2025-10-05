@@ -18,7 +18,7 @@ export const authService = {
     return response;
   },
   
-  // Lấy thông tin user hiện tại
+  // lay thong tin nguoi dung hien tai
   getCurrentUser: async () => {
     const response = await api.get('/auth/me');
     return response;
@@ -30,19 +30,26 @@ export const authService = {
     return response;
   },
   
-  // quen mat khau
   forgotPassword: async (email) => {
-    const response = await api.post('/auth/forgot-password', { email });
-    return response;
+    try {
+      const response = await api.post('/auth/forgot-password', { email });
+      return response;
+    } catch (error) {
+      console.error('Forgot password error:', error);
+      throw error;
+    }
   },
-  
-  // dat lai mat khau
   resetPassword: async (token, newPassword) => {
-    const response = await api.post('/auth/reset-password', {
-      token,
-      password: newPassword,
-    });
-    return response;
+    try {
+      const response = await api.post('/auth/reset-password', {
+        token,
+        password: newPassword,
+      });
+      return response;
+    } catch (error) {
+      console.error('Reset password error:', error);
+      throw error;
+    }
   },
   
   // doi mat khau
@@ -59,10 +66,24 @@ export const authService = {
     const response = await api.post('/auth/verify-email', { token });
     return response;
   },
-  
-  // gui lai ma neu user yeu cau
   resendVerificationEmail: async () => {
-    const response = await api.post('/auth/resend-verification');
-    return response;
+    try {
+      const response = await api.post('/auth/resend-verification');
+      return response;
+    } catch (error) {
+      console.error('Resend verification error:', error);
+      throw error;
+    }
+  },
+  
+  // kiem tra token sau khi reset password
+  verifyResetToken: async (token) => {
+    try {
+      const response = await api.get(`/auth/verify-reset-token/${token}`);
+      return response;
+    } catch (error) {
+      console.error('Verify token error:', error);
+      throw error;
+    }
   },
 };
