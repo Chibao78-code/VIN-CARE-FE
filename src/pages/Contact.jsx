@@ -1,7 +1,14 @@
 import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
-import { FiPhone, FiMail, FiMapPin, FiClock } from "react-icons/fi";
+import {
+  FiPhone,
+  FiMail,
+  FiMapPin,
+  FiClock,
+  FiArrowLeft,
+} from "react-icons/fi";
+import { Link } from "react-router-dom";
 
 function Contact() {
   useEffect(() => {
@@ -28,7 +35,16 @@ function Contact() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 relative">
+      {/* Nút quay lại */}
+      <Link
+        to="/"
+        className="absolute top-4 left-4 flex items-center gap-1 p-2 z-50"
+      >
+        <FiArrowLeft className="w-5 h-5 text-black" />
+        <span className="text-black font-semibold">Quay lại</span>
+      </Link>
+
       {/* Banner */}
       <div className="relative">
         <img
@@ -39,7 +55,8 @@ function Contact() {
         <div className="absolute inset-0 bg-gradient-to-tr from-[#6BBFD4]/40 to-[#027C9D]/60 flex flex-col justify-center items-center text-white text-center px-4">
           <h1 className="text-5xl font-bold mb-2">Liên hệ với EV Service</h1>
           <p className="text-lg max-w-xl text-white/80">
-            Chúng tôi luôn sẵn sàng lắng nghe và hỗ trợ bạn. Hãy để lại thông tin để được tư vấn nhanh chóng.
+            Chúng tôi luôn sẵn sàng lắng nghe và hỗ trợ bạn. Hãy để lại thông
+            tin để được tư vấn nhanh chóng.
           </p>
         </div>
       </div>
@@ -60,7 +77,9 @@ function Contact() {
                 {...register("name", { required: "Vui lòng nhập tên" })}
               />
               {errors.name && (
-                <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.name.message}
+                </p>
               )}
             </div>
 
@@ -79,7 +98,9 @@ function Contact() {
                 })}
               />
               {errors.email && (
-                <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.email.message}
+                </p>
               )}
             </div>
 
@@ -95,7 +116,9 @@ function Contact() {
                 <option>Góp ý & phản hồi</option>
               </select>
               {errors.topic && (
-                <p className="text-red-500 text-sm mt-1">{errors.topic.message}</p>
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.topic.message}
+                </p>
               )}
             </div>
 
@@ -108,7 +131,9 @@ function Contact() {
                 {...register("message", { required: "Vui lòng nhập nội dung" })}
               ></textarea>
               {errors.message && (
-                <p className="text-red-500 text-sm mt-1">{errors.message.message}</p>
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.message.message}
+                </p>
               )}
             </div>
 
@@ -125,8 +150,12 @@ function Contact() {
       {/* Thông tin liên hệ */}
       <section className="py-20 px-6 lg:px-20">
         <div className="text-center mb-10">
-          <h2 className="text-3xl font-bold text-gray-800">Thông tin liên hệ</h2>
-          <p className="text-gray-600 mt-2">Bạn cũng có thể liên hệ trực tiếp qua các kênh dưới đây</p>
+          <h2 className="text-3xl font-bold text-gray-800">
+            Thông tin liên hệ
+          </h2>
+          <p className="text-gray-600 mt-2">
+            Bạn cũng có thể liên hệ trực tiếp qua các kênh dưới đây
+          </p>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-12 items-start">
