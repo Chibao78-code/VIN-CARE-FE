@@ -118,8 +118,7 @@ function App() {
         >
           <Route index element={<Navigate to="/app/dashboard" replace />} />
           <Route path="dashboard" element={<Dashboard />} />
-          {/* Giữ code của bạn (HEAD) */}
-          <Route path="vehicles" element={<div>Vehicles Page</div>} />
+          <Route path="vehicles" element={<MyVehicles />} />
           <Route path="services" element={<Services />} />
           <Route path="my-bookings" element={<MyBookings />} />
           <Route path="stations" element={<div>Stations Page</div>} />
