@@ -13,6 +13,7 @@ import Landing from './pages/Landing';
 import Contact from "./pages/Contact";
 import Services from './pages/Services';
 import MyBookings from './pages/MyBookings';
+import MaintenanceHistory from './pages/MaintenanceHistory';
 
 import Profile from './pages/Profile';
 import MyVehicles from './pages/MyVehicles';
@@ -121,6 +122,7 @@ function App() {
           <Route path="vehicles" element={<MyVehicles />} />
           <Route path="services" element={<Services />} />
           <Route path="my-bookings" element={<MyBookings />} />
+          <Route path="vehicle-history" element={<MaintenanceHistory />} />
           <Route path="profile" element={<Profile />} />
           <Route path="settings" element={<Settings />} />
         </Route>
