@@ -113,8 +113,7 @@ const Landing = () => {
               </div>
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                 <button
-                  onClick={() =>
-                    window.dispatchEvent(new Event("openBookingModal"))
+                  onClick={() => navigate("/login")
                   }
                   className="bg-[#027C9D] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#02617A] transition-all transform hover:scale-105 shadow-lg animate-pulse"
                 >
