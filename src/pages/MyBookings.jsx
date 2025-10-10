@@ -1,16 +1,15 @@
 import React, { useState } from 'react';
-import { 
-  FiCalendar, FiClock, FiMapPin, FiUser, FiCheck, FiX, FiAlertCircle 
-} from 'react-icons/fi';
+import { FiCalendar, FiClock, FiMapPin, FiUser, FiCheck, FiX, FiAlertCircle } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import { formatDate, formatCurrency } from '../utils/format';
+import MultiStepBooking from '../components/booking/MultiStepBooking';
 
 const MyBookings = () => {
   const [activeTab, setActiveTab] = useState('upcoming');
+  const [isBookingOpen, setIsBookingOpen] = useState(false);
 
-  // State quản lý bookings
   const [bookings, setBookings] = useState({
     upcoming: [
       {
@@ -70,6 +69,9 @@ const MyBookings = () => {
     ]
   });
 
+  const openBookingModal = () => setIsBookingOpen(true);
+  const closeBookingModal = () => setIsBookingOpen(false);
+
   const getStatusBadge = (status) => {
     const config = {
       pending: { label: 'Chờ xác nhận', color: 'bg-yellow-100 text-yellow-800', icon: <FiClock /> },
@@ -109,9 +111,17 @@ const MyBookings = () => {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Lịch Hẹn Của Tôi</h1>
+      <h1 className="text-3xl font-bold text-gray-900 mb-6 flex justify-between items-center">
+        Lịch Hẹn Của Tôi
+        <Button 
+          size="md" 
+          variant="primary" 
+          onClick={openBookingModal}
+        >
+          Thêm lịch hẹn mới
+        </Button>
+      </h1>
 
-      {/* Tabs */}
       <div className="border-b border-gray-200 mb-6">
         <nav className="-mb-px flex space-x-8">
           {['upcoming', 'completed', 'cancelled'].map(tab => (
@@ -131,7 +141,6 @@ const MyBookings = () => {
         </nav>
       </div>
 
-      {/* Booking list */}
       <div className="space-y-4">
         {bookings[activeTab].length === 0 ? (
           <Card className="text-center py-12">
@@ -165,7 +174,6 @@ const MyBookings = () => {
                   </div>
                 </div>
 
-                {/* Actions */}
                 <div className="mt-3 lg:mt-0 flex flex-col gap-2">
                   {activeTab === 'upcoming' && (
                     <>
@@ -192,6 +200,12 @@ const MyBookings = () => {
           </p>
         </div>
       )}
+
+      {/* Modal đặt lịch */}
+      <MultiStepBooking 
+        isOpen={isBookingOpen} 
+        onClose={closeBookingModal}
+      />
     </div>
   );
 };
