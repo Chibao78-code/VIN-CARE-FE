@@ -8,8 +8,7 @@ import {
   FiBarChart2,
   FiPackage,
   FiX,
-  FiClipboard
-  
+  FiClipboard,
 } from "react-icons/fi";
 import useAppStore from "../../store/appStore";
 import useAuthStore from "../../store/authStore";
@@ -24,8 +23,11 @@ const Sidebar = () => {
     { name: "Xe của tôi", href: "/app/vehicles", icon: FiTruck },
     { name: "Dịch vụ", href: "/app/services", icon: FiPackage },
     { name: "Đặt lịch", href: "/app/my-bookings", icon: FiCalendar },
-    { name: "Lịch sử bảo dưỡng", href: "/app/vehicle-history", icon: FiClipboard },
-    
+    {
+      name: "Lịch sử bảo dưỡng",
+      href: "/app/vehicle-history",
+      icon: FiClipboard,
+    },
   ];
 
   const adminNavigation = [
@@ -65,7 +67,7 @@ const Sidebar = () => {
             </button>
           </div>
 
-          <div className="bg-[#015C7A] px-4 py-6 text-center">
+          <div className="bg-gradient-to-r from-[#027C9D] via-[#034F67] to-[#015C7A] px-4 py-6 text-center">
             <p className="text-sm font-semibold text-white uppercase tracking-wide">
               Trang khách hàng
             </p>
