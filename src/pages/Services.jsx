@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import BookingModal from "../components/BookingModal";
 import Button from "../components/ui/Button";
 import { FiSearch, FiTool, FiShield, FiZap } from "react-icons/fi";
+import MultiStepBooking from "../components/booking/MultiStepBooking";
 
 const packages = [
   {
@@ -191,7 +191,7 @@ const Service = () => {
 
       {/* Modal đặt lịch */}
       {selectedVehicle && (
-        <BookingModal
+        <MultiStepBooking
           isOpen={isModalOpen}
           onClose={closeModal}
           defaultService={selectedVehicle.vehicle}

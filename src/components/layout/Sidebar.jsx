@@ -19,9 +19,9 @@ const Sidebar = () => {
   const { user } = useAuthStore();
 
   const navigation = [
-    { name: "Giới thiệu", href: "/app/dashboard", icon: FiHome },
+    { name: "Tổng quan", href: "/app/dashboard", icon: FiHome },
     { name: "Xe của tôi", href: "/app/vehicles", icon: FiTruck },
-    { name: "Đặt lịch", href: "/app/services", icon: FiPackage },
+    { name: "Dịch vụ", href: "/app/services", icon: FiPackage },
     { name: "Lịch hẹn", href: "/app/my-bookings", icon: FiCalendar },
     
   ];
