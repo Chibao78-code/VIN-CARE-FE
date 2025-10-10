@@ -1,9 +1,7 @@
-// src/components/ImageSlider.jsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-// Mảng chứa đường dẫn ảnh và alt text
+// Mảng chứa đường dẫn ảnh
 const images = [
- 
   "/images/Technician_1.png",
   "/images/Technician.png",
   "/images/ky-thuat-xe-dien.png",
@@ -12,7 +10,7 @@ const images = [
 ];
 
 export default function ImageSlider() {
-  const [current, setCurrent] = useState(0); // Quản lý ảnh đang hiển thị
+  const [current, setCurrent] = useState(0);
 
   // Chuyển về ảnh trước
   const prevSlide = () =>
@@ -22,13 +20,22 @@ export default function ImageSlider() {
   const nextSlide = () =>
     setCurrent((current + 1) % images.length);
 
+  // Tự động chuyển ảnh mỗi 3 giây
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrent((prev) => (prev + 1) % images.length);
+    }, 3000); // 3000ms = 3 giây
+
+    return () => clearInterval(interval); // Clear khi component unmount
+  }, []);
+
   return (
     <div className="relative max-w-screen-xl mx-auto h-[400px] overflow-hidden shadow-xl rounded-xl">
       {/* Ảnh hiện tại */}
       <img
         src={images[current]}
         alt={`Kỹ thuật viên ${current + 1}`}
-        className="w-full h-full object-cover transition-transform duration-500"
+        className="w-full h-full object-cover transition-opacity duration-700 ease-in-out"
       />
 
       {/* Nút chuyển về ảnh trước */}
@@ -49,3 +56,4 @@ export default function ImageSlider() {
     </div>
   );
 }
+

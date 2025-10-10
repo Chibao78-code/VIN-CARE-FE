@@ -121,8 +121,6 @@ function App() {
           <Route path="vehicles" element={<MyVehicles />} />
           <Route path="services" element={<Services />} />
           <Route path="my-bookings" element={<MyBookings />} />
-          <Route path="stations" element={<div>Stations Page</div>} />
-          <Route path="stations/map" element={<div>Stations Map Page</div>} />
           <Route path="profile" element={<Profile />} />
           <Route path="settings" element={<Settings />} />
         </Route>
