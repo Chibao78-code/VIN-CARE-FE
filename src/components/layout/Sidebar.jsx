@@ -8,6 +8,7 @@ import {
   FiBarChart2,
   FiPackage,
   FiX,
+  FiClipboard
   
 } from "react-icons/fi";
 import useAppStore from "../../store/appStore";
@@ -22,7 +23,8 @@ const Sidebar = () => {
     { name: "Tổng quan", href: "/app/dashboard", icon: FiHome },
     { name: "Xe của tôi", href: "/app/vehicles", icon: FiTruck },
     { name: "Dịch vụ", href: "/app/services", icon: FiPackage },
-    { name: "Lịch hẹn", href: "/app/my-bookings", icon: FiCalendar },
+    { name: "Đặt lịch", href: "/app/my-bookings", icon: FiCalendar },
+    { name: "Lịch sử bảo dưỡng", href: "/app/vehicle-history", icon: FiClipboard },
     
   ];
 
