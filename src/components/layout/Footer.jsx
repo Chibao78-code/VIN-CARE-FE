@@ -11,6 +11,7 @@ import {
   FiZap,
 } from "react-icons/fi";
 
+
 const Footer = () => {
   // năm bay gio
   const currentYear = new Date().getFullYear();
