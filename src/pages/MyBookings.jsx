@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
-import { FiCalendar, FiClock, FiMapPin, FiUser, FiPhone, FiCheck, FiX, FiAlertCircle } from 'react-icons/fi';
+import { FiCalendar, FiClock, FiMapPin, FiUser, FiCheck, FiX, FiAlertCircle } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import { formatDate, formatCurrency } from '../utils/format';
+import MultiStepBooking from '../components/booking/MultiStepBooking';
 
 const MyBookings = () => {
   const [activeTab, setActiveTab] = useState('upcoming');
-  
-  // dake data booking
-  const bookings = {
+  const [isBookingOpen, setIsBookingOpen] = useState(false);
+
+  const [bookings, setBookings] = useState({
     upcoming: [
       {
         id: 1,
@@ -52,20 +53,6 @@ const MyBookings = () => {
         status: 'completed',
         rating: 5,
         feedback: 'Dịch vụ tốt, nhân viên thân thiện'
-      },
-      {
-        id: 4,
-        service: 'Sửa chữa',
-        vehicle: 'Tesla Model 3 - 51G-67890',
-        date: '2024-01-15',
-        time: '13:00',
-        station: 'EV Service Center Quận 7',
-        address: '789 Nguyễn Văn Linh, Q.7',
-        technician: 'Phạm Văn D',
-        totalCost: 3500000,
-        status: 'completed',
-        rating: 4,
-        feedback: 'Sửa chữa nhanh chóng'
       }
     ],
     cancelled: [
@@ -80,49 +67,43 @@ const MyBookings = () => {
         cancelReason: 'Khách hàng bận việc đột xuất'
       }
     ]
-  };
+  });
+
+  const openBookingModal = () => setIsBookingOpen(true);
+  const closeBookingModal = () => setIsBookingOpen(false);
 
   const getStatusBadge = (status) => {
-    const statusConfig = {
-      pending: { 
-        label: 'Chờ xác nhận', 
-        className: 'bg-yellow-100 text-yellow-800',
-        icon: <FiClock className="w-4 h-4" />
-      },
-      confirmed: { 
-        label: 'Đã xác nhận', 
-        className: 'bg-blue-100 text-blue-800',
-        icon: <FiCheck className="w-4 h-4" />
-      },
-      completed: { 
-        label: 'Hoàn thành', 
-        className: 'bg-green-100 text-green-800',
-        icon: <FiCheck className="w-4 h-4" />
-      },
-      cancelled: { 
-        label: 'Đã hủy', 
-        className: 'bg-red-100 text-red-800',
-        icon: <FiX className="w-4 h-4" />
-      }
-    };
+    const config = {
+      pending: { label: 'Chờ xác nhận', color: 'bg-yellow-100 text-yellow-800', icon: <FiClock /> },
+      confirmed: { label: 'Đã xác nhận', color: 'bg-blue-100 text-blue-800', icon: <FiCheck /> },
+      completed: { label: 'Hoàn thành', color: 'bg-green-100 text-green-800', icon: <FiCheck /> },
+      cancelled: { label: 'Đã hủy', color: 'bg-red-100 text-red-800', icon: <FiX /> }
+    }[status];
 
-    const config = statusConfig[status];
     return (
-      <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${config.className}`}>
-        {config.icon}
-        {config.label}
+      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${config.color}`}>
+        {config.icon}{config.label}
       </span>
     );
   };
 
   const handleCancelBooking = (bookingId) => {
     if (window.confirm('Bạn có chắc chắn muốn hủy lịch hẹn này?')) {
+      setBookings(prev => {
+        const bookingToCancel = prev.upcoming.find(b => b.id === bookingId);
+        if (!bookingToCancel) return prev;
+
+        return {
+          ...prev,
+          upcoming: prev.upcoming.filter(b => b.id !== bookingId),
+          cancelled: [...prev.cancelled, { ...bookingToCancel, status: 'cancelled', cancelReason: 'Khách hàng hủy' }]
+        };
+      });
       toast.success('Đã hủy lịch hẹn thành công!');
     }
   };
 
   const handleReschedule = (booking) => {
-    // Mở modal đặt lại lịch với dữ liệu booking hiện tại
     window.dispatchEvent(new CustomEvent('openBookingModal', { 
       detail: { booking, isReschedule: true } 
     }));
@@ -130,204 +111,101 @@ const MyBookings = () => {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">
+      <h1 className="text-3xl font-bold text-gray-900 mb-6 flex justify-between items-center">
         Lịch Hẹn Của Tôi
+        <Button 
+          size="md" 
+          variant="primary" 
+          onClick={openBookingModal}
+        >
+          Thêm lịch hẹn mới
+        </Button>
       </h1>
+
       <div className="border-b border-gray-200 mb-6">
         <nav className="-mb-px flex space-x-8">
-          {[
-            { key: 'upcoming', label: 'Sắp tới', count: bookings.upcoming.length },
-            { key: 'completed', label: 'Hoàn thành', count: bookings.completed.length },
-            { key: 'cancelled', label: 'Đã hủy', count: bookings.cancelled.length }
-          ].map(tab => (
+          {['upcoming', 'completed', 'cancelled'].map(tab => (
             <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`
-                py-2 px-1 border-b-2 font-medium text-sm transition-colors
-                ${activeTab === tab.key
-                  ? 'border-teal-500 text-teal-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }
-              `}
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
+                activeTab === tab ? 'border-teal-500 text-teal-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
             >
-              {tab.label}
-              {tab.count > 0 && (
-                <span className="ml-2 bg-gray-100 text-gray-600 py-0.5 px-2 rounded-full text-xs">
-                  {tab.count}
-                </span>
-              )}
+              {tab === 'upcoming' ? 'Sắp tới' : tab === 'completed' ? 'Hoàn thành' : 'Đã hủy'}
+              <span className="ml-2 bg-gray-100 text-gray-600 py-0.5 px-2 rounded-full text-xs">
+                {bookings[tab].length}
+              </span>
             </button>
           ))}
         </nav>
       </div>
+
       <div className="space-y-4">
         {bookings[activeTab].length === 0 ? (
           <Card className="text-center py-12">
             <FiCalendar className="text-6xl text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500">
-              Không có lịch hẹn nào
-            </p>
+            <p className="text-gray-500">Không có lịch hẹn nào</p>
           </Card>
         ) : (
-          bookings[activeTab].map(booking => (
-            <Card key={booking.id} className="hover:shadow-lg transition-shadow">
-              <Card.Content>
-                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-start justify-between mb-4 lg:mb-0">
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                          {booking.service}
-                        </h3>
-                        <p className="text-sm text-gray-600 mb-2">
-                          {booking.vehicle}
-                        </p>
-                        {getStatusBadge(booking.status)}
-                      </div>
+          bookings[activeTab].map(b => (
+            <Card key={b.id} className="p-4 hover:shadow-lg transition-shadow">
+              <div className="flex justify-between flex-col lg:flex-row lg:items-center">
+                <div>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="text-lg font-semibold">{b.service}</h3>
+                      <p className="text-sm text-gray-600">{b.vehicle}</p>
+                      {getStatusBadge(b.status)}
                     </div>
-
-                    <div className="mt-4 grid md:grid-cols-2 gap-4 text-sm">
-                      <div className="space-y-2">
-                        <div className="flex items-center text-gray-600">
-                          <FiCalendar className="mr-2 flex-shrink-0" />
-                          <span>{formatDate(booking.date)}</span>
-                        </div>
-                        <div className="flex items-center text-gray-600">
-                          <FiClock className="mr-2 flex-shrink-0" />
-                          <span>{booking.time}</span>
-                        </div>
-                        {booking.technician && (
-                          <div className="flex items-center text-gray-600">
-                            <FiUser className="mr-2 flex-shrink-0" />
-                            <span>KTV: {booking.technician}</span>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="space-y-2">
-                        <div className="flex items-start text-gray-600">
-                          <FiMapPin className="mr-2 flex-shrink-0 mt-0.5" />
-                          <div>
-                            <p className="font-medium">{booking.station}</p>
-                            {booking.address && (
-                              <p className="text-xs mt-0.5">{booking.address}</p>
-                            )}
-                          </div>
-                        </div>
-                        {booking.estimatedCost && (
-                          <div className="flex items-center text-gray-600">
-                            <span className="mr-2">Chi phí dự kiến:</span>
-                            <span className="font-semibold text-teal-600">
-                              {formatCurrency(booking.estimatedCost)}
-                            </span>
-                          </div>
-                        )}
-                        {booking.totalCost && (
-                          <div className="flex items-center text-gray-600">
-                            <span className="mr-2">Tổng chi phí:</span>
-                            <span className="font-semibold text-teal-600">
-                              {formatCurrency(booking.totalCost)}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {booking.notes && (
-                      <div className="mt-3 p-3 bg-gray-50 rounded-lg">
-                        <p className="text-sm text-gray-600">
-                          <span className="font-medium">Ghi chú:</span> {booking.notes}
-                        </p>
-                      </div>
-                    )}
-
-                    {booking.cancelReason && (
-                      <div className="mt-3 p-3 bg-red-50 rounded-lg">
-                        <p className="text-sm text-red-600">
-                          <span className="font-medium">Lý do hủy:</span> {booking.cancelReason}
-                        </p>
-                      </div>
-                    )}
-
-                    {booking.rating && (
-                      <div className="mt-3">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm text-gray-600">Đánh giá:</span>
-                          <div className="flex">
-                            {[1, 2, 3, 4, 5].map((star) => (
-                              <span
-                                key={star}
-                                className={`text-lg ${
-                                  star <= booking.rating ? 'text-yellow-400' : 'text-gray-300'
-                                }`}
-                              >
-                                ★
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                        {booking.feedback && (
-                          <p className="text-sm text-gray-600 mt-1 italic">
-                            "{booking.feedback}"
-                          </p>
-                        )}
-                      </div>
-                    )}
                   </div>
-                  <div className="mt-4 lg:mt-0 lg:ml-6 flex flex-col gap-2">
-                    {activeTab === 'upcoming' && (
-                      <>
-                        {booking.status === 'pending' && (
-                          <Button size="sm" variant="primary">
-                            Xác nhận
-                          </Button>
-                        )}
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => handleReschedule(booking)}
-                        >
-                          Đổi lịch
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          className="text-red-600 hover:text-red-700"
-                          onClick={() => handleCancelBooking(booking.id)}
-                        >
-                          Hủy lịch
-                        </Button>
-                      </>
-                    )}
-                    {activeTab === 'completed' && !booking.rating && (
-                      <Button size="sm" variant="primary">
-                        Đánh giá
-                      </Button>
-                    )}
-                    <Button size="sm" variant="outline">
-                      Chi tiết
-                    </Button>
+
+                  <div className="mt-3 text-sm space-y-1">
+                    <p><FiCalendar className="inline mr-1" /> {formatDate(b.date)}</p>
+                    <p><FiClock className="inline mr-1" /> {b.time}</p>
+                    <p><FiMapPin className="inline mr-1" /> {b.station}</p>
+                    {b.address && <p className="ml-5 text-gray-500">{b.address}</p>}
+                    {b.technician && <p><FiUser className="inline mr-1" /> {b.technician}</p>}
+                    {b.estimatedCost && <p>Chi phí dự kiến: {formatCurrency(b.estimatedCost)}</p>}
+                    {b.totalCost && <p>Tổng chi phí: {formatCurrency(b.totalCost)}</p>}
+                    {b.notes && <p className="italic text-gray-600">Ghi chú: {b.notes}</p>}
+                    {b.cancelReason && <p className="italic text-red-600">Lý do hủy: {b.cancelReason}</p>}
+                    {b.feedback && <p className="italic text-gray-600">Đánh giá: "{b.feedback}"</p>}
                   </div>
                 </div>
-              </Card.Content>
+
+                <div className="mt-3 lg:mt-0 flex flex-col gap-2">
+                  {activeTab === 'upcoming' && (
+                    <>
+                      <Button size="sm" variant="outline" onClick={() => handleReschedule(b)}>Đổi lịch</Button>
+                      <Button size="sm" variant="outline" className="text-red-600" onClick={() => handleCancelBooking(b.id)}>Hủy lịch</Button>
+                    </>
+                  )}
+                  {activeTab === 'completed' && !b.rating && <Button size="sm" variant="primary">Đánh giá</Button>}
+                  <Button size="sm" variant="outline">Chi tiết</Button>
+                </div>
+              </div>
             </Card>
           ))
         )}
       </div>
+
+      {/* Note for upcoming */}
       {activeTab === 'upcoming' && (
-        <div className="mt-8 p-4 bg-teal-50 border border-teal-200 rounded-lg">
-          <div className="flex items-start">
-            <FiAlertCircle className="text-teal-600 mt-0.5 mr-3 flex-shrink-0" />
-            <div>
-              <p className="text-sm text-teal-800">
-                <strong>Lưu ý:</strong> Vui lòng đến trước giờ hẹn 15 phút để làm thủ tục. 
-                Nếu cần hủy hoặc dời lịch, vui lòng thông báo trước 24 giờ.
-              </p>
-            </div>
-          </div>
+        <div className="mt-8 p-4 bg-red-50 border border-red-300 rounded-lg flex items-start gap-3">
+          <FiAlertCircle className="text-red-600 mt-0.5" />
+          <p className="text-sm text-red-800">
+            <strong>Lưu ý:</strong> Vui lòng đến trước giờ hẹn 15 phút để làm thủ tục. 
+            Nếu cần hủy hoặc dời lịch, vui lòng thông báo trước 24 giờ.
+          </p>
         </div>
       )}
+
+      {/* Modal đặt lịch */}
+      <MultiStepBooking 
+        isOpen={isBookingOpen} 
+        onClose={closeBookingModal}
+      />
     </div>
   );
 };
