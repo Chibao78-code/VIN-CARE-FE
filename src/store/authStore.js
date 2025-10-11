@@ -1,7 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { STORAGE_KEYS } from '../constants/config';
-// call api
+import { authService } from '../services/authService';
+
 const useAuthStore = create(
   persist(
     (set, get) => ({
@@ -13,8 +14,18 @@ const useAuthStore = create(
       login: async (credentials) => {
         set({ isLoading: true });
         try {
-          const response = await mockLogin(credentials);
+          // call api login
+          const response = await authService.login({
+            username: credentials.email, //tk
+            password: credentials.password//mk
+          });
           
+          // xem phan hoi cua trang
+          if (!response || !response.token || !response.user) {
+            throw new Error('Invalid response from server');
+          }
+          
+          // luu user va token vao store
           set({
             user: response.user,
             token: response.token,
@@ -25,7 +36,10 @@ const useAuthStore = create(
           return { success: true };
         } catch (error) {
           set({ isLoading: false });
-          return { success: false, error: error.message };
+          return { 
+            success: false, 
+            error: error.response?.data?.message || error.message || 'Đăng nhập thất bại'
+          };
         }
       },
       
@@ -58,35 +72,5 @@ const useAuthStore = create(
     }
   )
 );
-//mock api login
-async function mockLogin(credentials) {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      //xem role da dung voi email dang nhap chua
-      const email = credentials.email.toLowerCase();
-      let role = 'user';
-      let name = 'Nguyễn Văn A';
-      
-      if (email.includes('admin')) {
-        role = 'admin';
-        name = 'Admin';
-      } else if (email.includes('staff') || email.includes('technician')) {
-        role = 'staff';
-        name = 'Staff Member';
-      }
-      
-      resolve({
-        user: {
-          id: '1',
-          email: credentials.email,
-          name: name,
-          role: role,
-          avatar: null,
-        },
-        token: 'mock-jwt-token-123456',
-      });
-    }, 1000);
-  });
-}
 
 export default useAuthStore;
