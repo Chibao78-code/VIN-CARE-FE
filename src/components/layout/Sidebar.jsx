@@ -10,7 +10,8 @@ import {
   FiBarChart2,
   FiPackage,
   FiBattery,
-  FiX
+  FiClipboard,
+  FiX,  // Thêm icon đóng
 } from 'react-icons/fi';
 import useAppStore from '../../store/appStore';
 import useAuthStore from '../../store/authStore';
@@ -19,33 +20,33 @@ import { cn } from '../../utils/cn';
 const Sidebar = () => {
   const { sidebarOpen, setSidebarOpen } = useAppStore();
   const { user } = useAuthStore();
-  
+
   const navigation = [
     { name: 'Tổng quan', href: '/app/dashboard', icon: FiHome },
     { name: 'Xe của tôi', href: '/app/vehicles', icon: FiTruck },
     { name: 'Dịch vụ', href: '/app/services', icon: FiPackage },
     { name: 'Lịch hẹn', href: '/app/my-bookings', icon: FiCalendar },
-    { name: 'Bản đồ', href: '/app/stations/map', icon: FiMapPin },
+    { name: 'Lịch sử bảo dưỡng', href:'/app/vehicle-history', icon: FiClipboard },
   ];
-  
+
   const adminNavigation = [
     { name: 'Quản lý người dùng', href: '/app/admin/users', icon: FiUsers },
     { name: 'Quản lý dịch vụ', href: '/app/admin/services', icon: FiPackage },
     { name: 'Báo cáo', href: '/app/admin/reports', icon: FiBarChart2 },
   ];
-  
+
   const isAdmin = user?.role === 'admin';
-  
+
   return (
     <>
-      {/* moblie */}
+      {/* Mobile backdrop */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 bg-gray-900 bg-opacity-50 z-40 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
-      
+
       {/* Sidebar */}
       <div
         className={cn(
@@ -54,7 +55,7 @@ const Sidebar = () => {
         )}
       >
         <div className="h-full flex flex-col">
-          {/* nut dong */}
+          {/* Close button (mobile) */}
           <div className="lg:hidden flex justify-end p-4">
             <button
               onClick={() => setSidebarOpen(false)}
@@ -63,9 +64,10 @@ const Sidebar = () => {
               <FiX className="h-5 w-5" />
             </button>
           </div>
-          
-          {/*  */}
+
+          {/* Navigation */}
           <nav className="flex-1 px-4 pb-4 space-y-1 overflow-y-auto">
+            {/* Main menu */}
             <div className="space-y-1">
               <h3 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                 Menu chính
@@ -94,8 +96,8 @@ const Sidebar = () => {
                 </NavLink>
               ))}
             </div>
-            
-            {/* trang admin */}
+
+            {/* Admin menu */}
             {isAdmin && (
               <div className="mt-8 space-y-1">
                 <h3 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
@@ -127,8 +129,8 @@ const Sidebar = () => {
               </div>
             )}
           </nav>
-          
-          {/* thong tin khach hang */}
+
+          {/* User Info */}
           <div className="border-t border-gray-200 p-4">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -147,12 +149,8 @@ const Sidebar = () => {
                 </div>
               </div>
               <div className="ml-3">
-                <p className="text-sm font-medium text-gray-900">
-                  {user?.name || 'User'}
-                </p>
-                <p className="text-xs text-gray-500">
-                  {user?.email}
-                </p>
+                <p className="text-sm font-medium text-gray-900">{user?.name || 'User'}</p>
+                <p className="text-xs text-gray-500">{user?.email}</p>
               </div>
             </div>
           </div>
