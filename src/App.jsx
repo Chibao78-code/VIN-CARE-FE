@@ -18,6 +18,7 @@ import MaintenanceHistory from './pages/MaintenanceHistory';
 import Profile from './pages/Profile';
 import MyVehicles from './pages/MyVehicles';
 import Settings from './pages/Settings';
+import Notifications from './pages/Notifications';
 
 // Admin 
 import AdminLayout from './layouts/AdminLayout';
@@ -125,6 +126,7 @@ function App() {
           <Route path="vehicle-history" element={<MaintenanceHistory />} />
           <Route path="profile" element={<Profile />} />
           <Route path="settings" element={<Settings />} />
+          <Route path="notifications" element={<Notifications />} />
         </Route>
 
         <Route
