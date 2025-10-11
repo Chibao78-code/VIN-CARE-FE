@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FiX, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
+import { FiX, FiChevronLeft } from 'react-icons/fi';
 import SelectCenter from './steps/SelectCenter';
 import SelectDate from './steps/SelectDate';
 import SelectService from './steps/SelectService';
@@ -18,37 +18,28 @@ const MultiStepBooking = ({ isOpen, onClose }) => {
     problemDescription: '',
     timeSlot: null,
     vehicle: null,
-    customerInfo: {
-      name: '',
-      phone: '',
-      email: '',
-      address: ''
-    },
+    customerInfo: { name: '', phone: '', email: '', address: '' },
     notes: '',
-    status: 'pending', // cho - xac nhan - dang thuc hien - hoan thanh
-    bookingId: null
+    status: 'pending',
+    bookingId: null,
   });
-    // tung buoc dat lich
+
   const steps = [
     { id: 1, name: 'Chọn trung tâm', component: SelectCenter },
     { id: 2, name: 'Chọn ngày', component: SelectDate },
     { id: 3, name: 'Chọn dịch vụ', component: SelectService },
     { id: 4, name: 'Chọn giờ', component: SelectTimeSlot },
     { id: 5, name: 'Xác nhận', component: ConfirmBooking },
-    { id: 6, name: 'Hoàn tất', component: BookingSuccess }
+    { id: 6, name: 'Hoàn tất', component: BookingSuccess },
   ];
 
   const handleNext = (data) => {
     setBookingData({ ...bookingData, ...data });
-    if (currentStep < steps.length) {
-      setCurrentStep(currentStep + 1);
-    }
+    if (currentStep < steps.length) setCurrentStep(currentStep + 1);
   };
 
   const handleBack = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
-    }
+    if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
 
   const handleReset = () => {
@@ -62,15 +53,10 @@ const MultiStepBooking = ({ isOpen, onClose }) => {
       problemDescription: '',
       timeSlot: null,
       vehicle: null,
-      customerInfo: {
-        name: '',
-        phone: '',
-        email: '',
-        address: ''
-      },
+      customerInfo: { name: '', phone: '', email: '', address: '' },
       notes: '',
       status: 'pending',
-      bookingId: null
+      bookingId: null,
     });
   };
 
@@ -85,60 +71,91 @@ const MultiStepBooking = ({ isOpen, onClose }) => {
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div 
-        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
+      <div
+        className="fixed inset-0 bg-black bg-opacity-40"
         onClick={handleClose}
       />
       <div className="flex min-h-full items-center justify-center p-4">
-        <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-5xl transform transition-all">
-          <div className="bg-gradient-to-br from-teal-700 via-teal-600 to-cyan-600 text-white rounded-t-2xl px-6 py-4">
-            <div className="flex items-center justify-between">
+        <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-4xl transition-all">
+          {/* Header modal */}
+          <div
+            className="px-8 py-6 rounded-t-3xl border-b border-[#027C9D]"
+            style={{ backgroundColor: '#027C9D' }}
+          >
+            <div className="flex items-center justify-between mb-6">
               <div>
-                <h2 className="text-xl font-bold">Đặt lịch dịch vụ VinFast</h2>
-                <p className="text-sm text-teal-50 mt-1">
+                <h2
+                  className="text-2xl font-bold tracking-tight truncate max-w-[300px]"
+                  style={{ color: '#f0f9ff' }}
+                >
+                  Đặt lịch dịch vụ VinFast
+                </h2>
+                <p
+                  className="text-base mt-1 font-medium truncate max-w-[180px]"
+                  style={{ color: '#80D3EF' }}
+                >
                   Bước {currentStep} / {steps.length - 1}: {steps[currentStep - 1].name}
                 </p>
               </div>
               <button
                 onClick={handleClose}
-                className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                className="p-2 rounded-lg hover:bg-[#80D3EF] focus:outline-none transition"
+                aria-label="Đóng modal"
               >
-                <FiX className="w-5 h-5" />
+                <FiX className="w-6 h-6" style={{ color: '#f0f9ff' }} />
               </button>
             </div>
+
+            {/* Progress Bar */}
             {currentStep < 6 && (
-              <div className="mt-4 mb-2">
-                <div className="flex items-center justify-between">
-                  {steps.slice(0, 5).map((step, index) => (
-                    <div key={step.id} className="flex items-center flex-1">
-                      <div className="relative">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 
-                          ${currentStep > step.id 
-                            ? 'bg-white text-teal-600 border-white' 
-                            : currentStep === step.id 
-                            ? 'bg-teal-500 text-white border-white' 
-                            : 'bg-transparent text-teal-100 border-teal-300'}`}
-                        >
-                          {currentStep > step.id ? '✓' : step.id}
-                        </div>
-                        <span className={`absolute -bottom-8 left-1/2 transform -translate-x-1/2 text-xs whitespace-nowrap text-center font-medium
-                          ${currentStep >= step.id ? 'text-white' : 'text-teal-100'}`}
-                        >
-                          {step.name}
-                        </span>
+              <div className="flex items-center justify-between gap-1 mt-2 mb-1">
+                {steps.slice(0, 5).map((step, index) => {
+                  let borderColor = '#a7d1e6';
+                  let backgroundColor = '#d1edf9';
+                  let color = '#80d3ef';
+
+                  if (currentStep > step.id) {
+                    borderColor = '#034058';
+                    backgroundColor = '#80d3ef';
+                    color = '#ffffff';
+                  } else if (currentStep === step.id) {
+                    borderColor = '#034058';
+                    backgroundColor = '#027c9d';
+                    color = '#ffffff';
+                  }
+
+                  return (
+                    <div key={step.id} className="flex flex-1 flex-col items-center min-w-0 relative">
+                      <div
+                        className="flex items-center justify-center w-9 h-9 rounded-full border-2 font-semibold text-lg"
+                        style={{ borderColor, backgroundColor, color }}
+                      >
+                        {currentStep > step.id ? '✓' : step.id}
                       </div>
+                      <span
+                        className="mt-2 max-w-[100px] text-xs text-center font-semibold truncate"
+                        style={{ color: currentStep >= step.id ? '#034058' : '#80d3ef' }}
+                      >
+                        {step.name}
+                      </span>
                       {index < steps.length - 2 && (
-                        <div className={`flex-1 h-0.5 mx-2 
-                          ${currentStep > step.id ? 'bg-white' : 'bg-teal-300'}`}
+                        <div
+                          className="absolute top-4 left-full h-0.5 w-full mx-2"
+                          style={{ backgroundColor: currentStep > step.id ? '#80d3ef' : '#a7d1e6' }}
                         />
                       )}
                     </div>
-                  ))}
-                </div>
+                  );
+                })}
               </div>
             )}
           </div>
-          <div className="p-6" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+
+          {/* Nội dung step */}
+          <div
+            className="p-7 rounded-b-3xl"
+            style={{ maxHeight: '70vh', overflowY: 'auto', backgroundColor: '#e7faff' }}
+          >
             <CurrentStepComponent
               data={bookingData}
               onNext={handleNext}
@@ -146,11 +163,14 @@ const MultiStepBooking = ({ isOpen, onClose }) => {
               currentStep={currentStep}
             />
           </div>
+
+          {/* Nút quay lại */}
           {currentStep > 1 && currentStep < 6 && (
-            <div className="px-6 py-4 border-t border-gray-200 flex justify-between">
+            <div className="px-8 py-6 border-t border-[#027C9D] flex justify-start bg-[#80d3ef] rounded-b-3xl">
               <button
                 onClick={handleBack}
-                className="flex items-center px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+                className="flex items-center px-5 py-2 font-semibold rounded-lg text-white"
+                style={{ backgroundColor: '#034058' }}
               >
                 <FiChevronLeft className="mr-2" />
                 Quay lại
