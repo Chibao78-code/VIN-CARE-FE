@@ -10,13 +10,14 @@ import {
 } from "react-icons/fi";
 import useAppStore from "../../store/appStore";
 import useAuthStore from "../../store/authStore";
+import { useNavigate } from "react-router-dom";
 
 const Header = () => {
   const { toggleSidebar, notifications } = useAppStore();
   const { user, logout } = useAuthStore();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
-
+  const navigate = useNavigate();
   // Đếm số thông báo chưa đọc
   const unreadNotifications = notifications.filter((n) => !n.read).length;
 
@@ -67,8 +68,11 @@ const Header = () => {
 
           {/* Bên phải: thông báo, lời chào, avatar + dropdown */}
           <div className="flex items-center space-x-3">
-            {/* Chuông thông báo */}
-            <button className="relative p-2 text-black hover:bg-[#B8ECFF] rounded-full transition">
+            <button
+              className="relative p-2 text-black hover:bg-[#B8ECFF] rounded-full transition"
+              onClick={() => navigate("/app/notifications")} // đến trang thông báo
+              aria-label="Xem thông báo"
+            >
               <FiBell className="h-5 w-5" />
               {unreadNotifications > 0 && (
                 <span className="absolute top-1 right-1 flex items-center justify-center h-4 w-4 text-[10px] font-bold text-white bg-red-500 rounded-full ring-2 ring-white">
