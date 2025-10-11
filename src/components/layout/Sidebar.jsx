@@ -1,158 +1,163 @@
-import React, { useState, useEffect } from 'react';
-import { FiMapPin, FiPhone, FiClock, FiStar, FiNavigation, FiChevronRight } from 'react-icons/fi';
-import { serviceCenters, calculateDistance } from '../../../steps/serviceCenters';
-import Button from '../../ui/Button';
+import React from 'react';
+import { NavLink } from 'react-router-dom';
+import {
+  FiHome,
+  FiTruck,
+  FiCalendar,
+  FiMapPin,
+  FiSettings,
+  FiUsers,
+  FiBarChart2,
+  FiPackage,
+  FiBattery,
+  FiClipboard,
+  FiX,  // Thêm icon đóng
+} from 'react-icons/fi';
+import useAppStore from '../../store/appStore';
+import useAuthStore from '../../store/authStore';
+import { cn } from '../../utils/cn';
 
-const SelectCenter = ({ data, onNext }) => {
-  const [centers, setCenters] = useState(serviceCenters);
-  const [selectedCenter, setSelectedCenter] = useState(data.center);
-  const [setUserLocation] = useState(null);
-  const [loadingLocation, setLoadingLocation] = useState(false);
+const Sidebar = () => {
+  const { sidebarOpen, setSidebarOpen } = useAppStore();
+  const { user } = useAuthStore();
 
-  useEffect(() => {
-    if (navigator.geolocation) {
-      setLoadingLocation(true);
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          setUserLocation({ lat: latitude, lng: longitude });
-          const centersWithDistance = serviceCenters
-            .map((center) => ({
-              ...center,
-              distance: calculateDistance(latitude, longitude, center.lat, center.lng),
-            }))
-            .sort((a, b) => a.distance - b.distance);
-          setCenters(centersWithDistance);
-          setLoadingLocation(false);
-        },
-        (error) => {
-          console.error('Error getting location:', error);
-          setLoadingLocation(false);
-        }
-      );
-    }
-  }, []);
+  const navigation = [
+    { name: 'Tổng quan', href: '/app/dashboard', icon: FiHome },
+    { name: 'Xe của tôi', href: '/app/vehicles', icon: FiTruck },
+    { name: 'Dịch vụ', href: '/app/services', icon: FiPackage },
+    { name: 'Lịch hẹn', href: '/app/my-bookings', icon: FiCalendar },
+    { name: 'Lịch sử bảo dưỡng', href:'/app/vehicle-history', icon: FiClipboard },
+  ];
 
-  const handleSelectCenter = (center) => {
-    setSelectedCenter(center);
-  };
+  const adminNavigation = [
+    { name: 'Quản lý người dùng', href: '/app/admin/users', icon: FiUsers },
+    { name: 'Quản lý dịch vụ', href: '/app/admin/services', icon: FiPackage },
+    { name: 'Báo cáo', href: '/app/admin/reports', icon: FiBarChart2 },
+  ];
 
-  const handleNext = () => {
-    if (selectedCenter) {
-      onNext({ center: selectedCenter });
-    }
-  };
-
-  const isToday = (days) => {
-    const today = new Date().getDay();
-    const dayMap = { CN: 0, T2: 1, T3: 2, T4: 3, T5: 4, T6: 5, T7: 6 };
-    const todayName = Object.keys(dayMap).find((key) => dayMap[key] === today);
-    return days.includes(todayName);
-  };
+  const isAdmin = user?.role === 'admin';
 
   return (
-    <div>
-      <div className="mb-6">
-        <h3 className="text-lg font-semibold text-[#027C9D] mb-2">Chọn trung tâm dịch vụ VinFast</h3>
-        <p className="text-sm text-[#80D3EF]">
-          Chọn trung tâm dịch vụ gần bạn nhất hoặc thuận tiện nhất
-        </p>
-        {loadingLocation && (
-          <div className="mt-3 p-3 bg-[#daf3ff] rounded-lg text-sm text-[#027C9D] flex items-center">
-            <FiNavigation className="mr-2 animate-pulse" />
-            Đang xác định vị trí của bạn...
-          </div>
+    <>
+      {/* Mobile backdrop */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-gray-900 bg-opacity-50 z-40 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <div
+        className={cn(
+          'fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0',
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         )}
-      </div>
+      >
+        <div className="h-full flex flex-col">
+          {/* Close button (mobile) */}
+          <div className="lg:hidden flex justify-end p-4">
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="p-2 rounded-lg text-gray-400 hover:text-gray-500 hover:bg-gray-100"
+            >
+              <FiX className="h-5 w-5" />
+            </button>
+          </div>
 
-      <div className="grid gap-4 max-h-96 overflow-y-auto pr-2">
-        {centers.map((center) => (
-          <div
-            key={center.id}
-            onClick={() => handleSelectCenter(center)}
-            className={`p-4 border-2 rounded-lg cursor-pointer transition-all hover:shadow-md ${
-              selectedCenter?.id === center.id
-                ? 'border-[#027C9D] bg-[#e7faff]'
-                : 'border-gray-200 hover:border-[#80D3EF]'
-            }`}
-          >
-            <div className="flex justify-between items-start">
-              <div className="flex-1">
-                <div className="flex items-start justify-between">
-                  <h4 className="font-semibold text-[#034058]">{center.name}</h4>
-                  {center.distance && (
-                    <span className="ml-2 px-2 py-1 bg-[#c2e0ff] text-[#027C9D] text-xs rounded-full">
-                      {center.distance.toFixed(1)} km
-                    </span>
-                  )}
-                </div>
-
-                <div className="mt-2 space-y-1 text-[#034058] text-sm">
-                  <div className="flex items-center">
-                    <FiMapPin className="mr-2 text-[#80D3EF] flex-shrink-0" />
-                    <span>{center.address}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <FiPhone className="mr-2 text-[#80D3EF]" />
-                    <span>{center.phone}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <FiClock className="mr-2 text-[#80D3EF]" />
-                    <span>
-                      {center.openTime} - {center.closeTime}
-                    </span>
-                    <span className="ml-2">({center.workingDays.join(', ')})</span>
-                    {isToday(center.workingDays) && (
-                      <span className="ml-2 text-green-600 font-medium">Hôm nay mở cửa</span>
+          {/* Navigation */}
+          <nav className="flex-1 px-4 pb-4 space-y-1 overflow-y-auto">
+            {/* Main menu */}
+            <div className="space-y-1">
+              <h3 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                Menu chính
+              </h3>
+              {navigation.map((item) => (
+                <NavLink
+                  key={item.name}
+                  to={item.href}
+                  className={({ isActive }) =>
+                    cn(
+                      'group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors',
+                      isActive
+                        ? 'bg-primary-50 text-primary-700'
+                        : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                    )
+                  }
+                  onClick={() => setSidebarOpen(false)}
+                >
+                  <item.icon
+                    className={cn(
+                      'mr-3 h-5 w-5 flex-shrink-0 transition-colors',
+                      'group-hover:text-gray-900'
                     )}
-                  </div>
-                  <div className="flex items-center">
-                    <FiStar className="mr-1 text-yellow-500" />
-                    <span className="text-[#034058] font-medium">{center.rating}</span>
-                    <span className="ml-3 text-[#80D3EF]">{center.technicians} kỹ thuật viên</span>
-                  </div>
-                </div>
+                  />
+                  {item.name}
+                </NavLink>
+              ))}
+            </div>
 
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {center.services.includes('maintenance') && (
-                    <span className="px-2 py-1 bg-gray-100 text-[#034058] text-xs rounded">
-                      Bảo dưỡng
-                    </span>
-                  )}
-                  {center.services.includes('repair') && (
-                    <span className="px-2 py-1 bg-gray-100 text-[#034058] text-xs rounded">
-                      Sửa chữa
-                    </span>
-                  )}
-                  {center.services.includes('parts') && (
-                    <span className="px-2 py-1 bg-gray-100 text-[#034058] text-xs rounded">
-                      Phụ tùng
-                    </span>
-                  )}
-                  {center.services.includes('emergency') && (
-                    <span className="px-2 py-1 bg-red-100 text-red-700 text-xs rounded">
-                      Cứu hộ 24/7
+            {/* Admin menu */}
+            {isAdmin && (
+              <div className="mt-8 space-y-1">
+                <h3 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Quản trị
+                </h3>
+                {adminNavigation.map((item) => (
+                  <NavLink
+                    key={item.name}
+                    to={item.href}
+                    className={({ isActive }) =>
+                      cn(
+                        'group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors',
+                        isActive
+                          ? 'bg-primary-50 text-primary-700'
+                          : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                      )
+                    }
+                    onClick={() => setSidebarOpen(false)}
+                  >
+                    <item.icon
+                      className={cn(
+                        'mr-3 h-5 w-5 flex-shrink-0 transition-colors',
+                        'group-hover:text-gray-900'
+                      )}
+                    />
+                    {item.name}
+                  </NavLink>
+                ))}
+              </div>
+            )}
+          </nav>
+
+          {/* User Info */}
+          <div className="border-t border-gray-200 p-4">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
+                  {user?.avatar ? (
+                    <img
+                      src={user.avatar}
+                      alt={user.name}
+                      className="w-full h-full rounded-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-primary-700 font-medium">
+                      {user?.name?.charAt(0)?.toUpperCase() || 'U'}
                     </span>
                   )}
                 </div>
               </div>
+              <div className="ml-3">
+                <p className="text-sm font-medium text-gray-900">{user?.name || 'User'}</p>
+                <p className="text-xs text-gray-500">{user?.email}</p>
+              </div>
             </div>
           </div>
-        ))}
+        </div>
       </div>
-
-      <div className="mt-6 flex justify-end">
-        <Button
-          onClick={handleNext}
-          disabled={!selectedCenter}
-          className="bg-[#027C9D] hover:bg-[#034058] text-white px-6"
-        >
-          Tiếp tục
-          <FiChevronRight className="ml-2" />
-        </Button>
-      </div>
-    </div>
+    </>
   );
 };
 
-export default SelectCenter;
+export default Sidebar;
