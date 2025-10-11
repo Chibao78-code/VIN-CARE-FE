@@ -192,9 +192,9 @@ const MyBookings = () => {
 
       {/* Note for upcoming */}
       {activeTab === 'upcoming' && (
-        <div className="mt-8 p-4 bg-teal-50 border border-teal-200 rounded-lg flex items-start gap-3">
-          <FiAlertCircle className="text-teal-600 mt-0.5" />
-          <p className="text-sm text-teal-800">
+        <div className="mt-8 p-4 bg-red-50 border border-red-300 rounded-lg flex items-start gap-3">
+          <FiAlertCircle className="text-red-600 mt-0.5" />
+          <p className="text-sm text-red-800">
             <strong>Lưu ý:</strong> Vui lòng đến trước giờ hẹn 15 phút để làm thủ tục. 
             Nếu cần hủy hoặc dời lịch, vui lòng thông báo trước 24 giờ.
           </p>
