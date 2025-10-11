@@ -4,7 +4,7 @@ import { FiBattery, FiCalendar, FiInfo, FiTruck } from 'react-icons/fi';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import { formatDate } from '../utils/format';
-import MultiStepBooking from '../components/booking/MultiStepBooking'; // Import modal đặt lịch
+import MultiStepBooking from '../components/booking/MultiStepBooking'; 
 
 const MyVehicles = () => {
   const navigate = useNavigate();
@@ -97,7 +97,7 @@ const MyVehicles = () => {
                   </div>
                 </div>
               </div>
-              {/* Nhóm nút chức năng */}
+              
               <div className="flex flex-row md:flex-col gap-3 md:pr-6 md:justify-center items-center md:items-end py-4">
                 <Button
                   variant="primary"
@@ -110,7 +110,7 @@ const MyVehicles = () => {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => navigate(`/app/vehicle-history/${vehicle.id}`)}
+                  onClick={() => navigate("/app/vehicle-history")} // đến trang lịch sử bảo dưỡng
                 >
                   Lịch sử bảo dưỡng
                 </Button>
