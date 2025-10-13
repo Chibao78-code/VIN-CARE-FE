@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { FiCalendar, FiClock, FiMapPin, FiUser, FiCheck, FiX, FiAlertCircle } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import Card from '../components/ui/Card';
@@ -9,6 +10,7 @@ import MultiStepBooking from '../components/booking/MultiStepBooking';
 const MyBookings = () => {
   const [activeTab, setActiveTab] = useState('upcoming');
   const [isBookingOpen, setIsBookingOpen] = useState(false);
+  const navigate = useNavigate();
 
   const [bookings, setBookings] = useState({
     upcoming: [
@@ -69,9 +71,16 @@ const MyBookings = () => {
     ]
   });
 
+  // Mở modal đặt lịch mới
   const openBookingModal = () => setIsBookingOpen(true);
   const closeBookingModal = () => setIsBookingOpen(false);
 
+  // Chuyển sang trang đổi lịch, truyền booking qua state
+  const openReschedule = (booking) => {
+    navigate("/app/RescheduleBooking", { state: { booking } });
+  };
+
+  // Hiển thị trạng thái booking
   const getStatusBadge = (status) => {
     const config = {
       pending: { label: 'Chờ xác nhận', color: 'bg-yellow-100 text-yellow-800', icon: <FiClock /> },
@@ -87,12 +96,12 @@ const MyBookings = () => {
     );
   };
 
+  // Xử lý hủy booking
   const handleCancelBooking = (bookingId) => {
     if (window.confirm('Bạn có chắc chắn muốn hủy lịch hẹn này?')) {
       setBookings(prev => {
         const bookingToCancel = prev.upcoming.find(b => b.id === bookingId);
         if (!bookingToCancel) return prev;
-
         return {
           ...prev,
           upcoming: prev.upcoming.filter(b => b.id !== bookingId),
@@ -103,19 +112,13 @@ const MyBookings = () => {
     }
   };
 
-  const handleReschedule = (booking) => {
-    window.dispatchEvent(new CustomEvent('openBookingModal', { 
-      detail: { booking, isReschedule: true } 
-    }));
-  };
-
   return (
     <div>
       <h1 className="text-3xl font-bold text-gray-900 mb-6 flex justify-between items-center">
         Lịch Hẹn Của Tôi
-        <Button 
-          size="md" 
-          variant="primary" 
+        <Button
+          size="md"
+          variant="primary"
           onClick={openBookingModal}
         >
           Thêm lịch hẹn mới
@@ -173,16 +176,18 @@ const MyBookings = () => {
                     {b.feedback && <p className="italic text-gray-600">Đánh giá: "{b.feedback}"</p>}
                   </div>
                 </div>
-
                 <div className="mt-3 lg:mt-0 flex flex-col gap-2">
                   {activeTab === 'upcoming' && (
                     <>
-                      <Button size="sm" variant="outline" onClick={() => handleReschedule(b)}>Đổi lịch</Button>
-                      <Button size="sm" variant="outline" className="text-red-600" onClick={() => handleCancelBooking(b.id)}>Hủy lịch</Button>
+                      <Button size="sm" variant="outline" onClick={() => openReschedule(b)}>Đổi lịch</Button>
+                      <Button size="sm" variant="outline" className="text-red-600" onClick={() => handleCancelBooking(b.id)}>
+                        Hủy lịch
+                      </Button>
                     </>
                   )}
-                  {activeTab === 'completed' && !b.rating && <Button size="sm" variant="primary">Đánh giá</Button>}
-                  <Button size="sm" variant="outline">Chi tiết</Button>
+                  {activeTab === 'completed' && !b.rating &&
+                    <Button size="sm" variant="primary">Đánh giá</Button>
+                  }
                 </div>
               </div>
             </Card>
@@ -190,22 +195,22 @@ const MyBookings = () => {
         )}
       </div>
 
-      {/* Note for upcoming */}
       {activeTab === 'upcoming' && (
         <div className="mt-8 p-4 bg-red-50 border border-red-300 rounded-lg flex items-start gap-3">
           <FiAlertCircle className="text-red-600 mt-0.5" />
           <p className="text-sm text-red-800">
-            <strong>Lưu ý:</strong> Vui lòng đến trước giờ hẹn 15 phút để làm thủ tục. 
+            <strong>Lưu ý:</strong> Vui lòng đến trước giờ hẹn 15 phút để làm thủ tục.
             Nếu cần hủy hoặc dời lịch, vui lòng thông báo trước 24 giờ.
           </p>
         </div>
       )}
 
       {/* Modal đặt lịch */}
-      <MultiStepBooking 
-        isOpen={isBookingOpen} 
+      <MultiStepBooking
+        isOpen={isBookingOpen}
         onClose={closeBookingModal}
       />
+     
     </div>
   );
 };
