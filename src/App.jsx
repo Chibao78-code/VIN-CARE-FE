@@ -19,6 +19,7 @@ import Profile from './pages/Profile';
 import MyVehicles from './pages/MyVehicles';
 import Settings from './pages/Settings';
 import Notifications from './pages/Notifications';
+import RescheduleBooking from './pages/RescheduleBooking'; 
 
 // Admin 
 import AdminLayout from './layouts/AdminLayout';
@@ -127,6 +128,7 @@ function App() {
           <Route path="profile" element={<Profile />} />
           <Route path="settings" element={<Settings />} />
           <Route path="notifications" element={<Notifications />} />
+          <Route path="rescheduleBooking" element={<RescheduleBooking />} />
         </Route>
 
         <Route
