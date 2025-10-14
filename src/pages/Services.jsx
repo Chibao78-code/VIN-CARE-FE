@@ -90,7 +90,7 @@ const Services = () => {
         <img
           src="/images_service/Xedien3.png"
           alt="Bảo dưỡng pin & động cơ"
-          className="block mx-auto my-4 w-[500px] h-[320px] object-contain"
+          className="block mx-auto my-4 w-[900px] h-400px] object-contain"
         />
         <p>
           Để duy trì hiệu quả hoạt động lâu dài, bảo dưỡng định kỳ là giải pháp
