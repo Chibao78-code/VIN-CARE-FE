@@ -1,28 +1,46 @@
 import React, { useState, useEffect } from 'react';
-import { FiMapPin, FiPhone, FiClock, FiStar, FiNavigation, FiChevronRight } from 'react-icons/fi';
-import { serviceCenters, calculateDistance } from '../../../data/serviceCenters';
+import { FiMapPin, FiPhone, FiClock, FiStar, FiNavigation, FiChevronRight, FiAlertCircle } from 'react-icons/fi';
+import { calculateDistance } from '../../../data/serviceCenters';
+import serviceCenterService from '../../../services/serviceCenterService';
+import toast from 'react-hot-toast';
 import Button from '../../ui/Button';
 
 const SelectCenter = ({ data, onNext }) => {
-  const [centers, setCenters] = useState(serviceCenters);
+  const [centers, setCenters] = useState([]);
   const [selectedCenter, setSelectedCenter] = useState(data.center);
   const [userLocation, setUserLocation] = useState(null);
   const [loadingLocation, setLoadingLocation] = useState(false);
+  const [loadingCenters, setLoadingCenters] = useState(true);
+  const [error, setError] = useState(null);
 
+  // lay api backend danh sach trung tam
   useEffect(() => {
-    // hoi user chap nhan vi tri
-    if (navigator.geolocation) {
+    fetchServiceCenters();
+  }, []);
+
+  // Glay du lieu dia chi khach hang da mua xe 
+  useEffect(() => {
+    if (centers.length > 0 && navigator.geolocation) {
       setLoadingLocation(true);
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
           setUserLocation({ lat: latitude, lng: longitude });
           
-          // tinh khoang cach va sap xep
-          const centersWithDistance = serviceCenters.map(center => ({
-            ...center,
-            distance: calculateDistance(latitude, longitude, center.lat, center.lng)
-          })).sort((a, b) => a.distance - b.distance);
+          // tinh toan khoang cach 
+          const centersWithDistance = centers.map(center => {
+          // tinh khoang cach tu vi tri nguoi dung den cac trung tam
+            const distance = calculateDistance(
+              latitude, 
+              longitude, 
+              center.latitude || 10.762622, // hochiminh 
+              center.longitude || 106.660172
+            );
+            return {
+              ...center,
+              distance: distance.toFixed(1)
+            };
+          }).sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance));
           
           setCenters(centersWithDistance);
           setLoadingLocation(false);
@@ -33,7 +51,46 @@ const SelectCenter = ({ data, onNext }) => {
         }
       );
     }
-  }, []);
+  }, [centers.length]);
+
+  async function fetchServiceCenters() {
+    try {
+      setLoadingCenters(true);
+      setError(null);
+      
+      const response = await serviceCenterService.getAllCenters();
+      
+      if (response.success) {
+        // Chuyen doi du lieu backend ve dinh dang frontend da setyp
+        const transformedCenters = response.data.map(center => ({
+          id: center.id, // lay id,neu lôi 500 lấy center.id
+          name: center.centerName,
+          address: center.centerAddress, // be tra du lieu ve
+          phone: center.centerPhone,
+          openTime: center.startTime || '07:30',
+          closeTime: center.endTime || '18:30',
+          workingDays: ['T2', 'T3', 'T4', 'T5', 'T6', 'T7'], 
+          rating: 4.7, 
+          technicians: 6, 
+          services: ['maintenance', 'repair', 'parts'], 
+          maxCapacity: center.maxCapacity || 10,
+          latitude: center.latitude,
+          longitude: center.longitude
+        }));
+        
+        setCenters(transformedCenters);
+      } else {
+        setError(response.error);
+        toast.error(response.error || 'Không thể tải danh sách trung tâm');
+      }
+    } catch (err) {
+      console.error('Fetch centers error:', err);
+      setError('Không thể kết nối đến server');
+      toast.error('Không thể tải danh sách trung tâm');
+    } finally {
+      setLoadingCenters(false);
+    }
+  }
 
   const handleSelectCenter = (center) => {
     setSelectedCenter(center);
@@ -68,7 +125,34 @@ const SelectCenter = ({ data, onNext }) => {
             Đang xác định vị trí của bạn...
           </div>
         )}
+        
+        {error && (
+          <div className="mt-3 p-3 bg-red-50 rounded-lg text-sm text-red-700">
+            <FiAlertCircle className="inline mr-2" />
+            {error}
+          </div>
+        )}
       </div>
+
+      {loadingCenters ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Đang tải danh sách trung tâm...</p>
+          </div>
+        </div>
+      ) : centers.length === 0 ? (
+        <div className="text-center py-12">
+          <FiAlertCircle className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+          <p className="text-gray-600">Không tìm thấy trung tâm dịch vụ</p>
+          <button 
+            onClick={fetchServiceCenters}
+            className="mt-4 text-teal-600 hover:text-teal-700"
+          >
+            Thử lại
+          </button>
+        </div>
+      ) : (
 
       <div className="grid gap-4 max-h-96 overflow-y-auto pr-2">
         {centers.map((center) => (
@@ -149,11 +233,12 @@ const SelectCenter = ({ data, onNext }) => {
           </div>
         ))}
       </div>
+      )}
 
       <div className="mt-6 flex justify-end">
         <Button
           onClick={handleNext}
-          disabled={!selectedCenter}
+          disabled={!selectedCenter || loadingCenters}
           className="bg-teal-600 hover:bg-teal-700 text-white px-6"
         >
           Tiếp tục
