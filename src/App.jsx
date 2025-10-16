@@ -6,6 +6,7 @@ import MainLayout from './layouts/MainLayout';
 import PublicLayout from './layouts/PublicLayout';
 import Login from './pages/Login';
 import ForgotPassword from './pages/ForgotPassword';
+import VerifyOTP from './pages/VerifyOTP';
 import ResetPassword from './pages/ResetPassword';
 import Dashboard from './pages/Dashboard';
 import Landing from './pages/Landing';
@@ -19,9 +20,8 @@ import Profile from './pages/Profile';
 import MyVehicles from './pages/MyVehicles';
 import Settings from './pages/Settings';
 import Notifications from './pages/Notifications';
-import RescheduleBooking from './pages/RescheduleBooking'; 
 
-// Admin 
+// admin 
 import AdminLayout from './layouts/AdminLayout';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminAnalytics from './pages/admin/AdminAnalytics';
@@ -29,13 +29,13 @@ import AdminInventory from './pages/admin/AdminInventory';
 import AdminUsers from './pages/admin/AdminUsers';
 import AdminSettings from './pages/admin/AdminSettings';
 
-// Staff 
+// staff 
 import StaffLayout from './layouts/StaffLayout';
 import StaffDashboard from './pages/staff/StaffDashboard';
 import StaffCustomers from './pages/staff/StaffCustomers';
 import StaffAppointments from './pages/staff/StaffAppointments';
 
-// Technician 
+// technician 
 import TechnicianLayout from './layouts/TechnicianLayout';
 import TechnicianDashboard from './pages/technician/TechnicianDashboard';
 import TechnicianWorkOrders from './pages/technician/TechnicianWorkOrders';
@@ -104,6 +104,14 @@ function App() {
           } 
         />
         <Route 
+          path="/verify-otp" 
+          element={
+            <PublicRoute>
+              <VerifyOTP />
+            </PublicRoute>
+          } 
+        />
+        <Route 
           path="/reset-password/:token" 
           element={
             <PublicRoute>
@@ -128,7 +136,6 @@ function App() {
           <Route path="profile" element={<Profile />} />
           <Route path="settings" element={<Settings />} />
           <Route path="notifications" element={<Notifications />} />
-          <Route path="rescheduleBooking" element={<RescheduleBooking />} />
         </Route>
 
         <Route
