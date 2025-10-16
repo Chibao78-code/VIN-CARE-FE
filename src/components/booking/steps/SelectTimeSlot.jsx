@@ -1,20 +1,75 @@
 import React, { useState, useEffect } from 'react';
 import { FiClock, FiChevronRight, FiAlertCircle } from 'react-icons/fi';
-import { timeSlots } from '../../../data/serviceCenters';
+import bookingService from '../../../services/bookingService';
+import toast from 'react-hot-toast';
 import Button from '../../ui/Button';
 
 const SelectTimeSlot = ({ data, onNext, onBack }) => {
   const [selectedTime, setSelectedTime] = useState(data.timeSlot || null);
   const [availableSlots, setAvailableSlots] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // fake data, check xem co cho nao trong
-    const slots = timeSlots.map(slot => ({
-      ...slot,
-      // random de demo
-      available: Math.random() > 0.3
-    }));
-    setAvailableSlots(slots);
+    // goi du lieu backend slot con trong va day 
+    const fetchTimeSlots = async () => {
+      console.log('\u{1F50D} Checking time slot fetch conditions:');
+      console.log('  - Center ID:', data.center?.id);
+      console.log('  - Date:', data.date);
+      console.log('  - Full center:', data.center);
+      
+      if (!data.center?.id || !data.date) {
+        console.warn('\u{26A0}\uFE0F Missing center or date, skipping fetch');
+        return;
+      }
+
+      try {
+        setLoading(true);
+        console.log(`\u{1F4E1} Fetching time slots for center ${data.center.id} on ${data.date}`);
+        
+        // api get lay du lieu khung gio
+        const response = await bookingService.getAvailableTimeSlots(
+          data.center.id,
+          data.date
+        );
+        
+        console.log('\u{1F4E5} Time slots API response:', response);
+
+        if (response.success && response.data) {
+          // kieu du lieu tra ve tu backend dung
+          // date,center,slots
+          const slots = response.data.slots?.map(slot => {
+            // set dinh dang thoi gian theo chuỗi,array,string
+            let timeStr;
+            if (Array.isArray(slot.time)) {
+              const [hour, minute] = slot.time;
+              timeStr = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+            } else {
+              timeStr = slot.time;
+            }
+            
+            return {
+              time: timeStr,
+              available: slot.available
+            };
+          }) || [];
+          console.log('🕒 Available slots:', slots);
+          setAvailableSlots(slots);
+        } else {
+          console.error('\u{274C} API returned error:', response.error);
+          toast.error(response.error || 'Không thể tải danh sách khung giờ');
+          setAvailableSlots([]);
+        }
+      } catch (error) {
+        console.error('\u{274C} Error fetching time slots:', error);
+        console.error('Error details:', error.response || error.message);
+        toast.error('Có lỗi xảy ra khi tải khung giờ');
+        setAvailableSlots([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTimeSlots();
   }, [data.date, data.center]);
 
   const handleNext = () => {
@@ -27,9 +82,9 @@ const SelectTimeSlot = ({ data, onNext, onBack }) => {
     if (data.service?.id === 'maintenance') {
       return data.servicePackage?.duration || 60;
     } else if (data.service?.id === 'parts') {
-      return 30 + (data.parts.length * 15); // 30p mỗi slot
+      return 30 + (data.parts.length * 15); // 30p mot slot
     } else if (data.service?.id === 'repair') {
-      return 90; // mặc định total sua 90 phút
+      return 90; // mac dinh sua xe 90p
     }
     return 60;
   };
@@ -79,6 +134,20 @@ const SelectTimeSlot = ({ data, onNext, onBack }) => {
           <p>⏱️ Thời gian ước tính: {getEstimatedDuration()} phút</p>
         </div>
       </div>
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Đang tải khung giờ...</p>
+          </div>
+        </div>
+      ) : availableSlots.length === 0 ? (
+        <div className="text-center py-8">
+          <FiAlertCircle className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+          <p className="text-gray-600">Không có khung giờ nào trong ngày này</p>
+        </div>
+      ) : (
+        <>
       <div className="mb-6">
         <h4 className="font-medium text-gray-700 mb-3">Buổi sáng</h4>
         <div className="grid grid-cols-4 gap-2">
@@ -171,6 +240,8 @@ const SelectTimeSlot = ({ data, onNext, onBack }) => {
           </div>
         </div>
       </div>
+        </>
+      )}
 
       <div className="mt-6 flex justify-end">
         <Button
