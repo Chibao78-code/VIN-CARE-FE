@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FiChevronRight, FiTool, FiPackage, FiSettings, FiCheck, FiSearch, FiAlertCircle } from 'react-icons/fi';
-import { serviceDetails, vinfastModels } from '../../../data/serviceCenters';
+import { serviceDetails } from '../../../data/serviceCenters';
 import Button from '../../ui/Button';
+import api from '../../../services/api';
 
 const SelectService = ({ data, onNext, onBack }) => {
   const [selectedService, setSelectedService] = useState(data.service || null);
@@ -9,8 +10,86 @@ const SelectService = ({ data, onNext, onBack }) => {
   const [selectedParts, setSelectedParts] = useState(data.parts || []);
   const [partsSearch, setPartsSearch] = useState('');
   const [problemDescription, setProblemDescription] = useState(data.problemDescription || '');
-  const [selectedVehicle, setSelectedVehicle] = useState(data.vehicle || '');
+  const [selectedVehicle, setSelectedVehicle] = useState('');
   const [selectedIssue, setSelectedIssue] = useState('');
+  const [myVehicles, setMyVehicles] = useState([]);
+  const [loadingVehicles, setLoadingVehicles] = useState(true);
+  const [maintenancePackages, setMaintenancePackages] = useState([]);
+  const [loadingPackages, setLoadingPackages] = useState(false);
+
+  // data xe da chon tu step truoc day qua buoc sau 
+  useEffect(() => {
+    if (data.vehicle && !isNaN(parseInt(data.vehicle))) {
+      setSelectedVehicle(data.vehicle);
+    }
+  }, [data.vehicle]);
+
+  // lay du liẹu khach hang
+  useEffect(() => {
+    const fetchMyVehicles = async () => {
+      try {
+        console.log('🚗 Fetching customer vehicles from API...');
+        setLoadingVehicles(true);
+        // test api customer
+        const response = await api.get('/vehicles/test/0905111111');
+        console.log('✅ My Vehicles Response:', response);
+        
+        // data luu vao mang de hien thi
+        const vehicles = Array.isArray(response) ? response : (response.data || response);
+        console.log('🎯 Customer vehicles:', vehicles);
+        // ktr data dinh dang be,fe
+        // id, model,licensePlate,vin
+        // vehicleId,modelName,licensePlate
+        const transformedVehicles = vehicles.map(v => ({
+          vehicleId: v.id,
+          modelName: v.model,
+          licensePlate: v.licensePlate,
+          vin: v.vin
+        }));
+        
+        console.log('✅ Transformed vehicles:', transformedVehicles);
+        
+        setMyVehicles(transformedVehicles);
+      } catch (error) {
+        console.error('❌ Error fetching customer vehicles:', error);
+        console.error('Error details:', error.response);
+        // hien thi loi neu ko có data xe
+        setMyVehicles([]);
+      } finally {
+        setLoadingVehicles(false);
+      }
+    };
+
+    fetchMyVehicles();
+  }, []);
+  
+  // lay du lieu goi bao duong tu be 
+  useEffect(() => {
+    const fetchMaintenancePackages = async () => {
+      if (selectedService?.id === 'maintenance') {//selectedService?.id
+        try {
+          setLoadingPackages(true);
+          const packages = await api.get('/maintenance-packages');
+          // ktr data ve co dung ko
+          const transformedPackages = packages.map(pkg => ({
+            id: pkg.packageId,
+            name: pkg.packageName,
+            price: pkg.price,
+            duration: pkg.durationMinutes,
+            includes: pkg.includes ? pkg.includes.split('|') : []
+          }));
+          setMaintenancePackages(transformedPackages);
+        } catch (error) {
+          console.error('Error fetching maintenance packages:', error);
+          setMaintenancePackages([]);
+        } finally {
+          setLoadingPackages(false);
+        }
+      }
+    };
+    
+    fetchMaintenancePackages();
+  }, [selectedService]);
 
   const services = [
     { ...serviceDetails.maintenance, icon: <FiTool /> },
@@ -33,11 +112,21 @@ const SelectService = ({ data, onNext, onBack }) => {
     }
   };
 
+  const handleVehicleChange = (e) => {
+    const vehicleId = e.target.value;
+    console.log('🚗 Vehicle selected:', vehicleId, 'Type:', typeof vehicleId);
+    const selectedVehicleData = myVehicles.find(v => String(v.vehicleId) === String(vehicleId));
+    console.log('🚗 Full vehicle data:', selectedVehicleData);
+    setSelectedVehicle(vehicleId);
+  };
+
   const handleNext = () => {
     const serviceData = {
       service: selectedService,
-      vehicle: selectedVehicle
+      vehicle: selectedVehicle 
     };
+
+    console.log('📤 Passing vehicle to next step:', selectedVehicle, 'Type:', typeof selectedVehicle);
 
     if (selectedService?.id === 'maintenance') {
       serviceData.servicePackage = selectedPackage;
@@ -91,20 +180,34 @@ const SelectService = ({ data, onNext, onBack }) => {
       </div>
       <div className="mb-6">
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          Chọn dòng xe VinFast của bạn <span className="text-red-500">*</span>
+          Chọn xe của bạn <span className="text-red-500">*</span>
         </label>
         <select
           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           value={selectedVehicle}
-          onChange={(e) => setSelectedVehicle(e.target.value)}
+          onChange={handleVehicleChange}
+          disabled={loadingVehicles}
         >
-          <option value="">-- Chọn dòng xe --</option>
-          {vinfastModels.map(model => (
-            <option key={model.id} value={model.id}>
-              {model.name} ({model.batteryCapacity})
+          <option value="">
+            {loadingVehicles ? 'Đang tải...' : '-- Chọn xe của bạn --'}
+          </option>
+          {myVehicles && myVehicles.length > 0 && myVehicles.map(vehicle => (
+            <option key={vehicle.vehicleId} value={vehicle.vehicleId}>
+              {vehicle.modelName} - Biển số: {vehicle.licensePlate}
             </option>
           ))}
         </select>
+        {loadingVehicles && (
+          <p className="text-xs text-gray-500 mt-1">Đang tải danh sách xe của bạn...</p>
+        )}
+        {!loadingVehicles && (!myVehicles || myVehicles.length === 0) && (
+          <div className="mt-2 p-3 bg-amber-50 rounded-lg">
+            <p className="text-xs text-amber-700">
+              <FiAlertCircle className="inline mr-1" />
+              Bạn chưa đăng ký xe nào. Vui lòng thêm xe vào tài khoản trước khi đặt lịch.
+            </p>
+          </div>
+        )}
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         {services.map((service) => (
@@ -129,8 +232,13 @@ const SelectService = ({ data, onNext, onBack }) => {
           {selectedService.id === 'maintenance' && (
             <div>
               <h4 className="font-medium text-gray-900 mb-4">Chọn gói bảo dưỡng:</h4>
+              {loadingPackages ? (
+                <p className="text-gray-600">Loading packages...</p>
+              ) : maintenancePackages.length === 0 ? (
+                <p className="text-red-600">Không có gói bảo dưỡng nào.</p>
+              ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {selectedService.packages.map((pkg) => (
+                {maintenancePackages.map((pkg) => (
                   <div
                     key={pkg.id}
                     onClick={() => setSelectedPackage(pkg)}
@@ -159,6 +267,7 @@ const SelectService = ({ data, onNext, onBack }) => {
                   </div>
                 ))}
               </div>
+              )}
             </div>
           )}
           {selectedService.id === 'parts' && (
@@ -240,9 +349,9 @@ const SelectService = ({ data, onNext, onBack }) => {
                           : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}
                     >
                       {issue}
-                    </button>
-                  ))}
-                </div>
+                  </button>
+                ))}
+              </div>
               </div>
               <textarea
                 rows={4}
