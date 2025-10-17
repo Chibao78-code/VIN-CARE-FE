@@ -32,10 +32,36 @@ export const authService = {
   
   forgotPassword: async (email) => {
     try {
-      const response = await api.post('/auth/forgot-password', { email });
+      const response = await api.post('/auth/password/forgot', { email });
       return response;
     } catch (error) {
       console.error('Forgot password error:', error);
+      throw error;
+    }
+  },
+  
+  // xac thuc ma otp
+  verifyOTP: async (email, otpCode) => {
+    try {
+      const response = await api.post('/auth/password/verify-otp', { email, otpCode });
+      return response;
+    } catch (error) {
+      console.error('Verify OTP error:', error);
+      throw error;
+    }
+  },
+  
+  // dat lai mk voi otp
+  resetPasswordWithOTP: async (email, otpCode, newPassword) => {
+    try {
+      const response = await api.post('/auth/password/reset', { 
+        email, 
+        otpCode, 
+        newPassword 
+      });
+      return response;
+    } catch (error) {
+      console.error('Reset password error:', error);
       throw error;
     }
   },
