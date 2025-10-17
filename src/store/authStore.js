@@ -1,7 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { STORAGE_KEYS } from '../constants/config';
-// call api
+import { authService } from '../services/authService';
+// call api be
 const useAuthStore = create(
   persist(
     (set, get) => ({
@@ -13,7 +14,15 @@ const useAuthStore = create(
       login: async (credentials) => {
         set({ isLoading: true });
         try {
-          const response = await mockLogin(credentials);
+          // lay du lieu email, password
+          const response = await authService.login({
+            username: credentials.email, 
+            password: credentials.password
+          });
+          
+          // luu token vao local ng dung de dang nhap lan sau 
+          localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, response.token);
+          localStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(response.user));
           
           set({
             user: response.user,
@@ -22,14 +31,21 @@ const useAuthStore = create(
             isLoading: false,
           });
           
-          return { success: true };
+          return { success: true, user: response.user };
         } catch (error) {
           set({ isLoading: false });
-          return { success: false, error: error.message };
+          return { 
+            success: false, 
+            error: error.response?.data?.message || error.message || 'Đăng nhập thất bại'
+          };
         }
       },
       
       logout: () => {
+        // dang xuat thi xoa token local may ng dung
+        localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+        localStorage.removeItem(STORAGE_KEYS.USER_DATA);
+        
         set({
           user: null,
           token: null,
@@ -58,35 +74,4 @@ const useAuthStore = create(
     }
   )
 );
-//mock api login
-async function mockLogin(credentials) {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      //xem role da dung voi email dang nhap chua
-      const email = credentials.email.toLowerCase();
-      let role = 'user';
-      let name = 'Nguyễn Văn A';
-      
-      if (email.includes('admin')) {
-        role = 'admin';
-        name = 'Admin';
-      } else if (email.includes('staff') || email.includes('technician')) {
-        role = 'staff';
-        name = 'Staff Member';
-      }
-      
-      resolve({
-        user: {
-          id: '1',
-          email: credentials.email,
-          name: name,
-          role: role,
-          avatar: null,
-        },
-        token: 'mock-jwt-token-123456',
-      });
-    }, 1000);
-  });
-}
-
 export default useAuthStore;
