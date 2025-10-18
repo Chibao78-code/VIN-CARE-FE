@@ -1,17 +1,34 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FiCheck, FiUser, FiPhone, FiMail, FiMapPin, FiEdit2, FiAlertCircle } from 'react-icons/fi';
 import { vinfastModels } from '../../../data/serviceCenters';
 import Button from '../../ui/Button';
 import Input from '../../ui/Input';
 import toast from 'react-hot-toast';
+import useAuthStore from '../../../store/authStore';
+import bookingService from '../../../services/bookingService';
 // infor booking
 const ConfirmBooking = ({ data, onNext, onBack }) => {
+  const { user } = useAuthStore();
+  
+  // auto dien thong tin khach hang neu da login
   const [customerInfo, setCustomerInfo] = useState(data.customerInfo || {
-    name: '',
-    phone: '',
-    email: '',
-    address: ''
+    name: user?.fullName || '',
+    phone: user?.phone || '',
+    email: user?.email || '',
+    address: user?.address || ''
   });
+  
+  // cap nhat customer info khi user thay đổi
+  useEffect(() => {
+    if (user && !data.customerInfo?.name) {
+      setCustomerInfo({
+        name: user.fullName || '',
+        phone: user.phone || '',
+        email: user.email || '',
+        address: user.address || ''
+      });
+    }
+  }, [user, data.customerInfo]);
   const [notes, setNotes] = useState(data.notes || '');
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -49,31 +66,73 @@ const ConfirmBooking = ({ data, onNext, onBack }) => {
     setIsSubmitting(true);
     
     try {
-      // call api
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // tu genra ra ma dat lich
-      const bookingId = 'VF' + Date.now().toString().slice(-8);
-      
-      // cap nhat lai thong tin dat lich
-      const finalBookingData = {
-        ...data,
-        customerInfo,
-        notes,
-        bookingId,
-        status: 'confirmed',
-        createdAt: new Date().toISOString()
+      //  POST /bookings
+      //  eVId,centerId,bookingDate,bookingTime
+      const formattedTime = data.timeSlot.split(':').length === 3 
+        ? data.timeSlot 
+        : data.timeSlot + ':00';
+        // map dich vu sang offerTypeId
+      const getOfferTypeId = (serviceId) => {
+        const mapping = {
+          'maintenance': 1, // Bảo dưỡng định kỳ
+          'parts': 2,       // Thay thế phụ tùng
+          'repair': 3       // Sửa chữa
+        };
+        return mapping[serviceId] || null;
       };
       
-      // tu save ra file thong tin dat lich bang file text
-      const existingBookings = JSON.parse(localStorage.getItem('bookings') || '[]');
-      existingBookings.push(finalBookingData);
-      localStorage.setItem('bookings', JSON.stringify(existingBookings));
+      const bookingPayload = {
+        eVId: parseInt(data.vehicle) || null,
+        centerId: parseInt(data.center?.id) || null,
+        bookingDate: data.date,
+        bookingTime: formattedTime,
+        offerTypeId: getOfferTypeId(data.service?.id),
+        packageId: data.servicePackage?.id || null,
+        problemDescription: data.problemDescription || null,
+        notes: notes || null
+      };
       
-      toast.success('Đặt lịch thành công!');
-      onNext(finalBookingData);
+      console.log('📤 Creating booking with payload:', bookingPayload);
+      console.log('Service details:', {
+        service: data.service?.name,
+        package: data.servicePackage?.name,
+        problem: data.problemDescription
+      });
+      
+      // validation form nhap thong tin
+      if (!bookingPayload.eVId || !bookingPayload.centerId) {
+        toast.error('Thiếu thông tin xe hoặc trung tâm');
+        setIsSubmitting(false);
+        return;
+      }
+      
+      const response = await bookingService.createBooking(bookingPayload);
+      
+      if (response.success && response.data) {
+        // luu data booking cuoi cung
+        const finalBookingData = {
+          ...data,
+          customerInfo,
+          notes,
+          // neu be cung cap them data thi lay, neu ko thi tao gia tri mac dinh
+          bookingId: response.data.bookingId || 'VF' + Date.now().toString().slice(-8),
+          status: response.data.status || 'confirmed',
+          createdAt: response.data.createdAt || new Date().toISOString(),
+          backendData: response.data // luu data backend 
+        };
+         //luu data tam thoi vao local may user
+        const existingBookings = JSON.parse(localStorage.getItem('bookings') || '[]');
+        existingBookings.push(finalBookingData);
+        localStorage.setItem('bookings', JSON.stringify(existingBookings));
+        
+        toast.success('Đặt lịch thành công!');
+        onNext(finalBookingData);
+      } else {
+        toast.error(response.error || 'Không thể tạo lịch hẹn');
+      }
     } catch (error) {
-      toast.error('Có lỗi xảy ra. Vui lòng thử lại!');
+      console.error('Booking error:', error);
+      toast.error(error.response?.data?.message || 'Có lỗi xảy ra. Vui lòng thử lại!');
     } finally {
       setIsSubmitting(false);
     }

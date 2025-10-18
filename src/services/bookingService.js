@@ -1,24 +1,21 @@
 import api from './api';
-
-/**
- * Booking Service
- * Handles all booking related API calls
- */
-
 const bookingService = {
-  /**
-   * Create a new booking
-   * @param {Object} bookingData - { eVId, centerId, bookingDate, bookingTime }
-   * @returns {Promise} - BookingResponseDTO
-   */
+   // tao moi booking
   createBooking: async (bookingData) => {
     try {
-      const response = await api.post('/bookings', {
-        eVId: bookingData.vehicleId || bookingData.eVId,
+      const payload = {
+        eVId: bookingData.eVId || bookingData.vehicleId,
         centerId: bookingData.centerId,
-        bookingDate: bookingData.date || bookingData.bookingDate, // Format: YYYY-MM-DD
-        bookingTime: bookingData.time || bookingData.bookingTime  // Format: HH:mm:ss
-      });
+        bookingDate: bookingData.bookingDate || bookingData.date,
+        bookingTime: bookingData.bookingTime || bookingData.time,
+        offerTypeId: bookingData.offerTypeId || null,
+        packageId: bookingData.packageId || null,
+        problemDescription: bookingData.problemDescription || null,
+        notes: bookingData.notes || null
+      };
+      
+      console.log('📤 Sending booking payload to backend:', payload);
+      const response = await api.post('/bookings', payload);
       return {
         success: true,
         data: response
@@ -30,13 +27,7 @@ const bookingService = {
       };
     }
   },
-
-  /**
-   * Get available time slots for a specific center and date
-   * @param {number} centerId - Service center ID
-   * @param {string} date - Date in format YYYY-MM-DD
-   * @returns {Promise} - TimeSlotResponseDTO
-   */
+  //check xem khung gio con trong ko
   getAvailableTimeSlots: async (centerId, date) => {
     try {
       const response = await api.get(`/bookings/${centerId}/${date}`);
@@ -51,11 +42,7 @@ const bookingService = {
       };
     }
   },
-
-  /**
-   * Get all offer types (service types)
-   * @returns {Promise} - List<OfferTypeDTO>
-   */
+// check xem co loai dich vu nao available khong
   getOfferTypes: async () => {
     try {
       const response = await api.get('/offer-types');
@@ -70,12 +57,22 @@ const bookingService = {
       };
     }
   },
-
-  /**
-   * Get customer's bookings
-   * @param {string} status - 'upcoming', 'completed', 'cancelled', or 'all'
-   * @returns {Promise} - List of bookings
-   */
+// lay tat ca booking
+  getAllBookings: async () => {
+    try {
+      const response = await api.get('/bookings');
+      return {
+        success: true,
+        data: response
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Không thể lấy danh sách booking'
+      };
+    }
+  },
+// lay booking cua minh
   getMyBookings: async (status = 'all') => {
     try {
       const endpoint = status === 'all' 
@@ -94,12 +91,7 @@ const bookingService = {
       };
     }
   },
-
-  /**
-   * Get booking details by ID
-   * @param {number} bookingId - Booking ID
-   * @returns {Promise} - Booking details
-   */
+// lay booking theo id
   getBookingById: async (bookingId) => {
     try {
       const response = await api.get(`/bookings/${bookingId}`);
@@ -114,13 +106,7 @@ const bookingService = {
       };
     }
   },
-
-  /**
-   * Cancel a booking
-   * @param {number} bookingId - Booking ID
-   * @param {string} reason - Cancellation reason
-   * @returns {Promise}
-   */
+// huy booking
   cancelBooking: async (bookingId, reason) => {
     try {
       const response = await api.put(`/bookings/${bookingId}/cancel`, { reason });
@@ -135,13 +121,7 @@ const bookingService = {
       };
     }
   },
-
-  /**
-   * Reschedule a booking
-   * @param {number} bookingId - Booking ID
-   * @param {Object} newSchedule - { bookingDate, bookingTime }
-   * @returns {Promise}
-   */
+// doi lich booking
   rescheduleBooking: async (bookingId, newSchedule) => {
     try {
       const response = await api.put(`/bookings/${bookingId}/reschedule`, newSchedule);

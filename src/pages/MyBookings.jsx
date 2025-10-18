@@ -28,7 +28,7 @@ const MyBookings = () => {
       {
         id: 2,
         service: 'Sạc xe điện',
-        vehicle: 'Vinfast - 51G-67890',
+        vehicle: 'Vinfast- 51G-67890',
         date: '2024-02-10',
         time: '14:30',
         station: 'EV Charging Hub Thủ Đức',
@@ -59,7 +59,7 @@ const MyBookings = () => {
       {
         id: 5,
         service: 'Bảo dưỡng định kỳ',
-        vehicle: 'VinFast VF8 - 30A-12345',
+        vehicle: 'VinFast - 30A-12345',
         date: '2024-01-10',
         time: '11:00',
         station: 'EV Service Center Quận 1',
