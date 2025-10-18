@@ -10,7 +10,7 @@ const SelectTimeSlot = ({ data, onNext, onBack }) => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // goi du lieu backend slot con trong va day 
+    // goi api tu be 
     const fetchTimeSlots = async () => {
       console.log('\u{1F50D} Checking time slot fetch conditions:');
       console.log('  - Center ID:', data.center?.id);
@@ -26,7 +26,7 @@ const SelectTimeSlot = ({ data, onNext, onBack }) => {
         setLoading(true);
         console.log(`\u{1F4E1} Fetching time slots for center ${data.center.id} on ${data.date}`);
         
-        // api get lay du lieu khung gio
+        // get/bookings/{centerId}/{date}
         const response = await bookingService.getAvailableTimeSlots(
           data.center.id,
           data.date
@@ -35,10 +35,9 @@ const SelectTimeSlot = ({ data, onNext, onBack }) => {
         console.log('\u{1F4E5} Time slots API response:', response);
 
         if (response.success && response.data) {
-          // kieu du lieu tra ve tu backend dung
-          // date,center,slots
+          //date,center,slots
           const slots = response.data.slots?.map(slot => {
-            // set dinh dang thoi gian theo chuỗi,array,string
+            // backend LocalTime có thể trả về dạng array [hour, minute, second] hoặc string
             let timeStr;
             if (Array.isArray(slot.time)) {
               const [hour, minute] = slot.time;
@@ -82,9 +81,9 @@ const SelectTimeSlot = ({ data, onNext, onBack }) => {
     if (data.service?.id === 'maintenance') {
       return data.servicePackage?.duration || 60;
     } else if (data.service?.id === 'parts') {
-      return 30 + (data.parts.length * 15); // 30p mot slot
+      return 30 + (data.parts.length * 15); // 30p mỗi slot
     } else if (data.service?.id === 'repair') {
-      return 90; // mac dinh sua xe 90p
+      return 90; // mặc định total sua 90 phút
     }
     return 60;
   };

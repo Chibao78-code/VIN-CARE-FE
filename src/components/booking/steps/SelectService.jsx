@@ -3,6 +3,8 @@ import { FiChevronRight, FiTool, FiPackage, FiSettings, FiCheck, FiSearch, FiAle
 import { serviceDetails } from '../../../data/serviceCenters';
 import Button from '../../ui/Button';
 import api from '../../../services/api';
+import { issueService } from '../../../services/issueService';
+import { sparePartService } from '../../../services/sparePartService';
 
 const SelectService = ({ data, onNext, onBack }) => {
   const [selectedService, setSelectedService] = useState(data.service || null);
@@ -16,30 +18,42 @@ const SelectService = ({ data, onNext, onBack }) => {
   const [loadingVehicles, setLoadingVehicles] = useState(true);
   const [maintenancePackages, setMaintenancePackages] = useState([]);
   const [loadingPackages, setLoadingPackages] = useState(false);
+  const [repairIssues, setRepairIssues] = useState([]);
+  const [loadingIssues, setLoadingIssues] = useState(false);
+  const [apiSpareParts, setApiSpareParts] = useState([]);
+  const [loadingParts, setLoadingParts] = useState(false);
+  
+  // map dich vu den offerTypeId backend theo id 
+  const OFFER_TYPE_IDS = {
+    'maintenance': 1, // bảo dưỡng định kỳ
+    'parts': 2,       // thay thế phụ tùng
+    'repair': 3       // sửa chữa
+  };
 
-  // data xe da chon tu step truoc day qua buoc sau 
+  // set vehicle neu co data truyen vao
   useEffect(() => {
     if (data.vehicle && !isNaN(parseInt(data.vehicle))) {
       setSelectedVehicle(data.vehicle);
     }
   }, [data.vehicle]);
 
-  // lay du liẹu khach hang
+  // fetch data xe cua khach hang
   useEffect(() => {
     const fetchMyVehicles = async () => {
       try {
         console.log('🚗 Fetching customer vehicles from API...');
         setLoadingVehicles(true);
-        // test api customer
+        // Goi API lay xe cua khach hang
         const response = await api.get('/vehicles/test/0905111111');
         console.log('✅ My Vehicles Response:', response);
         
-        // data luu vao mang de hien thi
+        // Kiem tra va chuyen doi du lieu backend ve frontend
         const vehicles = Array.isArray(response) ? response : (response.data || response);
         console.log('🎯 Customer vehicles:', vehicles);
-        // ktr data dinh dang be,fe
-        // id, model,licensePlate,vin
-        // vehicleId,modelName,licensePlate
+        
+        // kieu du lieu fr goi api tu be 
+        // be id,model,licensePlate,vin
+        // fe vehicleId,modelName,licensePlate
         const transformedVehicles = vehicles.map(v => ({
           vehicleId: v.id,
           modelName: v.model,
@@ -53,7 +67,7 @@ const SelectService = ({ data, onNext, onBack }) => {
       } catch (error) {
         console.error('❌ Error fetching customer vehicles:', error);
         console.error('Error details:', error.response);
-        // hien thi loi neu ko có data xe
+        // set empty array neu loi
         setMyVehicles([]);
       } finally {
         setLoadingVehicles(false);
@@ -63,14 +77,14 @@ const SelectService = ({ data, onNext, onBack }) => {
     fetchMyVehicles();
   }, []);
   
-  // lay du lieu goi bao duong tu be 
+  // fetch data khi dich vu da duoc chon va gui ve 
   useEffect(() => {
     const fetchMaintenancePackages = async () => {
-      if (selectedService?.id === 'maintenance') {//selectedService?.id
+      if (selectedService?.id === 'maintenance') {
         try {
           setLoadingPackages(true);
           const packages = await api.get('/maintenance-packages');
-          // ktr data ve co dung ko
+          // chuyen doi data backend ve frontend xem co dk
           const transformedPackages = packages.map(pkg => ({
             id: pkg.packageId,
             name: pkg.packageName,
@@ -89,6 +103,64 @@ const SelectService = ({ data, onNext, onBack }) => {
     };
     
     fetchMaintenancePackages();
+  }, [selectedService]);
+  
+  // fetch data dịch vụ khi dia vu sua chua da duoc chon
+  useEffect(() => {
+    const fetchRepairIssues = async () => {
+      if (selectedService?.id === 'repair') {
+        try {
+          setLoadingIssues(true);
+          const offerTypeId = OFFER_TYPE_IDS[selectedService.id];
+          const issues = await issueService.getIssuesByOfferType(offerTypeId);
+          console.log('✅ Fetched repair issues:', issues);
+          // Transform to simple string array for compatibility
+          const issueNames = issues.map(issue => issue.issueName);
+          setRepairIssues(issueNames);
+        } catch (error) {
+          console.error('❌ Error fetching repair issues:', error);
+          // handle loi neu call api bi loi
+          setRepairIssues(serviceDetails.repair.commonIssues);
+        } finally {
+          setLoadingIssues(false);
+        }
+      }
+    };
+    
+    fetchRepairIssues();
+  }, [selectedService]);
+  
+  // fetch data phu tung khi dich vu thay the phu tung duoc chon
+  useEffect(() => {
+    const fetchSpareParts = async () => {
+      if (selectedService?.id === 'parts') {
+        try {
+          setLoadingParts(true);
+          const parts = await sparePartService.getAllSpareParts();
+          console.log('✅ Fetched spare parts:', parts);
+          // Tkieu du liẹu fe goi tu be 
+          //be sparePartId,sparePartName,price,inStock,category,description
+          // Fe id,name,price,inStock
+          const transformedParts = parts.map(part => ({
+            id: part.sparePartId,
+            name: part.sparePartName,
+            price: part.price,
+            inStock: part.inStock,
+            category: part.category,
+            description: part.description
+          }));
+          setApiSpareParts(transformedParts);
+        } catch (error) {
+          console.error('❌ Error fetching spare parts:', error);
+          // neu loi thi lay data mac dinh
+          setApiSpareParts(serviceDetails.parts.commonParts);
+        } finally {
+          setLoadingParts(false);
+        }
+      }
+    };
+    
+    fetchSpareParts();
   }, [selectedService]);
 
   const services = [
@@ -123,7 +195,7 @@ const SelectService = ({ data, onNext, onBack }) => {
   const handleNext = () => {
     const serviceData = {
       service: selectedService,
-      vehicle: selectedVehicle 
+      vehicle: selectedVehicle // Luu vehicleId
     };
 
     console.log('📤 Passing vehicle to next step:', selectedVehicle, 'Type:', typeof selectedVehicle);
@@ -134,6 +206,7 @@ const SelectService = ({ data, onNext, onBack }) => {
       serviceData.parts = selectedParts;
     } else if (selectedService?.id === 'repair') {
       serviceData.problemDescription = problemDescription;
+      serviceData.selectedIssue = selectedIssue; // luu van de duoc chon
     }
 
     onNext(serviceData);
@@ -153,7 +226,7 @@ const SelectService = ({ data, onNext, onBack }) => {
   };
 
   const filteredParts = selectedService?.id === 'parts' 
-    ? serviceDetails.parts.commonParts.filter(part => 
+    ? apiSpareParts.filter(part => 
         part.name.toLowerCase().includes(partsSearch.toLowerCase())
       )
     : [];
@@ -273,6 +346,12 @@ const SelectService = ({ data, onNext, onBack }) => {
           {selectedService.id === 'parts' && (
             <div>
               <h4 className="font-medium text-gray-900 mb-4">Chọn phụ tùng cần thay thế:</h4>
+              {loadingParts ? (
+                <p className="text-gray-600 text-sm">Đang tải danh sách phụ tùng...</p>
+              ) : apiSpareParts.length === 0 ? (
+                <p className="text-red-600 text-sm">Không có phụ tùng nào.</p>
+              ) : (
+              <>
               <div className="relative mb-4">
                 <FiSearch className="absolute left-3 top-3 text-gray-400" />
                 <input
@@ -325,6 +404,8 @@ const SelectService = ({ data, onNext, onBack }) => {
                   </p>
                 </div>
               )}
+              </>
+              )}
             </div>
           )}
           {selectedService.id === 'repair' && (
@@ -332,8 +413,11 @@ const SelectService = ({ data, onNext, onBack }) => {
               <h4 className="font-medium text-gray-900 mb-4">Mô tả vấn đề cần sửa chữa:</h4>
               <div className="mb-4">
                 <p className="text-sm text-gray-600 mb-2">Vấn đề thường gặp:</p>
+                {loadingIssues ? (
+                  <p className="text-gray-600 text-sm">Đang tải danh sách vấn đề...</p>
+                ) : (
                 <div className="flex flex-wrap gap-2">
-                  {serviceDetails.repair.commonIssues.map((issue) => (
+                  {repairIssues.map((issue) => (
                     <button
                       key={issue}
                       type="button"
@@ -350,8 +434,9 @@ const SelectService = ({ data, onNext, onBack }) => {
                     >
                       {issue}
                   </button>
-                ))}
-              </div>
+                  ))}
+                </div>
+                )}
               </div>
               <textarea
                 rows={4}
