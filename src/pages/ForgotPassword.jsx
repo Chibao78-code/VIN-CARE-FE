@@ -20,13 +20,13 @@ function ForgotPassword() {
     setIsSubmitting(true);
     
     try {
-      // goi api de sent ma otp ve email
+      // goi api quen mat khau
       const response = await authService.forgotPassword(data.email);
       
       if (response.success !== false) {
         toast.success('Mã OTP đã được gửi đến email của bạn!');
         
-        // chuyen den trang verify otp
+        // chuyen den trang xac minh otp
         navigate('/verify-otp', { state: { email: data.email } });
       }
     } catch (error) {
@@ -50,12 +50,12 @@ function ForgotPassword() {
       await new Promise(resolve => setTimeout(resolve, 1000));
       toast.success('Email đã được gửi lại!');
     } catch (error) {
-      //ko gui dc bao error
       toast.error('Không thể gửi lại email');
     } finally {
       setIsSubmitting(false);
     }
   }
+//header
   return (
     <div className="min-h-screen bg-gradient-to-br from-teal-50 to-cyan-50 flex items-center justify-center px-4 py-12">
       <div className="max-w-md w-full">
