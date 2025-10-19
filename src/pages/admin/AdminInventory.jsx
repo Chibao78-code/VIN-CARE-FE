@@ -8,6 +8,7 @@ import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import toast from 'react-hot-toast';
+import { sparePartService } from '../../services/sparePartService';
 
 const AdminInventory = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -28,39 +29,8 @@ const AdminInventory = () => {
     description: ''
   });
 
-  // data ao cho kho
-  const [inventoryItems, setInventoryItems] = useState([
-    {
-      id: 1,
-      name: 'Battery Pack Model S',
-      partNumber: 'BP-MS-001',
-      category: 'Battery Components',
-      currentStock: 3,
-      minStock: 5,
-      maxStock: 20,
-      unitCost: 25000,
-      location: 'A1-01',
-      supplier: 'Tesla Parts',
-      lastRestocked: '2025-09-19',
-      status: 'low',
-      description: 'High capacity battery pack for Tesla Model S'
-    },
-    {
-      id: 2,
-      name: 'Charging Cable Type 2',
-      partNumber: 'CC-T2-002',
-      category: 'Charging Equipment',
-      currentStock: 0,
-      minStock: 10,
-      maxStock: 50,
-      unitCost: 150,
-      location: 'B2-05',
-      supplier: 'EV Accessories Inc',
-      lastRestocked: '2025-09-12',
-      status: 'out',
-      description: 'Type 2 charging cable for EVs'
-    }
-  ]);
+  const [inventoryItems, setInventoryItems] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   // check thong ke
   const stats = {
@@ -70,18 +40,90 @@ const AdminInventory = () => {
     totalValue: inventoryItems.reduce((sum, item) => sum + (item.currentStock * item.unitCost), 0)
   };
 
+  // fetch api tui be lay data linh kien 
+  useEffect(() => {
+    fetchSpareParts();
+  }, []);
+
+  const fetchSpareParts = async () => {
+    try {
+      setLoading(true);
+      const data = await sparePartService.getAllSpareParts();
+      console.log('✅ Fetched spare parts:', data);
+      
+      // chuyen doi data dung khi goi api
+      const transformedData = data.map(item => ({
+        id: item.sparePartId,
+        name: item.sparePartName,
+        partNumber: item.partNumber || 'N/A',
+        category: getCategoryLabel(item.category),
+        currentStock: item.quantity,
+        minStock: item.minimumStock || 0,
+        maxStock: item.minimumStock ? item.minimumStock * 4 : 100,
+        unitCost: item.unitCost || item.price,
+        location: item.location || 'N/A',
+        supplier: item.supplier || 'N/A',
+        lastRestocked: new Date().toISOString().split('T')[0],
+        status: item.quantity === 0 ? 'out' : item.quantity < (item.minimumStock || 0) ? 'low' : 'in-stock',
+        description: item.description || ''
+      }));
+      
+      setInventoryItems(transformedData);
+    } catch (error) {
+      console.error('❌ Error fetching spare parts:', error);
+      toast.error('Không thể tải dữ liệu phụ tùng');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // map lai category label
+  const getCategoryLabel = (category) => {
+    const categoryMap = {
+      'BATTERY': 'Battery Components',
+      'MOTOR': 'Motors & Drives',
+      'CHARGER': 'Charging Equipment',
+      'BRAKE': 'Brake System',
+      'TIRE': 'Tires & Wheels',
+      'LIGHT': 'Lighting',
+      'MIRROR': 'Mirrors',
+      'HORN': 'Horn',
+      'ELECTRICAL': 'Electrical',
+      'OTHER': 'Other'
+    };
+    return categoryMap[category] || category;
+  };
+
+  // map lai category enum
+  const getCategoryEnum = (label) => {
+    const enumMap = {
+      'Battery Components': 'BATTERY',
+      'Motors & Drives': 'MOTOR',
+      'Charging Equipment': 'CHARGER',
+      'Brake System': 'BRAKE',
+      'Tires & Wheels': 'TIRE',
+      'Lighting': 'LIGHT',
+      'Mirrors': 'MIRROR',
+      'Horn': 'HORN',
+      'Electrical': 'ELECTRICAL',
+      'Other': 'OTHER'
+    };
+    return enumMap[label] || 'OTHER';
+  };
+
   // linh kien
   const categories = [
     'all',
     'Battery Components',
     'Charging Equipment',
-    'Cooling Systems',
+    'Brake System',
     'Motors & Drives',
-    'Software & Electronics',
     'Tires & Wheels',
-    'Interior Parts',
-    'Exterior Parts',
-    'Tools & Equipment'
+    'Lighting',
+    'Mirrors',
+    'Horn',
+    'Electrical',
+    'Other'
   ];
 
   // loc trang thai
@@ -119,77 +161,99 @@ const AdminInventory = () => {
   };
 
   // Them linh kien moi
-  const handleAddItem = (e) => {
+  const handleAddItem = async (e) => {
     e.preventDefault();
     
-    const newItem = {
-      id: inventoryItems.length + 1,
-      name: formData.name,
-      partNumber: formData.partNumber,
-      category: formData.category,
-      currentStock: parseInt(formData.quantity),
-      minStock: parseInt(formData.minStock),
-      maxStock: parseInt(formData.minStock) * 4,
-      unitCost: parseFloat(formData.unitCost),
-      location: formData.location,
-      supplier: formData.supplier,
-      lastRestocked: new Date().toISOString().split('T')[0],
-      status: parseInt(formData.quantity) === 0 ? 'out' : 
-              parseInt(formData.quantity) < parseInt(formData.minStock) ? 'low' : 'in-stock',
-      description: formData.description
-    };
+    try {
+      // goi api du lieu gui toi backend
+      const backendData = {
+        sparePartName: formData.name,
+        partNumber: formData.partNumber,
+        category: getCategoryEnum(formData.category),
+        quantity: parseInt(formData.quantity),
+        minimumStock: parseInt(formData.minStock),
+        price: parseFloat(formData.unitCost), // neu backend yeu cau price
+        unitCost: parseFloat(formData.unitCost),
+        inStock: parseInt(formData.quantity) > 0,
+        location: formData.location,
+        supplier: formData.supplier,
+        description: formData.description
+      };
 
-    setInventoryItems([...inventoryItems, newItem]);
-    setShowAddModal(false);
-    setFormData({
-      name: '',
-      partNumber: '',
-      category: '',
-      quantity: '',
-      minStock: '',
-      unitCost: '',
-      location: '',
-      supplier: '',
-      description: ''
-    });
-    toast.success('Item added successfully');
+      console.log('📤 Creating spare part:', backendData);
+      await sparePartService.createSparePart(backendData);
+      
+      // tai lai danh sach linh kien
+      await fetchSpareParts();
+      
+      setShowAddModal(false);
+      setFormData({
+        name: '',
+        partNumber: '',
+        category: '',
+        quantity: '',
+        minStock: '',
+        unitCost: '',
+        location: '',
+        supplier: '',
+        description: ''
+      });
+      toast.success('Phụ tùng đã được thêm thành công!');
+    } catch (error) {
+      console.error('❌ Error adding spare part:', error);
+      toast.error('Không thể thêm phụ tùng. Vui lòng thử lại.');
+    }
   };
 
   // Sua linh kien
-  const handleEditItem = (e) => {
+  const handleEditItem = async (e) => {
     e.preventDefault();
     
-    const updatedItems = inventoryItems.map(item => {
-      if (item.id === editingItem.id) {
-        return {
-          ...item,
-          name: formData.name,
-          partNumber: formData.partNumber,
-          category: formData.category,
-          currentStock: parseInt(formData.quantity),
-          minStock: parseInt(formData.minStock),
-          unitCost: parseFloat(formData.unitCost),
-          location: formData.location,
-          supplier: formData.supplier,
-          description: formData.description,
-          status: parseInt(formData.quantity) === 0 ? 'out' : 
-                  parseInt(formData.quantity) < parseInt(formData.minStock) ? 'low' : 'in-stock'
-        };
-      }
-      return item;
-    });
+    try {
+      const backendData = {
+        sparePartName: formData.name,
+        partNumber: formData.partNumber,
+        category: getCategoryEnum(formData.category),
+        quantity: parseInt(formData.quantity),
+        minimumStock: parseInt(formData.minStock),
+        price: parseFloat(formData.unitCost),
+        unitCost: parseFloat(formData.unitCost),
+        inStock: parseInt(formData.quantity) > 0,
+        location: formData.location,
+        supplier: formData.supplier,
+        description: formData.description
+      };
 
-    setInventoryItems(updatedItems);
-    setShowEditModal(false);
-    setEditingItem(null);
-    toast.success('Item updated successfully');
+      console.log('📝 Updating spare part ID:', editingItem.id, backendData);
+      await sparePartService.updateSparePart(editingItem.id, backendData);
+      
+      // tai lai danh sach linh kien
+      await fetchSpareParts();
+      
+      setShowEditModal(false);
+      setEditingItem(null);
+      toast.success('Phụ tùng đã được cập nhật!');
+    } catch (error) {
+      console.error('❌ Error updating spare part:', error);
+      toast.error('Không thể cập nhật phụ tùng. Vui lòng thử lại.');
+    }
   };
 
   // Xoa linh kien
-  const handleDeleteItem = (id) => {
-    if (window.confirm('Are you sure you want to delete this item?')) {
-      setInventoryItems(inventoryItems.filter(item => item.id !== id));
-      toast.success('Item deleted successfully');
+  const handleDeleteItem = async (id) => {
+    if (window.confirm('Bạn có chắc chắn muốn xóa phụ tùng này?')) {
+      try {
+        console.log('🗑️ Deleting spare part ID:', id);
+        await sparePartService.deleteSparePart(id);
+        
+        // tai lai danh sach linh kien
+        await fetchSpareParts();
+        
+        toast.success('Phụ tùng đã được xóa!');
+      } catch (error) {
+        console.error('❌ Error deleting spare part:', error);
+        toast.error('Không thể xóa phụ tùng. Vui lòng thử lại.');
+      }
     }
   };
 
@@ -317,7 +381,22 @@ const AdminInventory = () => {
         </Card>
       </div>
       <div className="space-y-4">
-        {filteredItems.map((item) => (
+        {loading ? (
+          <Card>
+            <Card.Content className="p-12 text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+              <p className="text-gray-500">Đang tải dữ liệu...</p>
+            </Card.Content>
+          </Card>
+        ) : filteredItems.length === 0 ? (
+          <Card>
+            <Card.Content className="p-12 text-center">
+              <FiPackage className="mx-auto text-4xl text-gray-400 mb-4" />
+              <p className="text-gray-500">Không tìm thấy phụ tùng nào</p>
+            </Card.Content>
+          </Card>
+        ) : (
+          filteredItems.map((item) => (
           <Card key={item.id}>
             <Card.Content className="p-6">
               <div className="flex flex-col lg:flex-row gap-4">
@@ -423,15 +502,7 @@ const AdminInventory = () => {
               </div>
             </Card.Content>
           </Card>
-        ))}
-
-        {filteredItems.length === 0 && (
-          <Card>
-            <Card.Content className="p-12 text-center">
-              <FiPackage className="mx-auto text-4xl text-gray-400 mb-4" />
-              <p className="text-gray-500">No items found matching your criteria</p>
-            </Card.Content>
-          </Card>
+          ))
         )}
       </div>
       {(showAddModal || showEditModal) && (
