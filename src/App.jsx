@@ -33,6 +33,9 @@ import StaffLayout from './layouts/StaffLayout';
 import StaffDashboard from './pages/staff/StaffDashboard';
 import StaffCustomers from './pages/staff/StaffCustomers';
 import StaffAppointments from './pages/staff/StaffAppointments';
+import StaffCheckin from './pages/staff/StaffCheckin';
+import StaffParts from './pages/staff/StaffParts';
+import StaffPayment from './pages/staff/StaffPayment';
 
 // Technician 
 import TechnicianLayout from './layouts/TechnicianLayout';
@@ -157,7 +160,10 @@ function App() {
           <Route path="dashboard" element={<StaffDashboard />} />
           <Route path="customers" element={<StaffCustomers />} />
           <Route path="appointments" element={<StaffAppointments />} />
-          <Route path="appointments/new" element={<StaffAppointments />} />
+          <Route path="checkin" element={<StaffCheckin />} />
+          <Route path="parts" element={<StaffParts/>} />
+          <Route path="payments" element={<StaffPayment />} />
+          
         </Route>
 
         <Route
