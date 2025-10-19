@@ -11,11 +11,26 @@ const api = axios.create({
 });
 api.interceptors.request.use(
   (config) => {
-// lay token
-    const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
-    if (token) {
+    // lay token tu local may user
+    let token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+    
+    // neu khong co bai loi
+    if (!token) {
+      const authState = localStorage.getItem('ev_auth_state');
+      if (authState) {
+        try {
+          const parsedState = JSON.parse(authState);
+          token = parsedState?.state?.token;
+        } catch (error) {
+          console.error('Failed to parse auth state:', error);
+        }
+      }
+    }
+    
+    if (token && typeof token === 'string') {
       config.headers.Authorization = `Bearer ${token}`;
-    }   
+    }
+    
     return config;
   },
   (error) => {
