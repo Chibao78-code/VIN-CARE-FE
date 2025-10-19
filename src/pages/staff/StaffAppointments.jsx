@@ -1,648 +1,207 @@
 import React, { useState } from 'react';
-import { 
-  FiCalendar, FiSearch, FiFilter, FiPlus, FiEdit2,
-  FiClock, FiUser, FiTruck, FiTool, FiDollarSign,
-  FiCheckCircle, FiAlertCircle, FiX, FiCheck, FiMapPin
-} from 'react-icons/fi';
-import Card from '../../components/ui/Card';
-import Button from '../../components/ui/Button';
-import toast from 'react-hot-toast';
+import { FiPlus, FiSearch, FiX } from 'react-icons/fi';
 
-const StaffAppointments = () => {
+const appointmentTableData = [
+  { code: 'DL01', name: 'Nguyên', vehicle: 'Feliz', package: 'Gói cơ bản', time: '08:00', date: '29/09/2025', contact: '0978385620', status: 'Đã đặt' },
+  { code: 'DL02', name: 'Phương', vehicle: 'Klara', package: 'Gói tiêu chuẩn', time: '09:00', date: '29/09/2025', contact: '0933532981', status: 'Đã đặt' },
+  { code: 'DL03', name: 'Minh', vehicle: 'Vento', package: 'Gói cơ bản', time: '09:30', date: '29/09/2025', contact: '0395573462', status: 'Hoàn thành' },
+  { code: 'DL04', name: 'Giáp', vehicle: 'Feliz', package: 'Gói toàn diện', time: '10:00', date: '29/09/2025', contact: '0365348171', status: 'Đang thực hiện' },
+  { code: 'DL05', name: 'Khôi', vehicle: 'Klara', package: 'Gói tiêu chuẩn', time: '10:30', date: '29/09/2025', contact: '0245756899', status: 'Hoàn thành' },
+  { code: 'DL06', name: 'Vy', vehicle: 'Klara', package: 'Gói toàn diện', time: '11:00', date: '29/09/2025', contact: '0965486877', status: 'Đã đặt' },
+  { code: 'DL07', name: 'Kiệt', vehicle: 'Evo', package: 'Gói cơ bản', time: '13:00', date: '29/09/2025', contact: '0978585643', status: 'Đã đặt' },
+  { code: 'DL08', name: 'Phú', vehicle: 'Klara', package: 'Gói cơ bản', time: '13:30', date: '29/09/2025', contact: '0346789847', status: 'Hoàn thành' },
+  { code: 'DL09', name: 'Thành', vehicle: 'Vento', package: 'Gói tiêu chuẩn', time: '14:00', date: '29/09/2025', contact: '0945581236', status: 'Đang thực hiện' },
+  { code: 'DL10', name: 'Nam', vehicle: 'Feliz', package: 'Gói cơ bản', time: '15:00', date: '29/09/2025', contact: '0389657482', status: 'Đã đặt' },
+  { code: 'DL11', name: 'Duy', vehicle: 'Klara', package: 'Gói cơ bản', time: '15:30', date: '29/09/2025', contact: '0366789123', status: 'Hoàn thành' },
+  { code: 'DL12', name: 'Tú', vehicle: 'Evo', package: 'Gói toàn diện', time: '16:00', date: '29/09/2025', contact: '0987412356', status: 'Hủy' },
+  { code: 'DL13', name: 'Bình', vehicle: 'Vento', package: 'Gói cơ bản', time: '16:30', date: '29/09/2025', contact: '0912354789', status: 'Đã đặt' }
+];
+
+const statusColors = {
+  'Đã đặt': 'bg-blue-100 text-blue-700',
+  'Đang thực hiện': 'bg-yellow-100 text-yellow-700',
+  'Hoàn thành': 'bg-green-100 text-green-700',
+  'Hủy': 'bg-red-100 text-red-700'
+};
+
+function StaffAppointments() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [dateFilter, setDateFilter] = useState('all');
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [formData, setFormData] = useState({
-    customerName: '',
-    customerEmail: '',
-    customerPhone: '',
-    vehicleMake: '',
-    vehicleModel: '',
-    vehiclePlate: '',
-    service: '',
-    date: '',
-    time: '',
-    duration: '60',
-    technician: '',
-    notes: '',
-    price: ''
-  });
+  const [showModal, setShowModal] = useState(false);
+  const [pageSize, setPageSize] = useState(10);
+  const [page, setPage] = useState(1);
 
-  // fake data appointment
-  const [appointments, setAppointments] = useState([]);
+  // Lọc
+  const filteredData = appointmentTableData.filter(item => (
+    (statusFilter === 'all' || item.status === statusFilter) &&
+    (
+      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.vehicle.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.package.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+  ));
 
-  // dich vu
-  const services = [
-    'Battery Check & Replacement',
-    'Software Update',
-    'General Maintenance',
-    'Charging System Service',
-    'AC System Service',
-    'Brake Service',
-    'Tire Rotation & Balance',
-    'Diagnostic Check'
-  ];
+  // Phân trang
+  const total = filteredData.length;
+  const maxPage = Math.max(1, Math.ceil(total / pageSize));
+  const viewData = filteredData.slice((page - 1) * pageSize, page * pageSize);
 
-  // fake date technician
-  const technicians = [
-    'Nguyễn Văn A',
-    'Trần Thị B',
-    'Lê Văn C',
-    'Phạm Thị D'
-  ];
-
-  // thoi gian
-  const timeSlots = [
-    '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',
-    '11:00', '11:30', '13:00', '13:30', '14:00', '14:30',
-    '15:00', '15:30', '16:00', '16:30', '17:00'
-  ];
-
-  
+  // Thống kê
   const stats = {
-    scheduled: appointments.filter(a => a.status === 'scheduled').length,
-    inProgress: appointments.filter(a => a.status === 'in-progress').length,
-    completed: appointments.filter(a => a.status === 'completed').length,
-    unassigned: appointments.filter(a => !a.technician).length
-  };
-
-  // appointment 
-  const filteredAppointments = appointments.filter(appointment => {
-    const matchesSearch = 
-      appointment.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      appointment.vehiclePlate.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      appointment.service.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesStatus = statusFilter === 'all' || appointment.status === statusFilter;
-    
-    const matchesDate = dateFilter === 'all' || 
-      (dateFilter === 'today' && isToday(appointment.date)) ||
-      (dateFilter === 'week' && isThisWeek(appointment.date));
-    
-    return matchesSearch && matchesStatus && matchesDate;
-  });
-
-  // appointment sap xep theo thoi gian
-  const sortedAppointments = [...filteredAppointments].sort((a, b) => {
-    return new Date(a.date + ' ' + a.time) - new Date(b.date + ' ' + b.time);
-  });
-
-  // check ngay hom nay va tuan nay
-  const isToday = (date) => {
-    const today = new Date();
-    const appointmentDate = new Date(date);
-    return today.toDateString() === appointmentDate.toDateString();
-  };
-
-  const isThisWeek = (date) => {
-    const today = new Date();
-    const appointmentDate = new Date(date);
-    const weekStart = new Date(today);
-    weekStart.setDate(today.getDate() - today.getDay());
-    const weekEnd = new Date(weekStart);
-    weekEnd.setDate(weekStart.getDate() + 6);
-    return appointmentDate >= weekStart && appointmentDate <= weekEnd;
-  };
-
-  // mau sac trang thai sau khi chon
-  const getStatusColor = (status) => {
-    switch(status) {
-      case 'scheduled': return 'bg-blue-100 text-blue-700';
-      case 'in-progress': return 'bg-yellow-100 text-yellow-700';
-      case 'completed': return 'bg-green-100 text-green-700';
-      case 'cancelled': return 'bg-red-100 text-red-700';
-      default: return 'bg-gray-100 text-gray-700';
-    }
-  };
-
-  // them appinement
-  const handleAddAppointment = (e) => {
-    e.preventDefault();
-    
-    const newAppointment = {
-      id: appointments.length + 1,
-      customerName: formData.customerName,
-      customerEmail: formData.customerEmail,
-      customerPhone: formData.customerPhone,
-      vehicleMake: formData.vehicleMake,
-      vehicleModel: formData.vehicleModel,
-      vehiclePlate: formData.vehiclePlate,
-      service: formData.service,
-      date: formData.date,
-      time: formData.time,
-      duration: parseInt(formData.duration),
-      technician: formData.technician,
-      notes: formData.notes,
-      price: parseFloat(formData.price) || 0,
-      status: 'scheduled',
-      createdAt: new Date().toISOString()
-    };
-
-    setAppointments([...appointments, newAppointment]);
-    setShowAddModal(false);
-    setFormData({
-      customerName: '',
-      customerEmail: '',
-      customerPhone: '',
-      vehicleMake: '',
-      vehicleModel: '',
-      vehiclePlate: '',
-      service: '',
-      date: '',
-      time: '',
-      duration: '60',
-      technician: '',
-      notes: '',
-      price: ''
-    });
-    toast.success('Appointment created successfully');
-  };
-
-  // cap nhat trang thai
-  const handleStatusChange = (id, newStatus) => {
-    setAppointments(appointments.map(apt => 
-      apt.id === id ? { ...apt, status: newStatus } : apt
-    ));
-    toast.success(`Appointment status updated to ${newStatus}`);
-  };
-
-  // xoa appointment
-  const handleDeleteAppointment = (id) => {
-    if (window.confirm('Are you sure you want to cancel this appointment?')) {
-      setAppointments(appointments.map(apt => 
-        apt.id === id ? { ...apt, status: 'cancelled' } : apt
-      ));
-      toast.success('Appointment cancelled');
-    }
+    scheduled: appointmentTableData.filter(i => i.status === 'Đã đặt').length,
+    inprogress: appointmentTableData.filter(i => i.status === 'Đang thực hiện').length,
+    completed: appointmentTableData.filter(i => i.status === 'Hoàn thành').length,
+    cancelled: appointmentTableData.filter(i => i.status === 'Hủy').length
   };
 
   return (
-    <div>
-      <div className="mb-6 flex justify-between items-center">
+    <div className="container mx-auto px-4 py-8">
+      {/* Tiêu đề */}
+      <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Appointment Management</h1>
-          <p className="text-gray-600 mt-1">Manage customer appointments and assign technicians</p>
+          <h1 className="text-2xl font-bold text-gray-900">Lịch hẹn chăm sóc, bảo dưỡng xe</h1>
+          <p className="text-gray-500 mt-1">Quản lý lịch hẹn - theo dõi tiến trình</p>
         </div>
-        <Button
-          variant="primary"
-          icon={<FiPlus />}
-          onClick={() => setShowAddModal(true)}
-          className="bg-gradient-to-r from-green-500 to-teal-600"
+        <button
+          className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white rounded px-4 py-2 font-medium shadow"
+          onClick={() => setShowModal(true)}
         >
-          New Appointment
-        </Button>
+          <FiPlus /> Tạo lịch hẹn mới
+        </button>
       </div>
-      <div className="mb-6 flex flex-col sm:flex-row gap-4">
-        <div className="flex-1 relative">
+
+      {/* Thống kê */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        {[
+          { label: 'Đã đặt', value: stats.scheduled, color: 'text-blue-600' },
+          { label: 'Đang thực hiện', value: stats.inprogress, color: 'text-yellow-600' },
+          { label: 'Hoàn thành', value: stats.completed, color: 'text-green-600' },
+          { label: 'Đã hủy', value: stats.cancelled, color: 'text-red-600' }
+        ].map((s, idx) => (
+          <div key={idx} className="bg-white rounded-lg p-4 border shadow text-center">
+            <p className="text-sm text-gray-700">{s.label}</p>
+            <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Bộ lọc */}
+      <div className="flex flex-col sm:flex-row gap-3 mb-4 items-center">
+        <div className="relative w-full sm:w-2/5">
           <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
-            placeholder="Search customers, vehicles, or services..."
-            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+            placeholder="Tìm kiếm khách, xe, gói DV..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={e => { setSearchQuery(e.target.value); setPage(1); }}
+            className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg"
           />
         </div>
         <select
-          className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
           value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
+          onChange={e => { setStatusFilter(e.target.value); setPage(1); }}
+          className="px-8 py-2 border border-gray-300 rounded-lg"
         >
-          <option value="all">All Status</option>
-          <option value="scheduled">Scheduled</option>
-          <option value="in-progress">In Progress</option>
-          <option value="completed">Completed</option>
-          <option value="cancelled">Cancelled</option>
+          <option value="all">Tất cả</option>
+          <option value="Đã đặt">Đã đặt</option>
+          <option value="Đang thực hiện">Đang thực hiện</option>
+          <option value="Hoàn thành">Hoàn thành</option>
+          <option value="Hủy">Hủy</option>
         </select>
-        <select
-          className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-          value={dateFilter}
-          onChange={(e) => setDateFilter(e.target.value)}
-        >
-          <option value="all">All Dates</option>
-          <option value="today">Today</option>
-          <option value="week">This Week</option>
-        </select>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-        <Card>
-          <Card.Content className="p-6">
-            <p className="text-sm text-gray-600 mb-2">Scheduled</p>
-            <p className="text-3xl font-bold text-gray-900">{stats.scheduled}</p>
-          </Card.Content>
-        </Card>
-
-        <Card>
-          <Card.Content className="p-6">
-            <p className="text-sm text-gray-600 mb-2">In Progress</p>
-            <p className="text-3xl font-bold text-gray-900">{stats.inProgress}</p>
-          </Card.Content>
-        </Card>
-
-        <Card>
-          <Card.Content className="p-6">
-            <p className="text-sm text-gray-600 mb-2">Completed</p>
-            <p className="text-3xl font-bold text-gray-900">{stats.completed}</p>
-          </Card.Content>
-        </Card>
-
-        <Card>
-          <Card.Content className="p-6">
-            <p className="text-sm text-gray-600 mb-2">Unassigned</p>
-            <p className="text-3xl font-bold text-gray-900">{stats.unassigned}</p>
-          </Card.Content>
-        </Card>
-      </div>
-      {sortedAppointments.length === 0 ? (
-        <Card>
-          <Card.Content className="p-12 text-center">
-            <FiCalendar className="mx-auto text-5xl text-gray-300 mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">No appointments found</h3>
-            <p className="text-gray-500 mb-4">No appointments have been scheduled yet</p>
-            <Button
-              variant="primary"
-              icon={<FiPlus />}
-              onClick={() => setShowAddModal(true)}
-            >
-              Create First Appointment
-            </Button>
-          </Card.Content>
-        </Card>
-      ) : (
-        <div className="space-y-4">
-          {sortedAppointments.map((appointment) => (
-            <Card key={appointment.id}>
-              <Card.Content className="p-6">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-start justify-between mb-4">
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900">
-                          {appointment.customerName}
-                        </h3>
-                        <div className="flex items-center gap-4 mt-1 text-sm text-gray-600">
-                          <span className="flex items-center gap-1">
-                            <FiCalendar className="text-xs" />
-                            {appointment.date}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <FiClock className="text-xs" />
-                            {appointment.time}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <FiTruck className="text-xs" />
-                            {appointment.vehiclePlate}
-                          </span>
-                        </div>
-                      </div>
-                      <span className={`px-3 py-1 text-xs font-medium rounded-full ${getStatusColor(appointment.status)}`}>
-                        {appointment.status.toUpperCase().replace('-', ' ')}
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-                      <div>
-                        <p className="text-xs text-gray-500">Service</p>
-                        <p className="text-sm font-medium text-gray-900">{appointment.service}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-500">Vehicle</p>
-                        <p className="text-sm font-medium text-gray-900">
-                          {appointment.vehicleMake} {appointment.vehicleModel}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-500">Technician</p>
-                        <p className="text-sm font-medium text-gray-900">
-                          {appointment.technician || 'Unassigned'}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-500">Price</p>
-                        <p className="text-sm font-medium text-gray-900">
-                          ${appointment.price.toFixed(2)}
-                        </p>
-                      </div>
-                    </div>
-
-                    {appointment.notes && (
-                      <div className="mb-4">
-                        <p className="text-xs text-gray-500">Notes</p>
-                        <p className="text-sm text-gray-700">{appointment.notes}</p>
-                      </div>
-                    )}
-
-                    <div className="flex gap-2">
-                      {appointment.status === 'scheduled' && (
-                        <>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleStatusChange(appointment.id, 'in-progress')}
-                          >
-                            <FiClock className="mr-1" />
-                            Start Service
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDeleteAppointment(appointment.id)}
-                          >
-                            <FiX className="mr-1" />
-                            Cancel
-                          </Button>
-                        </>
-                      )}
-                      {appointment.status === 'in-progress' && (
-                        <Button
-                          variant="primary"
-                          size="sm"
-                          onClick={() => handleStatusChange(appointment.id, 'completed')}
-                        >
-                          <FiCheckCircle className="mr-1" />
-                          Complete Service
-                        </Button>
-                      )}
-                      {appointment.status === 'completed' && (
-                        <span className="text-sm text-green-600 flex items-center gap-1">
-                          <FiCheckCircle />
-                          Service Completed
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </Card.Content>
-            </Card>
-          ))}
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-gray-600">Hiển thị:</span>
+          <select
+            value={pageSize}
+            onChange={e => { setPageSize(Number(e.target.value)); setPage(1); }}
+            className="border border-gray-300 rounded px-2 py-1 w-24"
+          >
+            <option value={10}>10</option>
+            <option value={20}>20</option>
+            <option value={50}>50</option>
+          </select>
         </div>
-      )}
-      {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <h3 className="text-xl font-semibold text-gray-900">Create New Appointment</h3>
-                <button
-                  onClick={() => {
-                    setShowAddModal(false);
-                    setFormData({
-                      customerName: '',
-                      customerEmail: '',
-                      customerPhone: '',
-                      vehicleMake: '',
-                      vehicleModel: '',
-                      vehiclePlate: '',
-                      service: '',
-                      date: '',
-                      time: '',
-                      duration: '60',
-                      technician: '',
-                      notes: '',
-                      price: ''
-                    });
-                  }}
-                  className="p-2 hover:bg-gray-100 rounded-lg"
-                >
-                  <FiX className="text-xl" />
-                </button>
-              </div>
-            </div>
+      </div>
 
-            <form onSubmit={handleAddAppointment} className="p-6">
-              <h4 className="font-medium text-gray-900 mb-4">Customer Information</h4>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Name *
-                  </label>
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                    value={formData.customerName}
-                    onChange={(e) => setFormData({...formData, customerName: e.target.value})}
-                    required
-                  />
-                </div>
+      {/* Bảng lịch hẹn */}
+      <div className="overflow-x-auto rounded-lg border shadow-sm">
+        <table className="min-w-full text-sm border-collapse">
+          <thead className="bg-green-100 text-gray-800 border-b border-gray-300">
+            <tr>
+              <th className="border border-gray-300 px-3 py-2">Mã</th>
+              <th className="border border-gray-300 px-3 py-2">Tên KH</th>
+              <th className="border border-gray-300 px-3 py-2">Dòng xe</th>
+              <th className="border border-gray-300 px-3 py-2">Gói DV</th>
+              <th className="border border-gray-300 px-3 py-2">Giờ</th>
+              <th className="border border-gray-300 px-3 py-2">Ngày</th>
+              <th className="border border-gray-300 px-3 py-2">Liên hệ</th>
+              <th className="border border-gray-300 px-3 py-2">Trạng thái</th>
+            </tr>
+          </thead>
+          <tbody>
+            {viewData.length === 0 ? (
+              <tr>
+                <td colSpan={8} className="py-6 text-gray-500 text-center">
+                  Không có lịch hẹn nào phù hợp
+                </td>
+              </tr>
+            ) : (
+              viewData.map(item => (
+                <tr key={item.code} className="even:bg-gray-50 hover:bg-green-50 transition border-b border-gray-200">
+                  <td className="border border-gray-300 px-3 py-2 text-center font-medium text-gray-700">{item.code}</td>
+                  <td className="border border-gray-300 px-3 py-2">{item.name}</td>
+                  <td className="border border-gray-300 px-3 py-2">{item.vehicle}</td>
+                  <td className="border border-gray-300 px-3 py-2">{item.package}</td>
+                  <td className="border border-gray-300 px-3 py-2 text-center">{item.time}</td>
+                  <td className="border border-gray-300 px-3 py-2 text-center">{item.date}</td>
+                  <td className="border border-gray-300 px-3 py-2">{item.contact}</td>
+                  <td className="border border-gray-300 px-3 py-2 text-center">
+                    <span className={`inline-block px-2 py-1 rounded ${statusColors[item.status]} text-xs font-medium`}>
+                      {item.status}
+                    </span>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Email *
-                  </label>
-                  <input
-                    type="email"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                    value={formData.customerEmail}
-                    onChange={(e) => setFormData({...formData, customerEmail: e.target.value})}
-                    required
-                  />
-                </div>
+      {/* Phân trang */}
+      <div className="flex justify-end items-center gap-2 mt-4">
+        <button
+          className="px-3 py-1 rounded bg-gray-100 border hover:bg-gray-200"
+          onClick={() => setPage(Math.max(1, page - 1))}
+          disabled={page === 1}
+        >
+          Trang trước
+        </button>
+        <span className="text-sm text-gray-700">Trang {page}/{maxPage}</span>
+        <button
+          className="px-3 py-1 rounded bg-gray-100 border hover:bg-gray-200"
+          onClick={() => setPage(Math.min(maxPage, page + 1))}
+          disabled={page === maxPage}
+        >
+          Trang sau
+        </button>
+      </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Phone *
-                  </label>
-                  <input
-                    type="tel"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                    value={formData.customerPhone}
-                    onChange={(e) => setFormData({...formData, customerPhone: e.target.value})}
-                    required
-                  />
-                </div>
-              </div>
-              <h4 className="font-medium text-gray-900 mb-4">Vehicle Information</h4>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Make *
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g., Tesla"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                    value={formData.vehicleMake}
-                    onChange={(e) => setFormData({...formData, vehicleMake: e.target.value})}
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Model *
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g., Model 3"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                    value={formData.vehicleModel}
-                    onChange={(e) => setFormData({...formData, vehicleModel: e.target.value})}
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    License Plate *
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g., ABC-123"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                    value={formData.vehiclePlate}
-                    onChange={(e) => setFormData({...formData, vehiclePlate: e.target.value})}
-                    required
-                  />
-                </div>
-              </div>
-              <h4 className="font-medium text-gray-900 mb-4">Service Details</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Service Type *
-                  </label>
-                  <select
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                    value={formData.service}
-                    onChange={(e) => setFormData({...formData, service: e.target.value})}
-                    required
-                  >
-                    <option value="">Select Service</option>
-                    {services.map(service => (
-                      <option key={service} value={service}>{service}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Estimated Price ($)
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                    value={formData.price}
-                    onChange={(e) => setFormData({...formData, price: e.target.value})}
-                  />
-                </div>
-              </div>
-              <h4 className="font-medium text-gray-900 mb-4">Schedule</h4>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Date *
-                  </label>
-                  <input
-                    type="date"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                    value={formData.date}
-                    onChange={(e) => setFormData({...formData, date: e.target.value})}
-                    min={new Date().toISOString().split('T')[0]}
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Time *
-                  </label>
-                  <select
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                    value={formData.time}
-                    onChange={(e) => setFormData({...formData, time: e.target.value})}
-                    required
-                  >
-                    <option value="">Select Time</option>
-                    {timeSlots.map(time => (
-                      <option key={time} value={time}>{time}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Duration (minutes)
-                  </label>
-                  <select
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                    value={formData.duration}
-                    onChange={(e) => setFormData({...formData, duration: e.target.value})}
-                  >
-                    <option value="30">30</option>
-                    <option value="60">60</option>
-                    <option value="90">90</option>
-                    <option value="120">120</option>
-                    <option value="180">180</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Technician
-                  </label>
-                  <select
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                    value={formData.technician}
-                    onChange={(e) => setFormData({...formData, technician: e.target.value})}
-                  >
-                    <option value="">Assign Later</option>
-                    {technicians.map(tech => (
-                      <option key={tech} value={tech}>{tech}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Notes (Optional)
-                </label>
-                <textarea
-                  rows="3"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                  value={formData.notes}
-                  onChange={(e) => setFormData({...formData, notes: e.target.value})}
-                  placeholder="Any special instructions or notes..."
-                />
-              </div>
-
-              <div className="flex justify-end gap-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setShowAddModal(false);
-                    setFormData({
-                      customerName: '',
-                      customerEmail: '',
-                      customerPhone: '',
-                      vehicleMake: '',
-                      vehicleModel: '',
-                      vehiclePlate: '',
-                      service: '',
-                      date: '',
-                      time: '',
-                      duration: '60',
-                      technician: '',
-                      notes: '',
-                      price: ''
-                    });
-                  }}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" variant="primary">
-                  <FiCheck className="mr-1" />
-                  Create Appointment
-                </Button>
-              </div>
-            </form>
+      {/* Modal demo */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
+          <div className="bg-white rounded-lg max-w-lg w-full p-6 relative shadow-lg">
+            <button
+              className="absolute top-2 right-2 p-1 rounded hover:bg-gray-100"
+              onClick={() => setShowModal(false)}
+            >
+              <FiX />
+            </button>
+            <h2 className="text-lg font-semibold mb-4">Tạo lịch hẹn mới</h2>
+            <div className="text-gray-400 text-center py-10">(Demo: Form thêm lịch ở đây)</div>
           </div>
         </div>
       )}
     </div>
   );
-};
+}
 
 export default StaffAppointments;
