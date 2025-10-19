@@ -12,7 +12,6 @@ function VerifyOTP() {
   const location = useLocation();
   const navigate = useNavigate();
   const email = location.state?.email;
-  // gui otp va dat lai mk trong 2 step
   const [step, setStep] = useState(1); 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -23,7 +22,7 @@ function VerifyOTP() {
   const { register, handleSubmit, formState: { errors }, watch } = useForm();
   const watchPassword = watch('password', '');
   
-  // ko co mail chuyen ve trang quen mk
+  // chuyen về forgot-password nếu không có email
   useEffect(() => {
     if (!email) {
       toast.error('Vui lòng nhập email trước');
@@ -31,7 +30,7 @@ function VerifyOTP() {
     }
   }, [email, navigate]);
   
-  // thoi gian dem nguoc con lai cua ma otp
+  // dem nguoc thoi gian 5p cho ma otp co hieuj luc 
   useEffect(() => {
     if (timeLeft <= 0) return;
     
@@ -42,7 +41,7 @@ function VerifyOTP() {
     return () => clearInterval(timer);
   }, [timeLeft]);
   
-  // dinh dang thoi gian
+  // format time còn lại
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -59,7 +58,7 @@ function VerifyOTP() {
       if (response.success !== false) {
         toast.success('Mã OTP hợp lệ! Vui lòng đặt mật khẩu mới.');
         setOtpCode(data.otpCode);
-        setStep(2); // qua buoc 2 dat mk moi neu otp dung 
+        setStep(2); // chuyển sang bước 2: Đặt mật khẩu mới
       }
     } catch (error) {
       console.error('Verify OTP error:', error);
@@ -83,7 +82,7 @@ function VerifyOTP() {
       if (response.success !== false) {
         toast.success('Mật khẩu đã được đặt lại thành công!');
         
-        // ve trang login sau 2s neu dat mk thanh cong
+        // Chuyển về trang login sau 2 giây
         setTimeout(() => {
           navigate('/login');
         }, 2000);
@@ -96,7 +95,7 @@ function VerifyOTP() {
     }
   }
   
-  // sent laij otp
+  // Gửi lại OTP
   async function handleResendOTP() {
     setIsSubmitting(true);
     
@@ -105,7 +104,7 @@ function VerifyOTP() {
       
       if (response.success !== false) {
         toast.success('Mã OTP mới đã được gửi!');
-        setTimeLeft(300); //300s/5p de su dung otp moi
+        setTimeLeft(300); // Reset timer
       }
     } catch (error) {
       toast.error('Không thể gửi lại OTP. Vui lòng thử lại sau.');
@@ -114,7 +113,7 @@ function VerifyOTP() {
     }
   }
   
-  // kiem tra do manh mk truc tiep
+  // Kiểm tra độ mạnh mật khẩu
   function checkPasswordStrength(password) {
     let strength = 0;
     if (password.length >= 8) strength++;
@@ -146,7 +145,7 @@ function VerifyOTP() {
         
         <Card className="p-8">
           {step === 1 ? (
-            // nhap otp
+            // Step 1: Nhập OTP
             <form onSubmit={handleSubmit(handleVerifyOTP)} className="space-y-6">
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
                 <p className="text-sm text-blue-700 mb-1">
@@ -213,7 +212,7 @@ function VerifyOTP() {
               </div>
             </form>
           ) : (
-            // dat mk moi
+            // Step 2: Đặt mật khẩu mới
             <form onSubmit={handleSubmit(handleResetPassword)} className="space-y-6">
               <div>
                 <div className="relative">
@@ -239,6 +238,8 @@ function VerifyOTP() {
                     {showPassword ? <FiEyeOff /> : <FiEye />}
                   </button>
                 </div>
+                
+                {/* Password Strength Indicator */}
                 {watchPassword && (
                   <div className="mt-2">
                     <div className="flex gap-1">

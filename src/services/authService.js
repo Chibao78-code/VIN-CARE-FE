@@ -40,7 +40,7 @@ export const authService = {
     }
   },
   
-  // xac thuc ma otp
+  // Verify OTP for password reset
   verifyOTP: async (email, otpCode) => {
     try {
       const response = await api.post('/auth/password/verify-otp', { email, otpCode });
@@ -51,7 +51,7 @@ export const authService = {
     }
   },
   
-  // dat lai mk voi otp
+  // Reset password with OTP
   resetPasswordWithOTP: async (email, otpCode, newPassword) => {
     try {
       const response = await api.post('/auth/password/reset', { 
