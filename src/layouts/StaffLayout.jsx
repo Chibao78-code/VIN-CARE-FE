@@ -8,23 +8,24 @@ import {
   FiX,
   FiLogOut,
   FiBell,
-  FiPlus,
   FiTruck,
   FiBox,
   FiCreditCard,
 } from "react-icons/fi";
 import useAuthStore from "../store/authStore";
-import Button from "../components/ui/Button";
 
 const StaffLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
 
+  // 🔹 Xử lý đăng xuất
   const handleLogout = () => {
     logout();
     navigate("/login");
   };
+
+  // 🔹 Danh sách menu bên trái
   const menuItems = [
     { path: "/staff/dashboard", label: "Tổng quan", icon: FiGrid },
     { path: "/staff/customers", label: "Khách hàng", icon: FiUsers },
@@ -33,18 +34,23 @@ const StaffLayout = () => {
     { path: "/staff/parts", label: "Phụ tùng", icon: FiBox },
     { path: "/staff/payments", label: "Thanh toán", icon: FiCreditCard },
   ];
+
   return (
     <div className="min-h-screen bg-gray-50 flex">
+      {/* 🔸 Sidebar bên trái */}
       <aside
         className={`${
           isSidebarOpen ? "w-64" : "w-20"
         } transition-all duration-300 bg-white border-r border-gray-200 flex flex-col`}
       >
+        {/* Logo + Tên hệ thống */}
         <div className="h-16 flex items-center justify-between px-4 border-b border-gray-200">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-teal-600 rounded-lg flex items-center justify-center text-white font-bold">
-              EV
-            </div>
+            <img
+              src="/images/Logo_Staff.png"
+              alt="EV Service Logo"
+              className="w-10 h-10 object-contain rounded-lg shadow"
+            />
             {isSidebarOpen && (
               <div>
                 <h2 className="font-bold text-gray-900">EV Service</h2>
@@ -53,6 +59,8 @@ const StaffLayout = () => {
             )}
           </div>
         </div>
+
+        {/* Menu chức năng */}
         <nav className="flex-1 p-4">
           <ul className="space-y-2">
             {menuItems.map((item) => (
@@ -76,14 +84,19 @@ const StaffLayout = () => {
             ))}
           </ul>
         </nav>
-        <div className="p-4 border-t border-gray-200">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-medium">
+
+        {/* 🔹 Avatar nhân viên + nút đăng xuất */}
+        <div className="p-4 border-t border-gray-200 flex flex-col gap-2">
+          <div className="flex items-center gap-3">
+            {/* Avatar tròn – đổi màu cho nổi bật hơn */}
+            <div className="w-12 h-12 rounded-full bg-gradient-to-r from-green-500 to-teal-500 flex items-center justify-center text-white text-lg font-semibold shadow-md">
               {user?.name?.charAt(0)?.toUpperCase() || "S"}
             </div>
+
+            {/* Hiển thị tên + email nếu sidebar mở */}
             {isSidebarOpen && (
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">
+              <div>
+                <p className="font-medium text-gray-900">
                   {user?.name || "DINH BAO"}
                 </p>
                 <p className="text-xs text-gray-500">
@@ -92,17 +105,23 @@ const StaffLayout = () => {
               </div>
             )}
           </div>
+
+          {/* Nút đăng xuất */}
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+            className="mt-2 w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-green-600 hover:text-white transition"
           >
             <FiLogOut className="text-xl" />
-            {isSidebarOpen && <span className="font-medium">Logout</span>}
+            {isSidebarOpen && <span className="font-medium">Đăng xuất</span>}
           </button>
         </div>
       </aside>
+
+      {/* 🔸 Nội dung chính */}
       <div className="flex-1 flex flex-col">
+        {/* Thanh trên cùng */}
         <header className="h-16 bg-white border-b border-gray-200 px-6 flex items-center justify-between">
+          {/* Nút mở/đóng sidebar */}
           <button
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
             className="p-2 hover:bg-gray-100 rounded-lg"
@@ -114,21 +133,16 @@ const StaffLayout = () => {
             )}
           </button>
 
+          {/* Biểu tượng thông báo */}
           <div className="flex items-center gap-4">
             <button className="relative p-2 hover:bg-gray-100 rounded-lg">
               <FiBell className="text-xl text-gray-600" />
               <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
             </button>
-            <Button
-              variant="primary"
-              icon={<FiPlus />}
-              onClick={() => navigate("/staff/appointments/new")}
-              className="bg-gradient-to-r from-green-500 to-teal-600"
-            >
-              New Appointment
-            </Button>
           </div>
         </header>
+
+        {/* Vùng hiển thị nội dung trang con */}
         <main className="flex-1 p-6">
           <Outlet />
         </main>
