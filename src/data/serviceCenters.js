@@ -88,26 +88,26 @@
 // ];
 
 // Danh sách xe máy điện VinFast
-// export const vinfastModels = [
-//   { id: 'klara-s', name: 'Klara S', type: 'electric', batteryCapacity: '3.5 kWh' },
-//   { id: 'feliz-s', name: 'Feliz S', type: 'electric', batteryCapacity: '3.5 kWh' },
-//   { id: 'vento-s', name: 'Vento S', type: 'electric', batteryCapacity: '3.5 kWh' },
-//   { id: 'theon-s', name: 'Theon S', type: 'electric', batteryCapacity: '3.5 kWh' },
-//   { id: 'evo200', name: 'Evo 200', type: 'electric', batteryCapacity: '2.5 kWh' },
-//   { id: 'evo200-lite', name: 'Evo 200 Lite', type: 'electric', batteryCapacity: '2.5 kWh' },
-//   { id: 'impes', name: 'Impes', type: 'electric', batteryCapacity: '2.0 kWh' },
-//   { id: 'ludo', name: 'Ludo', type: 'electric', batteryCapacity: '1.8 kWh' },
-//   { id: 'klara-a2', name: 'Klara A2', type: 'electric', batteryCapacity: '2.5 kWh' }
-// ];
+export const vinfastModels = [
+  { id: 'klara-s', name: 'Klara S', type: 'electric', batteryCapacity: '3.5 kWh' },
+  { id: 'feliz-s', name: 'Feliz S', type: 'electric', batteryCapacity: '3.5 kWh' },
+  { id: 'vento-s', name: 'Vento S', type: 'electric', batteryCapacity: '3.5 kWh' },
+  { id: 'theon-s', name: 'Theon S', type: 'electric', batteryCapacity: '3.5 kWh' },
+  { id: 'evo200', name: 'Evo 200', type: 'electric', batteryCapacity: '2.5 kWh' },
+  { id: 'evo200-lite', name: 'Evo 200 Lite', type: 'electric', batteryCapacity: '2.5 kWh' },
+  { id: 'impes', name: 'Impes', type: 'electric', batteryCapacity: '2.0 kWh' },
+  { id: 'ludo', name: 'Ludo', type: 'electric', batteryCapacity: '1.8 kWh' },
+  { id: 'klara-a2', name: 'Klara A2', type: 'electric', batteryCapacity: '2.5 kWh' }
+];
 
-// danh sach dich vu
+// Danh sách dịch vụ chi tiết
 export const serviceDetails = {
   maintenance: {
     id: 'maintenance',
     name: 'Bảo dưỡng định kỳ',
     description: 'Bảo dưỡng toàn diện xe máy điện theo tiêu chuẩn VinFast',
     icon: '🔧',
-    packages: []
+    packages: [] // Will be fetched from backend API
   },
   parts: {
     id: 'parts',
@@ -145,30 +145,30 @@ export const serviceDetails = {
 };
 
 // Khung giờ làm việc
-// export const timeSlots = [
-//   { time: '08:00', available: true },
-//   { time: '08:30', available: true },
-//   { time: '09:00', available: true },
-//   { time: '09:30', available: true },
-//   { time: '10:00', available: true },
-//   { time: '10:30', available: true },
-//   { time: '11:00', available: true },
-//   { time: '11:30', available: false },
-//   { time: '13:00', available: true },
-//   { time: '13:30', available: true },
-//   { time: '14:00', available: true },
-//   { time: '14:30', available: true },
-//   { time: '15:00', available: true },
-//   { time: '15:30', available: true },
-//   { time: '16:00', available: false },
-//   { time: '16:30', available: true },
-//   { time: '17:00', available: true },
-//   { time: '17:30', available: true }
-// ];
+export const timeSlots = [
+  { time: '08:00', available: true },
+  { time: '08:30', available: true },
+  { time: '09:00', available: true },
+  { time: '09:30', available: true },
+  { time: '10:00', available: true },
+  { time: '10:30', available: true },
+  { time: '11:00', available: true },
+  { time: '11:30', available: false },
+  { time: '13:00', available: true },
+  { time: '13:30', available: true },
+  { time: '14:00', available: true },
+  { time: '14:30', available: true },
+  { time: '15:00', available: true },
+  { time: '15:30', available: true },
+  { time: '16:00', available: false },
+  { time: '16:30', available: true },
+  { time: '17:00', available: true },
+  { time: '17:30', available: true }
+];
 
-// tinh toan khoang cach giua nguoi dung va trung tam
+// tinh toan tu toa do cua user den trung tam gan nhat
 export const calculateDistance = (lat1, lon1, lat2, lon2) => {
-  const R = 6371; // Radius of the earth in km
+  const R = 6371; // so km o trai dat
   const dLat = (lat2 - lat1) * Math.PI / 180;
   const dLon = (lon2 - lon1) * Math.PI / 180;
   const a = 

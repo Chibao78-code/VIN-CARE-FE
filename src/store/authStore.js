@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { STORAGE_KEYS } from '../constants/config';
 import { authService } from '../services/authService';
-// call api be
+// call api tu be 
 const useAuthStore = create(
   persist(
     (set, get) => ({
@@ -14,13 +14,13 @@ const useAuthStore = create(
       login: async (credentials) => {
         set({ isLoading: true });
         try {
-          // lay du lieu email, password
+          // call api tu be 
           const response = await authService.login({
-            username: credentials.email, 
+            username: credentials.email, // be chap nhan username or email
             password: credentials.password
           });
           
-          // luu token vao local ng dung de dang nhap lan sau 
+          // luu token vao may local user
           localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, response.token);
           localStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(response.user));
           
@@ -42,7 +42,7 @@ const useAuthStore = create(
       },
       
       logout: () => {
-        // dang xuat thi xoa token local may ng dung
+        // dang xuat thi xoa token va user data
         localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
         localStorage.removeItem(STORAGE_KEYS.USER_DATA);
         
@@ -65,7 +65,7 @@ const useAuthStore = create(
       },
     }),
     {
-      name: STORAGE_KEYS.AUTH_TOKEN,
+      name: 'ev_auth_state', // Tên key trong localStorage
       partialize: (state) => ({
         user: state.user,
         token: state.token,
