@@ -26,18 +26,27 @@ const Login = () => {
   
   const onSubmit = async (data) => {
     const result = await login(data);
-    //xem role da dung chua
+    
     if (result.success) {
       toast.success('Đăng nhập thành công!');
-      const email = data.email.toLowerCase();
-      if (email.includes('admin')) {
-        navigate('/admin/dashboard');
-      } else if (email.includes('staff')) {
-        navigate('/staff/dashboard');
-      } else if (email.includes('technician') || email.includes('tech')) {
-        navigate('/technician/dashboard');
-      } else {
-        navigate('/app/dashboard');
+      
+      // check xem role da dung chua
+      const userRole = result.user?.role || 'CUSTOMER';
+      
+      switch(userRole) {
+        case 'ADMIN':
+          navigate('/admin/dashboard');
+          break;
+        case 'STAFF':
+          navigate('/staff/dashboard');
+          break;
+        case 'TECHNICIAN':
+          navigate('/technician/dashboard');
+          break;
+        case 'CUSTOMER':
+        default:
+          navigate('/app/dashboard');
+          break;
       }
     } else {
       toast.error(result.error || 'Đăng nhập thất bại');
@@ -59,15 +68,15 @@ const Login = () => {
         
         <Card className="p-8">
           <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="text-sm text-blue-700 mb-2">
-              💡 Tips đăng nhập:
+            <p className="text-sm text-blue-700 font-semibold mb-2">
+              🔑 Tài khoản test:
             </p>
-            <ul className="text-sm text-blue-600 space-y-1">
-              <li>• Admin: email chứa "admin" (v.d: admin@evservice.com)</li>
-              <li>• Staff: email chứa "staff" (v.d: staff@evservice.com)</li>
-              <li>• Kỹ thuật: email chứa "tech" hoặc "technician" (v.d: tech@evservice.com)</li>
-              <li>• Khách hàng: email bất kỳ khác (v.d: user@gmail.com)</li>
-              <li className="text-xs">• Mật khẩu: nhập bất kỳ</li>
+            <ul className="text-xs text-blue-600 space-y-1">
+              <li>• <strong>Admin:</strong> dinhdinhchibao@gmail.com / admin123</li>
+              <li>• <strong>Customer:</strong> quangphap931@gmail.com / user1@</li>
+              <li>• <strong>Staff:</strong> ddinhchibao@gmail.com / staff123</li>
+              <li>• <strong>Technician:</strong> zzz.dinhchibao.15@gmail.com / tech123</li>
+              <li className="text-xs text-blue-500 mt-1">⚠️ Hoặc dùng số điện thoại thay vì email</li>
             </ul>
           </div>
           
