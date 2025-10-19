@@ -7,6 +7,7 @@ import {
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import toast from 'react-hot-toast';
+import bookingService from '../../services/bookingService';
 
 const TechnicianWorkOrders = () => {
   const [workOrders, setWorkOrders] = useState([]);
@@ -15,12 +16,74 @@ const TechnicianWorkOrders = () => {
   const [priorityFilter, setPriorityFilter] = useState('all');
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  // lay cong viec tu apointment
+  // lay du lieuj booking tu backend
   useEffect(() => {
-    // call api de lay cong viec
-    const fetchWorkOrders = () => {
-      const mockOrders = [
+    fetchWorkOrders();
+  }, []);
+  
+  const fetchWorkOrders = async () => {
+    try {
+      setLoading(true);
+      console.log('🔄 Fetching work orders from API...');
+      const result = await bookingService.getAllBookings();
+      
+      if (result.success) {
+        console.log('✅ Fetched bookings:', result.data);
+        
+        // goi du lieu tu backend 
+        const transformedOrders = result.data.map((booking, index) => ({
+          id: `WO-${String(booking.bookingId).padStart(3, '0')}`,
+          appointmentId: `APT-${String(booking.bookingId).padStart(3, '0')}`,
+          bookingId: booking.bookingId,
+          customerName: booking.customerName,
+          customerPhone: booking.customerPhone,
+          vehicle: {
+            make: 'VinFast', // xe may dien vinfast
+            model: booking.eVModel,
+            plate: booking.licensePlate,
+            year: 2023,
+            vin: 'N/A'
+          },
+          service: booking.offerType || 'Dịch vụ',
+          serviceDetails: booking.maintenancePackage ? [booking.maintenancePackage] : [],
+          problemDescription: booking.problemDescription,
+          priority: 'normal', 
+          status: booking.status.toLowerCase() === 'pending' ? 'pending' : 'in-progress',
+          scheduledDate: booking.date,
+          scheduledTime: booking.time,
+          estimatedDuration: 60,
+          location: 'Bay 1',
+          assignedBy: 'System',
+          notes: booking.notes || booking.problemDescription || '',
+          parts: [],
+          checklist: [
+            { id: 1, task: 'Kiểm tra hệ thống', completed: false },
+            { id: 2, task: 'Thực hiện dịch vụ', completed: false },
+            { id: 3, task: 'Test drive', completed: false }
+          ]
+        }));
+        
+        setWorkOrders(transformedOrders);
+      } else {
+        console.error('❌ Error:', result.error);
+        toast.error(result.error);
+        // sử dụng dữ liệu giả lập nếu không lấy được từ API
+        setWorkOrders(getMockOrders());
+      }
+    } catch (error) {
+      console.error('❌ Error fetching work orders:', error);
+      toast.error('Không thể tải danh sách công việc');
+      setWorkOrders(getMockOrders());
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // lấy dữ liệu giả lập nếu không lấy được từ API
+  const getMockOrders = () => {
+    return [
         //fake data
         {
           id: 'WO-001',
@@ -134,12 +197,7 @@ const TechnicianWorkOrders = () => {
           ]
         }
       ];
-
-      setWorkOrders(mockOrders);
-    };
-
-    fetchWorkOrders();
-  }, []);
+  };
 
   // trang thai loc va tim kiem
   const filteredOrders = workOrders.filter(order => {
@@ -227,9 +285,19 @@ const TechnicianWorkOrders = () => {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Work Orders</h1>
-        <p className="text-gray-600 mt-1">Manage your assigned work orders and track progress</p>
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Work Orders</h1>
+          <p className="text-gray-600 mt-1">Manage your assigned work orders and track progress</p>
+        </div>
+        <Button
+          onClick={fetchWorkOrders}
+          disabled={loading}
+          variant="outline"
+          icon={<FiRefreshCw className={loading ? 'animate-spin' : ''} />}
+        >
+          Refresh
+        </Button>
       </div>
       <div className="mb-6 flex flex-col sm:flex-row gap-4">
         <div className="flex-1 relative">
@@ -264,13 +332,20 @@ const TechnicianWorkOrders = () => {
           <option value="normal">Normal</option>
         </select>
       </div>
-      {filteredOrders.length === 0 ? (
+      {loading ? (
+        <Card>
+          <Card.Content className="p-12 text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+            <p className="text-gray-500">Đang tải danh sách công việc...</p>
+          </Card.Content>
+        </Card>
+      ) : filteredOrders.length === 0 ? (
         <Card>
           <Card.Content className="p-12 text-center">
             <FiTool className="mx-auto text-5xl text-gray-300 mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">No work orders found</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Không có công việc nào</h3>
             <p className="text-gray-500">
-              No work orders have been assigned to you yet
+              Chưa có công việc nào được giao cho bạn
             </p>
           </Card.Content>
         </Card>
