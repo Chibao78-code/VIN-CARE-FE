@@ -23,7 +23,7 @@ const StaffCheckin = () => {
   // Xử lý submit form
   const handleSubmit = (e) => {
     e.preventDefault();
-    // TODO: xử lý hoặc gọi API lưu thông tin xe tiếp nhận
+    //  xử lý hoặc gọi API lưu thông tin xe tiếp nhận
     alert('Tiếp nhận xe thành công');
     setFormData({
       customerName: '',
@@ -74,7 +74,7 @@ const StaffCheckin = () => {
               value={formData.vehicleMake}
               onChange={handleChange}
               className="w-full border border-gray-300 rounded px-3 py-2"
-              placeholder="Ví dụ: Tesla"
+              placeholder="Ví dụ: Vinfast"
             />
           </div>
 
@@ -86,7 +86,7 @@ const StaffCheckin = () => {
               value={formData.vehicleModel}
               onChange={handleChange}
               className="w-full border border-gray-300 rounded px-3 py-2"
-              placeholder="Ví dụ: Model 3"
+              placeholder="Ví dụ: Feliz S"
             />
           </div>
 
