@@ -104,10 +104,16 @@ const StaffLayout = () => {
           {/* Phần bên phải: Thông báo + Avatar + Menu */}
           <div className="flex items-center gap-4">
             {/* Thông báo */}
-            <button className="relative p-2 hover:bg-gray-100 rounded-lg">
+            <button
+              onClick={() => navigate("/staff/staff-notifications")}
+
+
+              className="relative p-2 hover:bg-gray-100 rounded-lg"
+            >
               <FiBell className="text-xl text-gray-600" />
               <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
             </button>
+              
 
             {/* Avatar */}
             <div className="relative">
