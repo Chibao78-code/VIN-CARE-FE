@@ -13,12 +13,12 @@ const SelectCenter = ({ data, onNext }) => {
   const [loadingCenters, setLoadingCenters] = useState(true);
   const [error, setError] = useState(null);
 
-  // call api tu backend 
+  // call api tu backend de lay danh sach trung tam
   useEffect(() => {
     fetchServiceCenters();
   }, []);
 
-  // lau data dia diem của user
+  // lay dia chi khach hang de sap xep trung tam theo khoang cach
   useEffect(() => {
     if (centers.length > 0 && navigator.geolocation) {
       setLoadingLocation(true);
@@ -27,12 +27,12 @@ const SelectCenter = ({ data, onNext }) => {
           const { latitude, longitude } = position.coords;
           setUserLocation({ lat: latitude, lng: longitude });
           
-          // tinh toan khoang cach den tung trung tam
+          // tinh toan khoang cach va sap xep
           const centersWithDistance = centers.map(center => {
             const distance = calculateDistance(
               latitude, 
               longitude, 
-              center.latitude || 10.762622, // mac dinh toa do HCM
+              center.latitude || 10.762622, // mac dinh HCM
               center.longitude || 106.660172
             );
             return {
@@ -60,18 +60,18 @@ const SelectCenter = ({ data, onNext }) => {
       const response = await serviceCenterService.getAllCenters();
       
       if (response.success) {
-        // transform data de su dung
+        // chuyen data backend ve dinh dang frontend goi
         const transformedCenters = response.data.map(center => ({
-          id: center.id, // backend trả về id luôn
+          id: center.id, // Backend trả về id luôn
           name: center.centerName,
-          address: center.centerAddress, // backend trả về centeraddress
+          address: center.centerAddress, // Backend trả về centerAddress
           phone: center.centerPhone,
           openTime: center.startTime || '07:30',
           closeTime: center.endTime || '18:30',
-          workingDays: ['T2', 'T3', 'T4', 'T5', 'T6', 'T7'],// ngay lam viec
-          rating: 4.7, // danh gia cua user 
-          technicians: 6, // `so ky thuat vien
-          services: ['maintenance', 'repair', 'parts'], //dich vu 
+          workingDays: ['T2', 'T3', 'T4', 'T5', 'T6', 'T7'], ]
+          rating: 4.7, // danh gia mac dinh
+          technicians: 6, // so luong ky thuat vien mac dinh
+          services: ['maintenance', 'repair', 'parts'], // dich vu mac dinh
           maxCapacity: center.maxCapacity || 10,
           latitude: center.latitude,
           longitude: center.longitude

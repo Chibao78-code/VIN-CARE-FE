@@ -100,32 +100,6 @@ const SelectDate = ({ data, onNext, onBack }) => {
             </div>
           )}
         </div>
-        <div>
-          <p className="text-sm font-medium text-gray-700 mb-2">Chọn nhanh:</p>
-          <div className="grid grid-cols-3 gap-2">
-            {[1, 2, 3, 7, 14, 30].map(days => {
-              const quickDate = new Date(today);
-              quickDate.setDate(quickDate.getDate() + days);
-              const dateString = formatDate(quickDate);
-              
-              return (
-                <button
-                  key={days}
-                  type="button"
-                  onClick={() => setSelectedDate(dateString)}
-                  className={`px-3 py-2 text-sm rounded-lg border transition-colors
-                    ${selectedDate === dateString 
-                      ? 'bg-teal-600 text-white border-teal-600' 
-                      : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}
-                >
-                  {days === 1 ? 'Ngày mai' : 
-                   days === 2 ? 'Ngày kia' : 
-                   `Sau ${days} ngày`}
-                </button>
-              );
-            })}
-          </div>
-        </div>
         <div className="p-4 bg-amber-50 rounded-lg">
           <h4 className="text-sm font-medium text-amber-900 mb-2">Lưu ý:</h4>
           <ul className="text-sm text-amber-700 space-y-1">

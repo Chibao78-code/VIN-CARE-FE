@@ -10,7 +10,7 @@ import bookingService from '../../../services/bookingService';
 const ConfirmBooking = ({ data, onNext, onBack }) => {
   const { user } = useAuthStore();
   
-  // auto dien thong tin khach hang neu da login
+  // Auto dien thong tin khach hang neu da login
   const [customerInfo, setCustomerInfo] = useState(data.customerInfo || {
     name: user?.fullName || '',
     phone: user?.phone || '',
@@ -18,7 +18,7 @@ const ConfirmBooking = ({ data, onNext, onBack }) => {
     address: user?.address || ''
   });
   
-  // cap nhat customer info khi user thay đổi
+  // cap nhat thong tin khi user thay doi
   useEffect(() => {
     if (user && !data.customerInfo?.name) {
       setCustomerInfo({
@@ -66,12 +66,13 @@ const ConfirmBooking = ({ data, onNext, onBack }) => {
     setIsSubmitting(true);
     
     try {
-      //  POST /bookings
-      //  eVId,centerId,bookingDate,bookingTime
+       // POST /bookings
+      //eVId,centerId,bookingDate,bookingTime
       const formattedTime = data.timeSlot.split(':').length === 3 
         ? data.timeSlot 
         : data.timeSlot + ':00';
-        // map dich vu sang offerTypeId
+      
+      // map voi serviceId
       const getOfferTypeId = (serviceId) => {
         const mapping = {
           'maintenance': 1, // Bảo dưỡng định kỳ
@@ -99,7 +100,7 @@ const ConfirmBooking = ({ data, onNext, onBack }) => {
         problem: data.problemDescription
       });
       
-      // validation form nhap thong tin
+      // check inpit co dung chua 
       if (!bookingPayload.eVId || !bookingPayload.centerId) {
         toast.error('Thiếu thông tin xe hoặc trung tâm');
         setIsSubmitting(false);
@@ -109,18 +110,19 @@ const ConfirmBooking = ({ data, onNext, onBack }) => {
       const response = await bookingService.createBooking(bookingPayload);
       
       if (response.success && response.data) {
-        // luu data booking cuoi cung
+        // Lưu thông tin đầy đủ từ backend
         const finalBookingData = {
           ...data,
           customerInfo,
           notes,
-          // neu be cung cap them data thi lay, neu ko thi tao gia tri mac dinh
+          // Nếu backend không trả về bookingId, tự tao
           bookingId: response.data.bookingId || 'VF' + Date.now().toString().slice(-8),
           status: response.data.status || 'confirmed',
           createdAt: response.data.createdAt || new Date().toISOString(),
-          backendData: response.data // luu data backend 
+          backendData: response.data // Lưu toàn bộ response từ backend
         };
-         //luu data tam thoi vao local may user
+        
+        // luu vao local storage de test
         const existingBookings = JSON.parse(localStorage.getItem('bookings') || '[]');
         existingBookings.push(finalBookingData);
         localStorage.setItem('bookings', JSON.stringify(existingBookings));
