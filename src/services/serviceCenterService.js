@@ -1,6 +1,6 @@
 import api from './api';
 const serviceCenterService = {
-  //lay tat ca data trung tam 
+  // Lấy tất cả trung tâm dịch vụ
   getAllCenters: async () => {
     try {
       const response = await api.get('/centers');
@@ -16,7 +16,7 @@ const serviceCenterService = {
       };
     }
   },
- // lat data trung tam theo id
+  // Lấy thông tin chi tiết trung tâm theo ID
   getCenterById: async (centerId) => {
     try {
       const response = await api.get(`/centers/${centerId}`);

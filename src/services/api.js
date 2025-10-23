@@ -11,10 +11,10 @@ const api = axios.create({
 });
 api.interceptors.request.use(
   (config) => {
-    // lay token tu local may user
+    // lay token tu local cua trinh duyet user
     let token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
     
-    // neu khong co bai loi
+    // neu ko thay bao loi
     if (!token) {
       const authState = localStorage.getItem('ev_auth_state');
       if (authState) {

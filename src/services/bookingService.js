@@ -1,6 +1,6 @@
 import api from './api';
+// Dịch vụ đặt lịch
 const bookingService = {
-   // tao moi booking
   createBooking: async (bookingData) => {
     try {
       const payload = {
@@ -13,7 +13,7 @@ const bookingService = {
         problemDescription: bookingData.problemDescription || null,
         notes: bookingData.notes || null
       };
-      
+      // Debug log payload
       console.log('📤 Sending booking payload to backend:', payload);
       const response = await api.post('/bookings', payload);
       return {
@@ -27,7 +27,7 @@ const bookingService = {
       };
     }
   },
-  //check xem khung gio con trong ko
+  // Lấy danh sách khung giờ có sẵn cho trung tâm và ngày đã chọn
   getAvailableTimeSlots: async (centerId, date) => {
     try {
       const response = await api.get(`/bookings/${centerId}/${date}`);
@@ -42,7 +42,7 @@ const bookingService = {
       };
     }
   },
-// check xem co loai dich vu nao available khong
+  // Lấy danh sách loại dịch vụ
   getOfferTypes: async () => {
     try {
       const response = await api.get('/offer-types');
@@ -57,7 +57,7 @@ const bookingService = {
       };
     }
   },
-// lay tat ca booking
+  // Lấy tất cả booking (admin)
   getAllBookings: async () => {
     try {
       const response = await api.get('/bookings');
@@ -72,7 +72,7 @@ const bookingService = {
       };
     }
   },
-// lay booking cua minh
+  // Lấy booking của người dùng hiện tại
   getMyBookings: async (status = 'all') => {
     try {
       const endpoint = status === 'all' 
@@ -91,7 +91,7 @@ const bookingService = {
       };
     }
   },
-// lay booking theo id
+  // Lấy chi tiết booking theo ID
   getBookingById: async (bookingId) => {
     try {
       const response = await api.get(`/bookings/${bookingId}`);
@@ -106,7 +106,7 @@ const bookingService = {
       };
     }
   },
-// huy booking
+  // huy booking
   cancelBooking: async (bookingId, reason) => {
     try {
       const response = await api.put(`/bookings/${bookingId}/cancel`, { reason });
@@ -121,7 +121,7 @@ const bookingService = {
       };
     }
   },
-// doi lich booking
+  // doi lich booking
   rescheduleBooking: async (bookingId, newSchedule) => {
     try {
       const response = await api.put(`/bookings/${bookingId}/reschedule`, newSchedule);
@@ -133,6 +133,96 @@ const bookingService = {
       return {
         success: false,
         error: error.response?.data?.message || 'Không thể đổi lịch booking'
+      };
+    }
+  },
+  // Lấy danh sách booking theo trạng thái (admin)
+  getBookingsByStatus: async (status) => {
+    try {
+      const response = await api.get(`/bookings/status/${status}`);
+      return {
+        success: true,
+        data: response
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Không thể lấy danh sách booking'
+      };
+    }
+  },
+  // Duyệt booking
+  approveBooking: async (bookingId) => {
+    try {
+      const response = await api.post(`/bookings/${bookingId}/approve`);
+      return {
+        success: true,
+        data: response
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Không thể duyệt booking'
+      };
+    }
+  },
+  // cancell booking
+  rejectBooking: async (bookingId, reason) => {
+    try {
+      const response = await api.post(`/bookings/${bookingId}/reject`, reason);
+      return {
+        success: true,
+        data: response
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Không thể từ chối booking'
+      };
+    }
+  },
+  // Phân công technician cho booking
+  assignTechnician: async (bookingId, technicianId) => {
+    try {
+      const response = await api.post(`/bookings/${bookingId}/assign?technicianId=${technicianId}`);
+      return {
+        success: true,
+        data: response
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Không thể phân công technician'
+      };
+    }
+  },
+  // Lấy danh sách công việc của technician
+  getTechnicianBookings: async (technicianId) => {
+    try {
+      const response = await api.get(`/bookings/technician/${technicianId}`);
+      return {
+        success: true,
+        data: response
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Không thể lấy danh sách công việc'
+      };
+    }
+  },
+  // Lấy danh sách technician
+  getTechnicians: async () => {
+    try {
+      const response = await api.get('/technicians');
+      return {
+        success: true,
+        data: response
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Không thể lấy danh sách technician'
       };
     }
   }
