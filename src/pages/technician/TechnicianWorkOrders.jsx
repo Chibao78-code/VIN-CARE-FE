@@ -8,8 +8,10 @@ import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import toast from 'react-hot-toast';
 import bookingService from '../../services/bookingService';
+import useAuthStore from '../../store/authStore';
 
 const TechnicianWorkOrders = () => {
+  const { user } = useAuthStore();
   const [workOrders, setWorkOrders] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -18,21 +20,33 @@ const TechnicianWorkOrders = () => {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // lay du lieuj booking tu backend
+  // call api de lay danh sach work order cua technician
   useEffect(() => {
-    fetchWorkOrders();
-  }, []);
+    if (user && user.userId) {
+      fetchWorkOrders();
+    }
+  }, [user]);
   
   const fetchWorkOrders = async () => {
     try {
       setLoading(true);
-      console.log('🔄 Fetching work orders from API...');
-      const result = await bookingService.getAllBookings();
+      
+      if (!user || !user.userId) {
+        console.error('❌ No user logged in');
+        toast.error('Vui lòng đăng nhập lại');
+        setLoading(false);
+        return;
+      }
+      
+      console.log('🔄 Fetching work orders for technician ID:', user.userId);
+      
+      // call api de lay danh sach work order
+      const result = await bookingService.getTechnicianBookings(user.userId);
       
       if (result.success) {
-        console.log('✅ Fetched bookings:', result.data);
+        console.log('✅ Fetched assigned bookings:', result.data);
         
-        // goi du lieu tu backend 
+        // data transform de phu hop voi work order
         const transformedOrders = result.data.map((booking, index) => ({
           id: `WO-${String(booking.bookingId).padStart(3, '0')}`,
           appointmentId: `APT-${String(booking.bookingId).padStart(3, '0')}`,
@@ -40,7 +54,7 @@ const TechnicianWorkOrders = () => {
           customerName: booking.customerName,
           customerPhone: booking.customerPhone,
           vehicle: {
-            make: 'VinFast', // xe may dien vinfast
+            make: 'VinFast', 
             model: booking.eVModel,
             plate: booking.licensePlate,
             year: 2023,
@@ -49,7 +63,7 @@ const TechnicianWorkOrders = () => {
           service: booking.offerType || 'Dịch vụ',
           serviceDetails: booking.maintenancePackage ? [booking.maintenancePackage] : [],
           problemDescription: booking.problemDescription,
-          priority: 'normal', 
+          priority: 'normal',
           status: booking.status.toLowerCase() === 'pending' ? 'pending' : 'in-progress',
           scheduledDate: booking.date,
           scheduledTime: booking.time,
@@ -69,7 +83,6 @@ const TechnicianWorkOrders = () => {
       } else {
         console.error('❌ Error:', result.error);
         toast.error(result.error);
-        // sử dụng dữ liệu giả lập nếu không lấy được từ API
         setWorkOrders(getMockOrders());
       }
     } catch (error) {
@@ -80,8 +93,6 @@ const TechnicianWorkOrders = () => {
       setLoading(false);
     }
   };
-  
-  // lấy dữ liệu giả lập nếu không lấy được từ API
   const getMockOrders = () => {
     return [
         //fake data
@@ -344,8 +355,11 @@ const TechnicianWorkOrders = () => {
           <Card.Content className="p-12 text-center">
             <FiTool className="mx-auto text-5xl text-gray-300 mb-4" />
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Không có công việc nào</h3>
-            <p className="text-gray-500">
-              Chưa có công việc nào được giao cho bạn
+            <p className="text-gray-500 mb-2">
+              Chưa có công việc nào được Staff giao cho bạn
+            </p>
+            <p className="text-sm text-gray-400">
+              Staff cần approve booking của customer và assign cho bạn trước
             </p>
           </Card.Content>
         </Card>

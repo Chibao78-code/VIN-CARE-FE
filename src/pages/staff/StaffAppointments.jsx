@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   FiCalendar, FiSearch, FiFilter, FiPlus, FiEdit2,
   FiClock, FiUser, FiTruck, FiTool, FiDollarSign,
@@ -7,12 +7,19 @@ import {
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import toast from 'react-hot-toast';
+import bookingService from '../../services/bookingService';
 
 const StaffAppointments = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState('all');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState(null);
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [technicians, setTechnicians] = useState([]);
+  const [selectedTechnicianId, setSelectedTechnicianId] = useState('');
+  const [technicianWorkload, setTechnicianWorkload] = useState({});
   const [formData, setFormData] = useState({
     customerName: '',
     customerEmail: '',
@@ -29,8 +36,119 @@ const StaffAppointments = () => {
     price: ''
   });
 
-  // fake data appointment
+  // lay du lieu booking tu backend
   const [appointments, setAppointments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  
+  // lay du lieu booking moi khi thay doi trang thai loc
+  useEffect(() => {
+    fetchBookings();
+    fetchTechnicians();
+  }, [statusFilter]);
+  
+  const fetchTechnicians = async () => {
+    try {
+      const result = await bookingService.getTechnicians();
+      if (result.success && result.data) {
+        setTechnicians(result.data);
+        // phan quyen sua cho technicial
+        calculateTechnicianWorkload(result.data);
+      }
+    } catch (error) {
+      console.error('Error fetching technicians:', error);
+    }
+  };
+  
+  // xem co bao nhieu booking dang thuc hien cua tung ky thuat vien
+  const calculateTechnicianWorkload = async (techList) => {
+    const workload = {};
+    
+    for (const tech of techList) {
+      try {
+        const result = await bookingService.getTechnicianBookings(tech.employeeId);
+        if (result.success && result.data) {
+          // trang thai dang thuc hien
+          const activeBookings = result.data.filter(booking => 
+            booking.status === 'ASSIGNED' || booking.status === 'IN_PROGRESS'
+          );
+          workload[tech.employeeId] = activeBookings.length;
+        } else {
+          workload[tech.employeeId] = 0;
+        }
+      } catch (error) {
+        workload[tech.employeeId] = 0;
+      }
+    }
+    
+    setTechnicianWorkload(workload);
+  };
+  
+  const fetchBookings = async () => {
+    setLoading(true);
+    try {
+      let result;
+      // status booking 
+      if (statusFilter !== 'all') {
+        // status map
+        const statusMap = {
+          'pending': 'PENDING',
+          'approved': 'APPROVED',
+          'assigned': 'ASSIGNED',
+          'in-progress': 'IN_PROGRESS',
+          'completed': 'COMPLETED',
+          'cancelled': 'CANCELLED'
+        };
+        result = await bookingService.getBookingsByStatus(statusMap[statusFilter]);
+      } else {
+        // hien thi tat ca booking cho staff
+        result = await bookingService.getAllBookings();
+      }
+      
+      if (result.success && result.data) {
+        // du lieu backend ve frontend goi
+        const transformedAppointments = result.data.map(booking => ({
+          id: booking.bookingId,
+          customerName: booking.customerName || 'N/A',
+          customerEmail: booking.customerEmail || '',
+          customerPhone: booking.customerPhone || '',
+          vehicleMake: booking.vehicleMake || 'EV',
+          vehicleModel: booking.vehicleModel || '',
+          vehiclePlate: booking.vehiclePlate || booking.licensePlate || 'N/A',
+          service: booking.serviceName || booking.offerType || 'Service',
+          date: booking.bookingDate,
+          time: booking.bookingTime,
+          duration: 60,
+          technician: booking.assignedTechnicianName || '',
+          notes: booking.notes || booking.problemDescription || '',
+          price: 0,
+          status: mapBackendStatus(booking.status),
+          createdAt: booking.createdAt
+        }));
+        setAppointments(transformedAppointments);
+      } else {
+        toast.error(result.error || 'Không thể tải danh sách booking');
+      }
+    } catch (error) {
+      console.error('Error fetching bookings:', error);
+      toast.error('Lỗi khi tải danh sách booking');
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // map trang thai backend sang frontend
+  const mapBackendStatus = (backendStatus) => {
+    const statusMap = {
+      'PENDING': 'pending',
+      'APPROVED': 'approved',
+      'ASSIGNED': 'assigned',
+      'IN_PROGRESS': 'in-progress',
+      'COMPLETED': 'completed',
+      'REJECTED': 'cancelled',
+      'CANCELLED': 'cancelled'
+    };
+    return statusMap[backendStatus] || 'pending';
+  };
 
   // dich vu
   const services = [
@@ -44,14 +162,6 @@ const StaffAppointments = () => {
     'Diagnostic Check'
   ];
 
-  // fake date technician
-  const technicians = [
-    'Nguyễn Văn A',
-    'Trần Thị B',
-    'Lê Văn C',
-    'Phạm Thị D'
-  ];
-
   // thoi gian
   const timeSlots = [
     '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',
@@ -61,10 +171,11 @@ const StaffAppointments = () => {
 
   
   const stats = {
-    scheduled: appointments.filter(a => a.status === 'scheduled').length,
+    pending: appointments.filter(a => a.status === 'pending').length,
+    approved: appointments.filter(a => a.status === 'approved').length,
+    assigned: appointments.filter(a => a.status === 'assigned').length,
     inProgress: appointments.filter(a => a.status === 'in-progress').length,
-    completed: appointments.filter(a => a.status === 'completed').length,
-    unassigned: appointments.filter(a => !a.technician).length
+    completed: appointments.filter(a => a.status === 'completed').length
   };
 
   // appointment 
@@ -108,8 +219,10 @@ const StaffAppointments = () => {
   // mau sac trang thai sau khi chon
   const getStatusColor = (status) => {
     switch(status) {
-      case 'scheduled': return 'bg-blue-100 text-blue-700';
-      case 'in-progress': return 'bg-yellow-100 text-yellow-700';
+      case 'pending': return 'bg-yellow-100 text-yellow-700';
+      case 'approved': return 'bg-blue-100 text-blue-700';
+      case 'assigned': return 'bg-purple-100 text-purple-700';
+      case 'in-progress': return 'bg-orange-100 text-orange-700';
       case 'completed': return 'bg-green-100 text-green-700';
       case 'cancelled': return 'bg-red-100 text-red-700';
       default: return 'bg-gray-100 text-gray-700';
@@ -176,6 +289,73 @@ const StaffAppointments = () => {
       toast.success('Appointment cancelled');
     }
   };
+  
+  // Show detail booking
+  const handleShowDetail = (appointment) => {
+    setSelectedBooking(appointment);
+    setShowDetailModal(true);
+  };
+  
+  // chap nhan booking
+  const handleApproveBooking = async (bookingId) => {
+    try {
+      const result = await bookingService.approveBooking(bookingId);
+      if (result.success) {
+        toast.success('Booking đã được duyệt!');
+        fetchBookings(); // tai lai list 
+      } else {
+        toast.error(result.error || 'Không thể duyệt booking');
+      }
+    } catch (error) {
+      toast.error('Lỗi khi duyệt booking');
+    }
+  };
+  
+  // tu chho  booking
+  const handleRejectBooking = async (bookingId) => {
+    const reason = prompt('Nhập lý do từ chối:');
+    if (!reason) return;
+    
+    try {
+      const result = await bookingService.rejectBooking(bookingId, reason);
+      if (result.success) {
+        toast.success('Booking đã bị từ chối. Khách hàng đã được thông báo.');
+        fetchBookings(); // tai lai list
+      } else {
+        toast.error(result.error || 'Không thể từ chối booking');
+      }
+    } catch (error) {
+      toast.error('Lỗi khi từ chối booking');
+    }
+  };
+  
+  // hien thi viec da giao ky thuat vien
+  const handleShowAssignModal = (booking) => {
+    setSelectedBooking(booking);
+    setShowAssignModal(true);
+  };
+  
+  // phan cong ky thuat vien
+  const handleAssignTechnician = async () => {
+    if (!selectedTechnicianId) {
+      toast.error('Vui lòng chọn kỹ thuật viên');
+      return;
+    }
+    
+    try {
+      const result = await bookingService.assignTechnician(selectedBooking.id, parseInt(selectedTechnicianId));
+      if (result.success) {
+        toast.success('Đã phân công kỹ thuật viên. Khách hàng đã được thông báo xe đang sửa chữa.');
+        setShowAssignModal(false);
+        setSelectedTechnicianId('');
+        fetchBookings(); //tai lai list 
+      } else {
+        toast.error(result.error || 'Không thể phân công kỹ thuật viên');
+      }
+    } catch (error) {
+      toast.error('Lỗi khi phân công kỹ thuật viên');
+    }
+  };
 
   return (
     <div>
@@ -209,11 +389,13 @@ const StaffAppointments = () => {
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
         >
-          <option value="all">All Status</option>
-          <option value="scheduled">Scheduled</option>
-          <option value="in-progress">In Progress</option>
-          <option value="completed">Completed</option>
-          <option value="cancelled">Cancelled</option>
+          <option value="all">Tất cả trạng thái</option>
+          <option value="pending">Chờ duyệt</option>
+          <option value="approved">Đã duyệt</option>
+          <option value="assigned">Đã phân công</option>
+          <option value="in-progress">Đang thực hiện</option>
+          <option value="completed">Hoàn thành</option>
+          <option value="cancelled">Đã hủy</option>
         </select>
         <select
           className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
@@ -225,36 +407,50 @@ const StaffAppointments = () => {
           <option value="week">This Week</option>
         </select>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
         <Card>
           <Card.Content className="p-6">
-            <p className="text-sm text-gray-600 mb-2">Scheduled</p>
-            <p className="text-3xl font-bold text-gray-900">{stats.scheduled}</p>
+            <p className="text-sm text-gray-600 mb-2">Chờ duyệt</p>
+            <p className="text-3xl font-bold text-yellow-600">{stats.pending}</p>
           </Card.Content>
         </Card>
 
         <Card>
           <Card.Content className="p-6">
-            <p className="text-sm text-gray-600 mb-2">In Progress</p>
-            <p className="text-3xl font-bold text-gray-900">{stats.inProgress}</p>
+            <p className="text-sm text-gray-600 mb-2">Đã duyệt</p>
+            <p className="text-3xl font-bold text-blue-600">{stats.approved}</p>
+          </Card.Content>
+        </Card>
+        
+        <Card>
+          <Card.Content className="p-6">
+            <p className="text-sm text-gray-600 mb-2">Đã phân công</p>
+            <p className="text-3xl font-bold text-purple-600">{stats.assigned}</p>
           </Card.Content>
         </Card>
 
         <Card>
           <Card.Content className="p-6">
-            <p className="text-sm text-gray-600 mb-2">Completed</p>
-            <p className="text-3xl font-bold text-gray-900">{stats.completed}</p>
+            <p className="text-sm text-gray-600 mb-2">Đang thực hiện</p>
+            <p className="text-3xl font-bold text-orange-600">{stats.inProgress}</p>
           </Card.Content>
         </Card>
 
         <Card>
           <Card.Content className="p-6">
-            <p className="text-sm text-gray-600 mb-2">Unassigned</p>
-            <p className="text-3xl font-bold text-gray-900">{stats.unassigned}</p>
+            <p className="text-sm text-gray-600 mb-2">Hoàn thành</p>
+            <p className="text-3xl font-bold text-green-600">{stats.completed}</p>
           </Card.Content>
         </Card>
       </div>
-      {sortedAppointments.length === 0 ? (
+      {loading ? (
+        <Card>
+          <Card.Content className="p-12 text-center">
+            <div className="animate-spin mx-auto h-12 w-12 border-4 border-green-500 border-t-transparent rounded-full mb-4"></div>
+            <p className="text-gray-600">Đang tải danh sách booking...</p>
+          </Card.Content>
+        </Card>
+      ) : sortedAppointments.length === 0 ? (
         <Card>
           <Card.Content className="p-12 text-center">
             <FiCalendar className="mx-auto text-5xl text-gray-300 mb-4" />
@@ -333,27 +529,67 @@ const StaffAppointments = () => {
                       </div>
                     )}
 
-                    <div className="flex gap-2">
-                      {appointment.status === 'scheduled' && (
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleShowDetail(appointment)}
+                      >
+                        <FiEdit2 className="mr-1" />
+                        Detail
+                      </Button>
+                      
+                      {appointment.status === 'pending' && (
                         <>
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            onClick={() => handleApproveBooking(appointment.id)}
+                            className="bg-green-600 hover:bg-green-700"
+                          >
+                            <FiCheck className="mr-1" />
+                            Duyệt
+                          </Button>
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleStatusChange(appointment.id, 'in-progress')}
+                            onClick={() => handleRejectBooking(appointment.id)}
+                            className="text-red-600 border-red-600 hover:bg-red-50"
                           >
-                            <FiClock className="mr-1" />
-                            Start Service
+                            <FiX className="mr-1" />
+                            Từ chối
                           </Button>
+                        </>
+                      )}
+                      {appointment.status === 'approved' && !appointment.technician && (
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          onClick={() => handleShowAssignModal(appointment)}
+                          className="bg-blue-600 hover:bg-blue-700"
+                        >
+                          <FiUser className="mr-1" />
+                          Phân công KTV
+                        </Button>
+                      )}
+                      {appointment.status === 'assigned' && (
+                        <>
+                          <span className="text-sm text-blue-600 flex items-center gap-1">
+                            <FiCheckCircle />
+                            Đã phân công cho {appointment.technician}
+                          </span>
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => handleDeleteAppointment(appointment.id)}
+                            className="text-red-600 border-red-600"
                           >
                             <FiX className="mr-1" />
-                            Cancel
+                            Hủy
                           </Button>
                         </>
                       )}
+                      
                       {appointment.status === 'in-progress' && (
                         <Button
                           variant="primary"
@@ -361,13 +597,13 @@ const StaffAppointments = () => {
                           onClick={() => handleStatusChange(appointment.id, 'completed')}
                         >
                           <FiCheckCircle className="mr-1" />
-                          Complete Service
+                          Hoàn thành
                         </Button>
                       )}
                       {appointment.status === 'completed' && (
                         <span className="text-sm text-green-600 flex items-center gap-1">
                           <FiCheckCircle />
-                          Service Completed
+                          Đã hoàn thành
                         </span>
                       )}
                     </div>
@@ -589,7 +825,7 @@ const StaffAppointments = () => {
                   >
                     <option value="">Assign Later</option>
                     {technicians.map(tech => (
-                      <option key={tech} value={tech}>{tech}</option>
+                      <option key={tech.employeeId} value={tech.name}>{tech.name}</option>
                     ))}
                   </select>
                 </div>
@@ -638,6 +874,295 @@ const StaffAppointments = () => {
                 </Button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {showDetailModal && selectedBooking && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-semibold text-gray-900">Chi tiết đặt lịch</h3>
+                <button
+                  onClick={() => {
+                    setShowDetailModal(false);
+                    setSelectedBooking(null);
+                  }}
+                  className="p-2 hover:bg-gray-100 rounded-lg"
+                >
+                  <FiX className="text-xl" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6">
+              <div className="mb-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="text-lg font-semibold text-gray-900">Trạng thái</h4>
+                  <span className={`px-3 py-1 text-sm font-medium rounded-full ${getStatusColor(selectedBooking.status)}`}>
+                    {selectedBooking.status.toUpperCase().replace('-', ' ')}
+                  </span>
+                </div>
+              </div>
+              <div className="mb-6 p-4 bg-blue-50 rounded-lg">
+                <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                  <FiUser className="mr-2" />
+                  Thông tin khách hàng
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-600">Họ tên</p>
+                    <p className="text-base font-medium text-gray-900">{selectedBooking.customerName}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Email</p>
+                    <p className="text-base font-medium text-gray-900">{selectedBooking.customerEmail || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Số điện thoại</p>
+                    <p className="text-base font-medium text-gray-900">{selectedBooking.customerPhone || 'N/A'}</p>
+                  </div>
+                </div>
+              </div>
+              <div className="mb-6 p-4 bg-green-50 rounded-lg">
+                <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                  <FiTruck className="mr-2" />
+                  Thông tin xe
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-600">Hãng xe</p>
+                    <p className="text-base font-medium text-gray-900">{selectedBooking.vehicleMake}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Dòng xe</p>
+                    <p className="text-base font-medium text-gray-900">{selectedBooking.vehicleModel}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Biển số</p>
+                    <p className="text-base font-medium text-gray-900">{selectedBooking.vehiclePlate}</p>
+                  </div>
+                </div>
+              </div>
+              <div className="mb-6 p-4 bg-yellow-50 rounded-lg">
+                <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                  <FiCalendar className="mr-2" />
+                  Thông tin đặt lịch
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-600">Dịch vụ</p>
+                    <p className="text-base font-medium text-gray-900">{selectedBooking.service}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Ngày hẹn</p>
+                    <p className="text-base font-medium text-gray-900">
+                      <FiCalendar className="inline mr-1" />
+                      {selectedBooking.date}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Giờ hẹn</p>
+                    <p className="text-base font-medium text-gray-900">
+                      <FiClock className="inline mr-1" />
+                      {selectedBooking.time}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Thời gian dự kiến</p>
+                    <p className="text-base font-medium text-gray-900">{selectedBooking.duration} phút</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Kỹ thuật viên</p>
+                    <p className="text-base font-medium text-gray-900">
+                      <FiTool className="inline mr-1" />
+                      {selectedBooking.technician || 'Chưa phân công'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Giá dự kiến</p>
+                    <p className="text-base font-medium text-gray-900">
+                      <FiDollarSign className="inline mr-1" />
+                      ${selectedBooking.price.toFixed(2)}
+                    </p>
+                  </div>
+                </div>
+                {selectedBooking.notes && (
+                  <div className="mt-4">
+                    <p className="text-sm text-gray-600">Ghi chú</p>
+                    <p className="text-base text-gray-900 mt-1 p-3 bg-white rounded border border-gray-200">
+                      {selectedBooking.notes}
+                    </p>
+                  </div>
+                )}
+              </div>
+              <div className="flex justify-end gap-3 mt-6 pt-6 border-t">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowDetailModal(false);
+                    setSelectedBooking(null);
+                  }}
+                >
+                  Đóng
+                </Button>
+                {selectedBooking.status === 'scheduled' && (
+                  <>
+                    <Button
+                      variant="primary"
+                      onClick={() => {
+                        handleStatusChange(selectedBooking.id, 'in-progress');
+                        setShowDetailModal(false);
+                      }}
+                    >
+                      <FiClock className="mr-1" />
+                      Bắt đầu dịch vụ
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        handleDeleteAppointment(selectedBooking.id);
+                        setShowDetailModal(false);
+                      }}
+                      className="text-red-600 border-red-600 hover:bg-red-50"
+                    >
+                      <FiX className="mr-1" />
+                      Hủy lịch
+                    </Button>
+                  </>
+                )}
+                {selectedBooking.status === 'in-progress' && (
+                  <Button
+                    variant="primary"
+                    onClick={() => {
+                      handleStatusChange(selectedBooking.id, 'completed');
+                      setShowDetailModal(false);
+                    }}
+                  >
+                    <FiCheckCircle className="mr-1" />
+                    Hoàn thành
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {showAssignModal && selectedBooking && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg max-w-md w-full">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-semibold text-gray-900">Phân công kỹ thuật viên</h3>
+                <button
+                  onClick={() => {
+                    setShowAssignModal(false);
+                    setSelectedBooking(null);
+                    setSelectedTechnicianId('');
+                  }}
+                  className="p-2 hover:bg-gray-100 rounded-lg"
+                >
+                  <FiX className="text-xl" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6">
+              <div className="mb-4">
+                <p className="text-sm text-gray-600 mb-2">Khách hàng</p>
+                <p className="text-base font-semibold text-gray-900">{selectedBooking.customerName}</p>
+              </div>
+              
+              <div className="mb-4">
+                <p className="text-sm text-gray-600 mb-2">Dịch vụ</p>
+                <p className="text-base font-medium text-gray-900">{selectedBooking.service}</p>
+              </div>
+              
+              <div className="mb-4">
+                <p className="text-sm text-gray-600 mb-2">Thời gian</p>
+                <p className="text-base font-medium text-gray-900">
+                  {selectedBooking.date} - {selectedBooking.time}
+                </p>
+              </div>
+
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Chọn kỹ thuật viên *
+                </label>
+                <div className="space-y-2">
+                  {technicians.length === 0 ? (
+                    <p className="text-sm text-gray-500">Không có kỹ thuật viên nào</p>
+                  ) : (
+                    technicians.map(tech => {
+                      const workload = technicianWorkload[tech.employeeId] || 0;
+                      const isAvailable = workload === 0;
+                      
+                      return (
+                        <label
+                          key={tech.employeeId}
+                          className={`flex items-center p-3 border rounded-lg cursor-pointer transition-all ${
+                            selectedTechnicianId === String(tech.employeeId)
+                              ? 'border-green-500 bg-green-50'
+                              : 'border-gray-300 hover:border-green-300 hover:bg-gray-50'
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name="technician"
+                            value={tech.employeeId}
+                            checked={selectedTechnicianId === String(tech.employeeId)}
+                            onChange={(e) => setSelectedTechnicianId(e.target.value)}
+                            className="mr-3 text-green-600 focus:ring-green-500"
+                          />
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between">
+                              <p className="font-medium text-gray-900">{tech.name}</p>
+                              {isAvailable ? (
+                                <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-700 rounded-full">
+                                  Đang rảnh
+                                </span>
+                              ) : (
+                                <span className="px-2 py-1 text-xs font-medium bg-orange-100 text-orange-700 rounded-full">
+                                  {workload} công việc
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-sm text-gray-600">{tech.phone}</p>
+                            {tech.centerName && (
+                              <p className="text-xs text-gray-500 mt-1">
+                                <FiMapPin className="inline mr-1" />
+                                {tech.centerName}
+                              </p>
+                            )}
+                          </div>
+                        </label>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowAssignModal(false);
+                    setSelectedBooking(null);
+                    setSelectedTechnicianId('');
+                  }}
+                >
+                  Hủy
+                </Button>
+                <Button
+                  variant="primary"
+                  onClick={handleAssignTechnician}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  <FiCheck className="mr-1" />
+                  Phân công
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       )}

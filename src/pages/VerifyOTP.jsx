@@ -12,7 +12,8 @@ function VerifyOTP() {
   const location = useLocation();
   const navigate = useNavigate();
   const email = location.state?.email;
-  const [step, setStep] = useState(1); 
+  
+  const [step, setStep] = useState(1); // 1: gui OTP, 2: Reset Password
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -22,7 +23,7 @@ function VerifyOTP() {
   const { register, handleSubmit, formState: { errors }, watch } = useForm();
   const watchPassword = watch('password', '');
   
-  // chuyen về forgot-password nếu không có email
+  // Redirect về forgot-password nếu không có email
   useEffect(() => {
     if (!email) {
       toast.error('Vui lòng nhập email trước');
@@ -30,7 +31,7 @@ function VerifyOTP() {
     }
   }, [email, navigate]);
   
-  // dem nguoc thoi gian 5p cho ma otp co hieuj luc 
+  // dem thoi gian hieu luc OTP
   useEffect(() => {
     if (timeLeft <= 0) return;
     
@@ -41,7 +42,7 @@ function VerifyOTP() {
     return () => clearInterval(timer);
   }, [timeLeft]);
   
-  // format time còn lại
+  // Format time còn lại
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -58,7 +59,7 @@ function VerifyOTP() {
       if (response.success !== false) {
         toast.success('Mã OTP hợp lệ! Vui lòng đặt mật khẩu mới.');
         setOtpCode(data.otpCode);
-        setStep(2); // chuyển sang bước 2: Đặt mật khẩu mới
+        setStep(2); // Chuyển sang bước 2: Đặt mật khẩu mới
       }
     } catch (error) {
       console.error('Verify OTP error:', error);
@@ -238,8 +239,6 @@ function VerifyOTP() {
                     {showPassword ? <FiEyeOff /> : <FiEye />}
                   </button>
                 </div>
-                
-                {/* Password Strength Indicator */}
                 {watchPassword && (
                   <div className="mt-2">
                     <div className="flex gap-1">
