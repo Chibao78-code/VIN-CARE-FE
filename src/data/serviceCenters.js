@@ -166,9 +166,9 @@ export const timeSlots = [
   { time: '17:30', available: true }
 ];
 
-// tinh toan tu toa do cua user den trung tam gan nhat
+// tinh toan khoang cach giua 2 toa do
 export const calculateDistance = (lat1, lon1, lat2, lon2) => {
-  const R = 6371; // so km o trai dat
+  const R = 6371; // km
   const dLat = (lat2 - lat1) * Math.PI / 180;
   const dLon = (lon2 - lon1) * Math.PI / 180;
   const a = 
