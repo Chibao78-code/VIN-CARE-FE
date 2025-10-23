@@ -30,7 +30,7 @@ const Login = () => {
     if (result.success) {
       toast.success('Đăng nhập thành công!');
       
-      // check xem role da dung chua
+      // role user de dieu huong
       const userRole = result.user?.role || 'CUSTOMER';
       
       switch(userRole) {
@@ -75,7 +75,9 @@ const Login = () => {
               <li>• <strong>Admin:</strong> dinhdinhchibao@gmail.com / admin123</li>
               <li>• <strong>Customer:</strong> quangphap931@gmail.com / user1@</li>
               <li>• <strong>Staff:</strong> ddinhchibao@gmail.com / staff123</li>
-              <li>• <strong>Technician:</strong> zzz.dinhchibao.15@gmail.com / tech123</li>
+              <li>• <strong>Technician 1:</strong> zzz.dinhchibao.15@gmail.com / tech123</li>
+              <li>• <strong>Technician 2:</strong> technician2@evservice.com / tech123</li>
+              <li>• <strong>Technician 3:</strong> technician3@evservice.com / tech123</li>
               <li className="text-xs text-blue-500 mt-1">⚠️ Hoặc dùng số điện thoại thay vì email</li>
             </ul>
           </div>

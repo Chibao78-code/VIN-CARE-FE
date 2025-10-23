@@ -1,49 +1,42 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiBattery, FiCalendar, FiInfo, FiTruck } from 'react-icons/fi';
+import { FiBattery, FiCalendar, FiInfo, FiTruck, FiShield, FiAlertCircle } from 'react-icons/fi';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import { formatDate } from '../utils/format';
-import MultiStepBooking from '../components/booking/MultiStepBooking'; 
+import MultiStepBooking from '../components/booking/MultiStepBooking';
+import vehicleService from '../services/vehicleService';
 
 const MyVehicles = () => {
   const navigate = useNavigate();
 
   // Trạng thái mở/đóng modal đặt lịch
   const [isBookingOpen, setIsBookingOpen] = useState(false);
-  // Xe được chọn để đặt lịch (nếu muốn dùng)
+  // Xe được chọn để đặt lịch
   const [selectedVehicle, setSelectedVehicle] = useState(null);
+  const [vehicles, setVehicles] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const [vehicles] = useState([
-    {
-      id: 1,
-      brand: 'VinFast',
-      model: 'EVO 200',
-      year: 2023,
-      purchaseDate: '2023-04-15',
-      licensePlate: '30A-12345',
-      vin: 'VF8VN2023001234',
-      color: 'Xanh dương',
-      batteryCapacity: '87.7 kWh',
-      mileage: '15,234 km',
-      nextMaintenance: '2024-03-15',
-      image: '/api/placeholder/300/200'
-    },
-    {
-      id: 2,
-      brand: 'VinFast',
-      model: 'Evo 200 Lite',
-      year: 2022,
-      purchaseDate: '2022-09-12',
-      licensePlate: '51G-67890',
-      vin: 'TM3US2022005678',
-      color: 'Trắng ngọc trai',
-      batteryCapacity: '75 kWh',
-      mileage: '28,456 km',
-      nextMaintenance: '2024-02-20',
-      image: '/api/placeholder/300/200'
-    }
-  ]);
+  // call api lay danh sach xe cua nguoi dung
+  useEffect(() => {
+    const fetchVehicles = async () => {
+      try {
+        setLoading(true);
+        const data = await vehicleService.getMyVehicles();
+        setVehicles(Array.isArray(data) ? data : []);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching vehicles:', err);
+        setError('Không thể tải danh sách xe. Vui lòng thử lại sau.');
+        setVehicles([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchVehicles();
+  }, []);
 
   // Hàm mở modal đặt lịch và chọn xe đó
   const openBookingModal = (vehicle) => {
@@ -57,12 +50,40 @@ const MyVehicles = () => {
     setIsBookingOpen(false);
   };
 
+  // Kiểm tra trạng thái bảo hành
+  const isWarrantyActive = (vehicle) => {
+    if (!vehicle.warrantyEndDate) return false;
+    const today = new Date();
+    
+    // format ngay thang
+    let endDate;
+    const dateStr = vehicle.warrantyEndDate;
+    if (dateStr.includes('-') && dateStr.split('-')[0].length === 2) {
+      const [day, month, year] = dateStr.split('-');
+      endDate = new Date(`${year}-${month}-${day}`);
+    } else {
+      endDate = new Date(dateStr);
+    }
+    
+    return endDate >= today;
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold text-gray-900 mb-8 border-b border-gray-200 pb-3">
         Xe Của Tôi
       </h1>
-      {vehicles.length === 0 ? (
+      
+      {loading ? (
+        <div className="flex justify-center items-center py-20">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
+        </div>
+      ) : error ? (
+        <Card className="text-center py-12 bg-red-50">
+          <FiAlertCircle className="text-5xl text-red-500 mx-auto mb-4" />
+          <p className="text-red-700 text-lg">{error}</p>
+        </Card>
+      ) : !vehicles || vehicles.length === 0 ? (
         <Card className="text-center py-20">
           <FiTruck className="text-7xl text-gray-300 mx-auto mb-6" />
           <p className="text-gray-500 text-lg mb-6">Bạn chưa có xe nào trong danh sách</p>
@@ -82,20 +103,29 @@ const MyVehicles = () => {
                 />
               </div>
               <div className="flex-1 px-0 md:px-3 py-2">
-                <h3 className="text-2xl font-bold text-gray-900 mb-0.5">{vehicle.brand} {vehicle.model}</h3>
-                <p className="text-gray-600 mb-1">{vehicle.year} • {vehicle.color} • Mua ngày: <time dateTime={vehicle.purchaseDate}>{formatDate(vehicle.purchaseDate)}</time></p>
-                <div className="font-mono text-teal-700 text-lg">{vehicle.licensePlate}</div>
-                <div className="grid grid-cols-3 gap-4 text-sm py-2">
-                  <div className="flex items-center gap-1 text-gray-600">
-                    <FiBattery /><span>{vehicle.batteryCapacity}</span>
-                  </div>
-                  <div className="flex items-center gap-1 text-gray-600">
-                    <FiInfo /><span>{vehicle.mileage}</span>
-                  </div>
-                  <div className="flex items-center gap-1 text-gray-600">
-                    <FiCalendar /><span className="text-orange-600">{formatDate(vehicle.nextMaintenance)}</span>
-                  </div>
+                <div className="flex items-center gap-2 mb-1">
+                  <h3 className="text-2xl font-bold text-gray-900">VinFast {vehicle.model}</h3>
+                  {vehicle.hasWarranty && isWarrantyActive(vehicle) && (
+                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">
+                      <FiShield className="w-3 h-3" />
+                      Bảo hành
+                    </span>
+                  )}
+                  {vehicle.hasWarranty && !isWarrantyActive(vehicle) && (
+                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-full">
+                      <FiAlertCircle className="w-3 h-3" />
+                      Hết bảo hành
+                    </span>
+                  )}
                 </div>
+                <p className="text-gray-600 mb-1">
+                  {vehicle.purchaseDate && `Mua ngày: ${formatDate(vehicle.purchaseDate)}`}
+                  {vehicle.warrantyEndDate && ` • Bảo hành đến: ${formatDate(vehicle.warrantyEndDate)}`}
+                </p>
+                <div className="font-mono text-teal-700 text-lg mb-2">{vehicle.licensePlate}</div>
+                {vehicle.vin && (
+                  <div className="text-xs text-gray-500">VIN: {vehicle.vin}</div>
+                )}
               </div>
               
               <div className="flex flex-row md:flex-col gap-3 md:pr-6 md:justify-center items-center md:items-end py-4">
@@ -119,8 +149,6 @@ const MyVehicles = () => {
           ))}
         </div>
       )}
-
-      {/* Modal đặt lịch */}
       <MultiStepBooking
         isOpen={isBookingOpen}
         onClose={closeBookingModal}

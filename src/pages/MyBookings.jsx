@@ -28,7 +28,7 @@ const MyBookings = () => {
       {
         id: 2,
         service: 'Sạc xe điện',
-        vehicle: 'Vinfast- 51G-67890',
+        vehicle: 'Vinfast - 51G-67890',
         date: '2024-02-10',
         time: '14:30',
         station: 'EV Charging Hub Thủ Đức',
