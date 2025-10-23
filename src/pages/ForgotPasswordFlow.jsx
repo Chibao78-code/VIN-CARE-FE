@@ -6,7 +6,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const ForgotPasswordFlow = () => {
   const navigate = useNavigate();
-  const [step, setStep] = useState(1); // gui otp, xac minh otp, dat lai mat khau 
+  const [step, setStep] = useState(1); // 1: Email, 2: OTP, 3: New Password
   const [email, setEmail] = useState('');
   const [otpCode, setOtpCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -38,7 +38,7 @@ const ForgotPasswordFlow = () => {
     }
   };
 
-  // xac minh otp
+  // xac thuc otp
   const handleVerifyOTP = async (e) => {
     e.preventDefault();
     setError('');
@@ -62,7 +62,7 @@ const ForgotPasswordFlow = () => {
     }
   };
 
-  // dat lai mk 
+  // doi mk moi
   const handleResetPassword = async (e) => {
     e.preventDefault();
     setError('');

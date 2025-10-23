@@ -40,7 +40,7 @@ const AdminInventory = () => {
     totalValue: inventoryItems.reduce((sum, item) => sum + (item.currentStock * item.unitCost), 0)
   };
 
-  // fetch api tui be lay data linh kien 
+  // call api de lay danh sach linh kien
   useEffect(() => {
     fetchSpareParts();
   }, []);
@@ -51,7 +51,7 @@ const AdminInventory = () => {
       const data = await sparePartService.getAllSpareParts();
       console.log('✅ Fetched spare parts:', data);
       
-      // chuyen doi data dung khi goi api
+      // chuyen doi data tu backend sang frontend
       const transformedData = data.map(item => ({
         id: item.sparePartId,
         name: item.sparePartName,
@@ -77,7 +77,7 @@ const AdminInventory = () => {
     }
   };
 
-  // map lai category label
+  // map data dung voi category
   const getCategoryLabel = (category) => {
     const categoryMap = {
       'BATTERY': 'Battery Components',
@@ -94,7 +94,7 @@ const AdminInventory = () => {
     return categoryMap[category] || category;
   };
 
-  // map lai category enum
+  // map fe sang be
   const getCategoryEnum = (label) => {
     const enumMap = {
       'Battery Components': 'BATTERY',
@@ -165,14 +165,14 @@ const AdminInventory = () => {
     e.preventDefault();
     
     try {
-      // goi api du lieu gui toi backend
+      // chuyen doi data tu fe sang be
       const backendData = {
         sparePartName: formData.name,
         partNumber: formData.partNumber,
         category: getCategoryEnum(formData.category),
         quantity: parseInt(formData.quantity),
         minimumStock: parseInt(formData.minStock),
-        price: parseFloat(formData.unitCost), // neu backend yeu cau price
+        price: parseFloat(formData.unitCost),
         unitCost: parseFloat(formData.unitCost),
         inStock: parseInt(formData.quantity) > 0,
         location: formData.location,
@@ -183,7 +183,7 @@ const AdminInventory = () => {
       console.log('📤 Creating spare part:', backendData);
       await sparePartService.createSparePart(backendData);
       
-      // tai lai danh sach linh kien
+      // Refresh data lai tu server
       await fetchSpareParts();
       
       setShowAddModal(false);
@@ -226,8 +226,6 @@ const AdminInventory = () => {
 
       console.log('📝 Updating spare part ID:', editingItem.id, backendData);
       await sparePartService.updateSparePart(editingItem.id, backendData);
-      
-      // tai lai danh sach linh kien
       await fetchSpareParts();
       
       setShowEditModal(false);
@@ -245,8 +243,6 @@ const AdminInventory = () => {
       try {
         console.log('🗑️ Deleting spare part ID:', id);
         await sparePartService.deleteSparePart(id);
-        
-        // tai lai danh sach linh kien
         await fetchSpareParts();
         
         toast.success('Phụ tùng đã được xóa!');
