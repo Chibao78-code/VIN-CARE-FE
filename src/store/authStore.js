@@ -14,13 +14,13 @@ const useAuthStore = create(
       login: async (credentials) => {
         set({ isLoading: true });
         try {
-          // call api tu be 
+          //  call api tu be
           const response = await authService.login({
-            username: credentials.email, // be chap nhan username or email
+            username: credentials.email, // BE chap nhan username
             password: credentials.password
           });
           
-          // luu token vao may local user
+          // luu token va user vao local trinh duyet cua user
           localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, response.token);
           localStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(response.user));
           
@@ -42,7 +42,7 @@ const useAuthStore = create(
       },
       
       logout: () => {
-        // dang xuat thi xoa token va user data
+        // xoa toke va user khoi local
         localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
         localStorage.removeItem(STORAGE_KEYS.USER_DATA);
         
@@ -65,7 +65,7 @@ const useAuthStore = create(
       },
     }),
     {
-      name: 'ev_auth_state', // Tên key trong localStorage
+      name: 'ev_auth_state', // 
       partialize: (state) => ({
         user: state.user,
         token: state.token,

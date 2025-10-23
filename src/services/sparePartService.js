@@ -1,31 +1,31 @@
 import api from './api';
 
 export const sparePartService = {
-  // lay tat ca linh kien tu be
+  // lay linh kien be 
   getAllSpareParts: async () => {
     const response = await api.get('/spare-parts');
     return response;
   },
   
-  // check xem linh kien nao con hang
+  // lay linh kien con hang
   getInStockParts: async () => {
     const response = await api.get('/spare-parts/in-stock');
     return response;
   },
   
-  // Lay linh kien theo id
+  // lay linh kien theo id
   getSparePartById: async (id) => {
     const response = await api.get(`/spare-parts/${id}`);
     return response;
   },
   
-  // admin them linh kien moi
+  // Admin: Tao moi linh kien
   createSparePart: async (sparePartData) => {
     const response = await api.post('/spare-parts', sparePartData);
     return response;
   },
   
-  // admin cap nhat linh kien 
+  //  admin: Cap nhat linh kien
   updateSparePart: async (id, sparePartData) => {
     const response = await api.put(`/spare-parts/${id}`, sparePartData);
     return response;

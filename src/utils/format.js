@@ -13,7 +13,19 @@ export const formatCurrency = (amount) => {
 //ngay thang nam
 export const formatDate = (date, formatStr = 'dd/MM/yyyy') => {
   if (!date) return '';
-  const dateObj = typeof date === 'string' ? parseISO(date) : date;
+  
+  let dateObj;
+  if (typeof date === 'string') {
+    if (date.includes('-') && date.split('-')[0].length === 2) {
+      const [day, month, year] = date.split('-');
+      dateObj = new Date(`${year}-${month}-${day}`);
+    } else {
+      dateObj = parseISO(date);
+    }
+  } else {
+    dateObj = date;
+  }
+  
   return format(dateObj, formatStr, { locale: vi });
 };
 //thoigian
