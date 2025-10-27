@@ -631,55 +631,77 @@ const StaffCheckin = () => {
           >
             + Thêm hạng mục
           </button>
-          <div className="overflow-x-auto rounded-lg border">
-            <table className="min-w-[600px] w-full bg-white text-base">
+          <div className="overflow-x-auto rounded-lg border border-blue-400">
+            <table className="min-w-[700px] w-full bg-white text-base border border-blue-400">
               <thead>
                 <tr>
-                  <th>STT</th>
-                  <th style={{ width: 240 }}>Tên hạng mục/vấn đề</th>
-                  <th>Tiền công</th>
-                  <th></th>
+                  <th className="border border-blue-400 bg-blue-50 text-center py-2 w-16">
+                    STT
+                  </th>
+                  <th
+                    className="border border-blue-400 bg-blue-50 text-center py-2"
+                    style={{ width: 350 }}
+                  >
+                    Tên hạng mục/vấn đề
+                  </th>
+                  <th className="border border-blue-400 bg-blue-50 text-center py-2 w-40">
+                    Tiền công
+                  </th>
+                  <th className="border border-blue-400 bg-blue-50 text-center py-2 w-12"></th>
                 </tr>
               </thead>
               <tbody>
-                {repairItems.map((item, idx) => (
-                  <tr key={idx}>
-                    <td>{idx + 1}</td>
-                    <td>
-                      <input
-                        type="text"
-                        value={item.name}
-                        onChange={(e) =>
-                          handleRepairItemChange(idx, "name", e.target.value)
-                        }
-                        className="w-full border rounded px-1 py-1"
-                        placeholder="Mô tả hạng mục..."
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="number"
-                        min={0}
-                        value={item.labor}
-                        onChange={(e) =>
-                          handleRepairItemChange(idx, "labor", e.target.value)
-                        }
-                        className="w-28 border rounded px-1 py-1 text-right"
-                        placeholder="0"
-                      />
-                    </td>
-                    <td>
-                      <button
-                        type="button"
-                        onClick={() => removeRepairItem(idx)}
-                        className="text-red-500 font-bold px-1 text-lg"
-                        title="Xoá"
-                      >
-                        ×
-                      </button>
+                {repairItems.length === 0 ? (
+                  <tr>
+                    <td
+                      className="border border-blue-400 text-center text-gray-500"
+                      colSpan={4}
+                    >
+                      (Chưa có hạng mục. Nhấn nút "Thêm hạng mục" để bắt đầu)
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  repairItems.map((item, idx) => (
+                    <tr key={idx}>
+                      <td className="border border-blue-400 text-center align-middle">
+                        {idx + 1}
+                      </td>
+                      <td className="border border-blue-400 px-2 py-2">
+                        <input
+                          type="text"
+                          value={item.name}
+                          onChange={(e) =>
+                            handleRepairItemChange(idx, "name", e.target.value)
+                          }
+                          className="w-full border rounded px-2 py-1"
+                          placeholder="Mô tả hạng mục..."
+                        />
+                      </td>
+                      <td className="border border-blue-400 px-2 py-2 text-right">
+                        <input
+                          type="number"
+                          min={0}
+                          value={item.labor}
+                          onChange={(e) =>
+                            handleRepairItemChange(idx, "labor", e.target.value)
+                          }
+                          className="w-28 border rounded px-2 py-1 text-right"
+                          placeholder="0"
+                        />
+                      </td>
+                      <td className="border border-blue-400 text-center align-middle">
+                        <button
+                          type="button"
+                          onClick={() => removeRepairItem(idx)}
+                          className="text-red-500 font-bold px-1 text-lg"
+                          title="Xoá"
+                        >
+                          ×
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
             <div className="text-right mt-3">
@@ -690,7 +712,6 @@ const StaffCheckin = () => {
           </div>
         </InfoBox>
       )}
-
       <div className="text-right my-6">
         <span className="inline-block bg-blue-50 border-l-4 border-blue-400 py-2 px-6 rounded font-bold text-blue-800 text-xl">
           Tổng chi phí: {totalAll.toLocaleString()}₫
