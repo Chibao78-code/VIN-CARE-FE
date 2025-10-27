@@ -46,9 +46,9 @@ const StaffLayout = () => {
         <div className="h-16 flex items-center justify-between px-4 border-b border-gray-200">
           <div className="flex items-center gap-3">
             <img
-              src="/images/Logo_Staff.png"
+              src="/images/LogoStaff.png"
               alt="EV Service Logo"
-              className="w-10 h-10 object-contain rounded-lg shadow"
+              className="h-12 w-auto"
             />
             {isSidebarOpen && (
               <div>
@@ -106,14 +106,11 @@ const StaffLayout = () => {
             {/* Thông báo */}
             <button
               onClick={() => navigate("/staff/staff-notifications")}
-
-
               className="relative p-2 hover:bg-gray-100 rounded-lg"
             >
               <FiBell className="text-xl text-gray-600" />
               <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
             </button>
-              
 
             {/* Avatar */}
             <div className="relative">
