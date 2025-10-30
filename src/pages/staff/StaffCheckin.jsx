@@ -137,7 +137,7 @@ const StaffCheckin = () => {
     ? selectedParts.reduce((sum, p) => sum + p.price * p.quantity, 0)
     : 0;
   const totalPartsLabor = selectedServiceTypes.includes("parts")
-    ? selectedParts.reduce((sum, p) => sum + (p.laborCost || 0) * p.quantity, 0)
+    ? selectedParts.reduce((sum, p) => sum + (p.laborCost || 0) , 0)
     : 0;
   const totalRepair = selectedServiceTypes.includes("repair")
     ? repairItems.reduce((sum, item) => sum + (item.labor || 0), 0)
@@ -379,7 +379,7 @@ const StaffCheckin = () => {
                     value={formData.vehicleColor}
                     onChange={handleChange}
                     className="w-full border border-blue-300 rounded px-2 py-1"
-                    placeholder="VD: Trắng ngọc trai"
+                    placeholder="VD: Đen"
                   />
                 </td>
               </tr>
@@ -611,7 +611,7 @@ const StaffCheckin = () => {
                 Tổng tiền phụ tùng: {totalParts.toLocaleString()}₫
               </div>
               <div className="text-blue-700 font-bold text-lg">
-                Tổng tiền công thay: {totalPartsLabor.toLocaleString()}₫
+               Tổng tiền công thay: {totalPartsLabor.toLocaleString()}₫
               </div>
               <div className="text-blue-800 font-extrabold text-xl border-t pt-2">
                 Tổng phụ tùng + công:{" "}
