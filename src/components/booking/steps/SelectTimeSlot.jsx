@@ -10,7 +10,7 @@ const SelectTimeSlot = ({ data, onNext, onBack }) => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // call api de lay khung gio theo trung tam va ngay da chon
+    // Fetch time slots from backend API
     const fetchTimeSlots = async () => {
       console.log('\u{1F50D} Checking time slot fetch conditions:');
       console.log('  - Center ID:', data.center?.id);
@@ -21,10 +21,12 @@ const SelectTimeSlot = ({ data, onNext, onBack }) => {
         console.warn('\u{26A0}\uFE0F Missing center or date, skipping fetch');
         return;
       }
+
       try {
         setLoading(true);
-        console.log(`\u{1F4E1} Fetching time slots for center ${data.center.id} on ${data.date}`);       
-        //GET/bookings/centerId
+        console.log(`\u{1F4E1} Fetching time slots for center ${data.center.id} on ${data.date}`);
+        
+        // Call API: GET /bookings/{centerId}/{date}
         const response = await bookingService.getAvailableTimeSlots(
           data.center.id,
           data.date
@@ -33,8 +35,10 @@ const SelectTimeSlot = ({ data, onNext, onBack }) => {
         console.log('\u{1F4E5} Time slots API response:', response);
 
         if (response.success && response.data) {
-          // Be date,center,slots
+          // Transform backend response to component format
+          // Backend trả về: { date, center, slots: [...] }
           const slots = response.data.slots?.map(slot => {
+            // Backend LocalTime có thể trả về dạng array [hour, minute, second] hoặc string
             let timeStr;
             if (Array.isArray(slot.time)) {
               const [hour, minute] = slot.time;
