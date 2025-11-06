@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { 
   FiGrid, FiUsers, FiCalendar, FiMenu, FiX, 
-  FiLogOut, FiBell, FiPlus
+  FiLogOut, FiBell, FiPlus, FiTruck, FiPackage, FiDollarSign, FiClock
 } from 'react-icons/fi';
 import useAuthStore from '../store/authStore';
 import Button from '../components/ui/Button';
@@ -18,9 +18,13 @@ const StaffLayout = () => {
   };
 
   const menuItems = [
-    { path: '/staff/dashboard', label: 'Dashboard', icon: FiGrid },
-    { path: '/staff/customers', label: 'Customers', icon: FiUsers },
-    { path: '/staff/appointments', label: 'Appointments', icon: FiCalendar },
+    { path: '/staff/dashboard', label: 'Tổng quan', icon: FiGrid },
+    { path: '/staff/customers', label: 'Khách hàng', icon: FiUsers },
+    { path: '/staff/appointments', label: 'Lịch hẹn', icon: FiCalendar },
+    { path: '/staff/vehicle-reception', label: 'Tiếp nhận xe', icon: FiTruck },
+    { path: '/staff/reception-tracking', label: 'Theo dõi tiếp nhận', icon: FiClock },
+    { path: '/staff/spare-parts', label: 'Quản lý phụ tùng', icon: FiPackage },
+    { path: '/staff/payments', label: 'Thanh toán', icon: FiDollarSign },
   ];
 
   return (
