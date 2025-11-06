@@ -40,7 +40,7 @@ const AdminInventory = () => {
     totalValue: inventoryItems.reduce((sum, item) => sum + (item.currentStock * item.unitCost), 0)
   };
 
-  // call api de lay danh sach linh kien
+  // Fetch spare parts from API
   useEffect(() => {
     fetchSpareParts();
   }, []);
@@ -51,7 +51,7 @@ const AdminInventory = () => {
       const data = await sparePartService.getAllSpareParts();
       console.log('✅ Fetched spare parts:', data);
       
-      // chuyen doi data tu backend sang frontend
+      // Transform backend data to frontend format
       const transformedData = data.map(item => ({
         id: item.sparePartId,
         name: item.sparePartName,
@@ -77,7 +77,7 @@ const AdminInventory = () => {
     }
   };
 
-  // map data dung voi category
+  // Map backend category enum to display label
   const getCategoryLabel = (category) => {
     const categoryMap = {
       'BATTERY': 'Battery Components',
@@ -94,7 +94,7 @@ const AdminInventory = () => {
     return categoryMap[category] || category;
   };
 
-  // map fe sang be
+  // Map frontend category to backend enum
   const getCategoryEnum = (label) => {
     const enumMap = {
       'Battery Components': 'BATTERY',
@@ -165,14 +165,14 @@ const AdminInventory = () => {
     e.preventDefault();
     
     try {
-      // chuyen doi data tu fe sang be
+      // Transform frontend data to backend format
       const backendData = {
         sparePartName: formData.name,
         partNumber: formData.partNumber,
         category: getCategoryEnum(formData.category),
         quantity: parseInt(formData.quantity),
         minimumStock: parseInt(formData.minStock),
-        price: parseFloat(formData.unitCost),
+        price: parseFloat(formData.unitCost), // Backend uses 'price' for selling price
         unitCost: parseFloat(formData.unitCost),
         inStock: parseInt(formData.quantity) > 0,
         location: formData.location,
@@ -183,7 +183,7 @@ const AdminInventory = () => {
       console.log('📤 Creating spare part:', backendData);
       await sparePartService.createSparePart(backendData);
       
-      // Refresh data lai tu server
+      // Refresh data from server
       await fetchSpareParts();
       
       setShowAddModal(false);
@@ -226,6 +226,8 @@ const AdminInventory = () => {
 
       console.log('📝 Updating spare part ID:', editingItem.id, backendData);
       await sparePartService.updateSparePart(editingItem.id, backendData);
+      
+      // Refresh data from server
       await fetchSpareParts();
       
       setShowEditModal(false);
@@ -243,6 +245,8 @@ const AdminInventory = () => {
       try {
         console.log('🗑️ Deleting spare part ID:', id);
         await sparePartService.deleteSparePart(id);
+        
+        // Refresh data from server
         await fetchSpareParts();
         
         toast.success('Phụ tùng đã được xóa!');

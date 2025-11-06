@@ -447,7 +447,7 @@ const AdminSettings = () => {
                 <label className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <FiDollarSign className="text-gray-600" />
-                    <span>Tiền mặt</span>
+                    <span>Tiền mặt (Cash)</span>
                   </div>
                   <input
                     type="checkbox"
@@ -463,45 +463,13 @@ const AdminSettings = () => {
                 <label className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <FiDollarSign className="text-gray-600" />
-                    <span>Thẻ tín dụng/Ghi nợ</span>
+                    <span>VNPay E-Transfer</span>
                   </div>
                   <input
                     type="checkbox"
                     className="w-4 h-4 text-green-600 rounded"
-                    checked={paymentSettings.acceptCard}
-                    onChange={(e) => setPaymentSettings({...paymentSettings, acceptCard: e.target.checked})}
-                    disabled={!isEditing}
-                  />
-                </label>
-              </div>
-
-              <div className="p-4 bg-gray-50 rounded-lg">
-                <label className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <FiDollarSign className="text-gray-600" />
-                    <span>Chuyển khoản</span>
-                  </div>
-                  <input
-                    type="checkbox"
-                    className="w-4 h-4 text-green-600 rounded"
-                    checked={paymentSettings.acceptBankTransfer}
-                    onChange={(e) => setPaymentSettings({...paymentSettings, acceptBankTransfer: e.target.checked})}
-                    disabled={!isEditing}
-                  />
-                </label>
-              </div>
-
-              <div className="p-4 bg-gray-50 rounded-lg">
-                <label className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <FiDollarSign className="text-gray-600" />
-                    <span>Ví điện tử</span>
-                  </div>
-                  <input
-                    type="checkbox"
-                    className="w-4 h-4 text-green-600 rounded"
-                    checked={paymentSettings.acceptEWallet}
-                    onChange={(e) => setPaymentSettings({...paymentSettings, acceptEWallet: e.target.checked})}
+                    checked={paymentSettings.acceptVNPay !== false}
+                    onChange={(e) => setPaymentSettings({...paymentSettings, acceptVNPay: e.target.checked})}
                     disabled={!isEditing}
                   />
                 </label>
