@@ -13,7 +13,7 @@ function VerifyOTP() {
   const navigate = useNavigate();
   const email = location.state?.email;
   
-  const [step, setStep] = useState(1); // 1: gui OTP, 2: Reset Password
+  const [step, setStep] = useState(1); // 1: Verify OTP, 2: Reset Password
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -31,7 +31,7 @@ function VerifyOTP() {
     }
   }, [email, navigate]);
   
-  // dem thoi gian hieu luc OTP
+  // Countdown timer cho OTP
   useEffect(() => {
     if (timeLeft <= 0) return;
     
@@ -239,6 +239,8 @@ function VerifyOTP() {
                     {showPassword ? <FiEyeOff /> : <FiEye />}
                   </button>
                 </div>
+                
+                {/* Password Strength Indicator */}
                 {watchPassword && (
                   <div className="mt-2">
                     <div className="flex gap-1">
