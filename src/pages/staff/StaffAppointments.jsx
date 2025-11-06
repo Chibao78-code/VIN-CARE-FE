@@ -36,11 +36,11 @@ const StaffAppointments = () => {
     price: ''
   });
 
-  // lay du lieu booking tu backend
+  // appointments from backend
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   
-  // lay du lieu booking moi khi thay doi trang thai loc
+  // Fetch bookings and technicians from backend when component mounts
   useEffect(() => {
     fetchBookings();
     fetchTechnicians();
@@ -51,7 +51,7 @@ const StaffAppointments = () => {
       const result = await bookingService.getTechnicians();
       if (result.success && result.data) {
         setTechnicians(result.data);
-        // phan quyen sua cho technicial
+        // Calculate workload for each technician
         calculateTechnicianWorkload(result.data);
       }
     } catch (error) {
@@ -59,7 +59,7 @@ const StaffAppointments = () => {
     }
   };
   
-  // xem co bao nhieu booking dang thuc hien cua tung ky thuat vien
+  // Calculate how many bookings each technician has
   const calculateTechnicianWorkload = async (techList) => {
     const workload = {};
     
@@ -67,7 +67,7 @@ const StaffAppointments = () => {
       try {
         const result = await bookingService.getTechnicianBookings(tech.employeeId);
         if (result.success && result.data) {
-          // trang thai dang thuc hien
+          // Count active bookings (ASSIGNED, IN_PROGRESS)
           const activeBookings = result.data.filter(booking => 
             booking.status === 'ASSIGNED' || booking.status === 'IN_PROGRESS'
           );
@@ -87,9 +87,9 @@ const StaffAppointments = () => {
     setLoading(true);
     try {
       let result;
-      // status booking 
+      // Fetch by status or all bookings
       if (statusFilter !== 'all') {
-        // status map
+        // Map frontend status to backend status enum
         const statusMap = {
           'pending': 'PENDING',
           'approved': 'APPROVED',
@@ -100,12 +100,12 @@ const StaffAppointments = () => {
         };
         result = await bookingService.getBookingsByStatus(statusMap[statusFilter]);
       } else {
-        // hien thi tat ca booking cho staff
+        // For staff, show all bookings (PENDING + APPROVED + ASSIGNED)
         result = await bookingService.getAllBookings();
       }
       
       if (result.success && result.data) {
-        // du lieu backend ve frontend goi
+        // Transform backend data to match frontend format
         const transformedAppointments = result.data.map(booking => ({
           id: booking.bookingId,
           customerName: booking.customerName || 'N/A',
@@ -136,7 +136,7 @@ const StaffAppointments = () => {
     }
   };
   
-  // map trang thai backend sang frontend
+  // Map backend status to frontend status
   const mapBackendStatus = (backendStatus) => {
     const statusMap = {
       'PENDING': 'pending',
@@ -290,19 +290,19 @@ const StaffAppointments = () => {
     }
   };
   
-  // Show detail booking
+  // Show detail modal
   const handleShowDetail = (appointment) => {
     setSelectedBooking(appointment);
     setShowDetailModal(true);
   };
   
-  // chap nhan booking
+  // Approve booking
   const handleApproveBooking = async (bookingId) => {
     try {
       const result = await bookingService.approveBooking(bookingId);
       if (result.success) {
         toast.success('Booking đã được duyệt!');
-        fetchBookings(); // tai lai list 
+        fetchBookings(); // Refresh list
       } else {
         toast.error(result.error || 'Không thể duyệt booking');
       }
@@ -311,7 +311,7 @@ const StaffAppointments = () => {
     }
   };
   
-  // tu chho  booking
+  // Reject booking
   const handleRejectBooking = async (bookingId) => {
     const reason = prompt('Nhập lý do từ chối:');
     if (!reason) return;
@@ -320,7 +320,7 @@ const StaffAppointments = () => {
       const result = await bookingService.rejectBooking(bookingId, reason);
       if (result.success) {
         toast.success('Booking đã bị từ chối. Khách hàng đã được thông báo.');
-        fetchBookings(); // tai lai list
+        fetchBookings(); // Refresh list
       } else {
         toast.error(result.error || 'Không thể từ chối booking');
       }
@@ -329,13 +329,13 @@ const StaffAppointments = () => {
     }
   };
   
-  // hien thi viec da giao ky thuat vien
+  // Show assign technician modal
   const handleShowAssignModal = (booking) => {
     setSelectedBooking(booking);
     setShowAssignModal(true);
   };
   
-  // phan cong ky thuat vien
+  // Assign technician
   const handleAssignTechnician = async () => {
     if (!selectedTechnicianId) {
       toast.error('Vui lòng chọn kỹ thuật viên');
@@ -348,7 +348,7 @@ const StaffAppointments = () => {
         toast.success('Đã phân công kỹ thuật viên. Khách hàng đã được thông báo xe đang sửa chữa.');
         setShowAssignModal(false);
         setSelectedTechnicianId('');
-        fetchBookings(); //tai lai list 
+        fetchBookings(); // Refresh list
       } else {
         toast.error(result.error || 'Không thể phân công kỹ thuật viên');
       }
@@ -359,261 +359,192 @@ const StaffAppointments = () => {
 
   return (
     <div>
-      <div className="mb-6 flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Appointment Management</h1>
-          <p className="text-gray-600 mt-1">Manage customer appointments and assign technicians</p>
-        </div>
-        <Button
-          variant="primary"
-          icon={<FiPlus />}
-          onClick={() => setShowAddModal(true)}
-          className="bg-gradient-to-r from-green-500 to-teal-600"
-        >
-          New Appointment
-        </Button>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">Lịch hẹn chăm sóc, bảo dưỡng xe</h1>
+        <p className="text-gray-600 mt-1">Quản ly lịch hẹn - theo dõi tiến trình</p>
       </div>
-      <div className="mb-6 flex flex-col sm:flex-row gap-4">
-        <div className="flex-1 relative">
-          <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search customers, vehicles, or services..."
-            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-        <select
-          className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-        >
-          <option value="all">Tất cả trạng thái</option>
-          <option value="pending">Chờ duyệt</option>
-          <option value="approved">Đã duyệt</option>
-          <option value="assigned">Đã phân công</option>
-          <option value="in-progress">Đang thực hiện</option>
-          <option value="completed">Hoàn thành</option>
-          <option value="cancelled">Đã hủy</option>
-        </select>
-        <select
-          className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-          value={dateFilter}
-          onChange={(e) => setDateFilter(e.target.value)}
-        >
-          <option value="all">All Dates</option>
-          <option value="today">Today</option>
-          <option value="week">This Week</option>
-        </select>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-        <Card>
-          <Card.Content className="p-6">
-            <p className="text-sm text-gray-600 mb-2">Chờ duyệt</p>
-            <p className="text-3xl font-bold text-yellow-600">{stats.pending}</p>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+        <Card className="border border-gray-200">
+          <Card.Content className="p-4 text-center">
+            <p className="text-sm text-gray-600 mb-1">Đã đặt</p>
+            <p className="text-3xl font-bold text-indigo-600">{stats.pending + stats.approved}</p>
           </Card.Content>
         </Card>
 
-        <Card>
-          <Card.Content className="p-6">
-            <p className="text-sm text-gray-600 mb-2">Đã duyệt</p>
-            <p className="text-3xl font-bold text-blue-600">{stats.approved}</p>
+        <Card className="border border-gray-200">
+          <Card.Content className="p-4 text-center">
+            <p className="text-sm text-gray-600 mb-1">Đạt thành công</p>
+            <p className="text-3xl font-bold text-teal-600">{stats.approved}</p>
           </Card.Content>
         </Card>
         
-        <Card>
-          <Card.Content className="p-6">
-            <p className="text-sm text-gray-600 mb-2">Đã phân công</p>
-            <p className="text-3xl font-bold text-purple-600">{stats.assigned}</p>
-          </Card.Content>
-        </Card>
-
-        <Card>
-          <Card.Content className="p-6">
-            <p className="text-sm text-gray-600 mb-2">Đang thực hiện</p>
+        <Card className="border border-gray-200">
+          <Card.Content className="p-4 text-center">
+            <p className="text-sm text-gray-600 mb-1">Đang thực hiện</p>
             <p className="text-3xl font-bold text-orange-600">{stats.inProgress}</p>
           </Card.Content>
         </Card>
 
-        <Card>
-          <Card.Content className="p-6">
-            <p className="text-sm text-gray-600 mb-2">Hoàn thành</p>
+        <Card className="border border-gray-200">
+          <Card.Content className="p-4 text-center">
+            <p className="text-sm text-gray-600 mb-1">Hoàn thành</p>
             <p className="text-3xl font-bold text-green-600">{stats.completed}</p>
           </Card.Content>
         </Card>
+
+        <Card className="border border-gray-200">
+          <Card.Content className="p-4 text-center">
+            <p className="text-sm text-gray-600 mb-1">Đã hủy</p>
+            <p className="text-3xl font-bold text-red-600">{appointments.filter(a => a.status === 'cancelled').length}</p>
+          </Card.Content>
+        </Card>
       </div>
-      {loading ? (
-        <Card>
-          <Card.Content className="p-12 text-center">
-            <div className="animate-spin mx-auto h-12 w-12 border-4 border-green-500 border-t-transparent rounded-full mb-4"></div>
-            <p className="text-gray-600">Đang tải danh sách booking...</p>
-          </Card.Content>
-        </Card>
-      ) : sortedAppointments.length === 0 ? (
-        <Card>
-          <Card.Content className="p-12 text-center">
-            <FiCalendar className="mx-auto text-5xl text-gray-300 mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">No appointments found</h3>
-            <p className="text-gray-500 mb-4">No appointments have been scheduled yet</p>
-            <Button
-              variant="primary"
-              icon={<FiPlus />}
-              onClick={() => setShowAddModal(true)}
+
+      {/* Search and Filter */}
+      <Card className="mb-6">
+        <Card.Content className="p-4">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1 relative">
+              <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Tìm kiếm khách, xe, gói DV..."
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            <select
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
             >
-              Create First Appointment
-            </Button>
-          </Card.Content>
-        </Card>
-      ) : (
-        <div className="space-y-4">
-          {sortedAppointments.map((appointment) => (
-            <Card key={appointment.id}>
-              <Card.Content className="p-6">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-start justify-between mb-4">
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900">
-                          {appointment.customerName}
-                        </h3>
-                        <div className="flex items-center gap-4 mt-1 text-sm text-gray-600">
-                          <span className="flex items-center gap-1">
-                            <FiCalendar className="text-xs" />
-                            {appointment.date}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <FiClock className="text-xs" />
-                            {appointment.time}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <FiTruck className="text-xs" />
-                            {appointment.vehiclePlate}
-                          </span>
-                        </div>
-                      </div>
-                      <span className={`px-3 py-1 text-xs font-medium rounded-full ${getStatusColor(appointment.status)}`}>
-                        {appointment.status.toUpperCase().replace('-', ' ')}
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-                      <div>
-                        <p className="text-xs text-gray-500">Service</p>
-                        <p className="text-sm font-medium text-gray-900">{appointment.service}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-500">Vehicle</p>
-                        <p className="text-sm font-medium text-gray-900">
-                          {appointment.vehicleMake} {appointment.vehicleModel}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-500">Technician</p>
-                        <p className="text-sm font-medium text-gray-900">
-                          {appointment.technician || 'Unassigned'}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-500">Price</p>
-                        <p className="text-sm font-medium text-gray-900">
-                          ${appointment.price.toFixed(2)}
-                        </p>
-                      </div>
-                    </div>
-
-                    {appointment.notes && (
-                      <div className="mb-4">
-                        <p className="text-xs text-gray-500">Notes</p>
-                        <p className="text-sm text-gray-700">{appointment.notes}</p>
-                      </div>
-                    )}
-
-                    <div className="flex flex-wrap gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleShowDetail(appointment)}
-                      >
-                        <FiEdit2 className="mr-1" />
-                        Detail
-                      </Button>
-                      
-                      {appointment.status === 'pending' && (
-                        <>
-                          <Button
-                            variant="primary"
-                            size="sm"
-                            onClick={() => handleApproveBooking(appointment.id)}
-                            className="bg-green-600 hover:bg-green-700"
-                          >
-                            <FiCheck className="mr-1" />
-                            Duyệt
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleRejectBooking(appointment.id)}
-                            className="text-red-600 border-red-600 hover:bg-red-50"
-                          >
-                            <FiX className="mr-1" />
-                            Từ chối
-                          </Button>
-                        </>
-                      )}
-                      {appointment.status === 'approved' && !appointment.technician && (
-                        <Button
-                          variant="primary"
-                          size="sm"
-                          onClick={() => handleShowAssignModal(appointment)}
-                          className="bg-blue-600 hover:bg-blue-700"
-                        >
-                          <FiUser className="mr-1" />
-                          Phân công KTV
-                        </Button>
-                      )}
-                      {appointment.status === 'assigned' && (
-                        <>
-                          <span className="text-sm text-blue-600 flex items-center gap-1">
-                            <FiCheckCircle />
-                            Đã phân công cho {appointment.technician}
-                          </span>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDeleteAppointment(appointment.id)}
-                            className="text-red-600 border-red-600"
-                          >
-                            <FiX className="mr-1" />
-                            Hủy
-                          </Button>
-                        </>
-                      )}
-                      
-                      {appointment.status === 'in-progress' && (
-                        <Button
-                          variant="primary"
-                          size="sm"
-                          onClick={() => handleStatusChange(appointment.id, 'completed')}
-                        >
-                          <FiCheckCircle className="mr-1" />
-                          Hoàn thành
-                        </Button>
-                      )}
-                      {appointment.status === 'completed' && (
-                        <span className="text-sm text-green-600 flex items-center gap-1">
-                          <FiCheckCircle />
-                          Đã hoàn thành
+              <option value="all">Hiển thị: 5</option>
+              <option value="pending">Chờ duyệt</option>
+              <option value="approved">Đã duyệt</option>
+              <option value="assigned">Đã phân công</option>
+              <option value="in-progress">Đang thực hiện</option>
+              <option value="completed">Hoàn thành</option>
+              <option value="cancelled">Đã hủy</option>
+            </select>
+          </div>
+        </Card.Content>
+      </Card>
+      {/* Table */}
+      <Card>
+        <Card.Content className="p-0">
+          {loading ? (
+            <div className="p-12 text-center">
+              <div className="animate-spin mx-auto h-12 w-12 border-4 border-green-500 border-t-transparent rounded-full mb-4"></div>
+              <p className="text-gray-600">Đang tải danh sách booking...</p>
+            </div>
+          ) : sortedAppointments.length === 0 ? (
+            <div className="p-12 text-center">
+              <FiCalendar className="mx-auto text-5xl text-gray-300 mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Chưa có lịch hẹn</h3>
+              <p className="text-gray-500">Chưa có lịch hẹn nào được tạo</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-green-50 border-b border-gray-200">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Mã</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Tên KH</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Dòng xe</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Gói DV</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Giờ</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Ngày</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Liên hệ</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Trạng thái</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Tiếp nhận</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {sortedAppointments.map((appointment, index) => (
+                    <tr key={appointment.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-4 py-4 text-sm font-medium text-gray-900">
+                        DL{String(appointment.id).padStart(2, '0')}
+                      </td>
+                      <td className="px-4 py-4 text-sm text-gray-900">
+                        {appointment.customerName}
+                      </td>
+                      <td className="px-4 py-4 text-sm text-gray-900">
+                        {appointment.vehicleModel || appointment.vehicleMake}
+                      </td>
+                      <td className="px-4 py-4 text-sm text-gray-700">
+                        {appointment.service}
+                      </td>
+                      <td className="px-4 py-4 text-sm text-gray-900">
+                        {appointment.time}
+                      </td>
+                      <td className="px-4 py-4 text-sm text-gray-900">
+                        {appointment.date}
+                      </td>
+                      <td className="px-4 py-4 text-sm text-gray-900">
+                        {appointment.customerPhone}
+                      </td>
+                      <td className="px-4 py-4">
+                        <span className={`px-3 py-1 text-xs font-medium rounded-full whitespace-nowrap ${getStatusColor(appointment.status)}`}>
+                          {appointment.status === 'pending' && 'Đã đặt'}
+                          {appointment.status === 'approved' && 'Đạt thành công'}
+                          {appointment.status === 'assigned' && 'Đã phân công'}
+                          {appointment.status === 'in-progress' && 'Đang thực hiện'}
+                          {appointment.status === 'completed' && 'Hoàn thành'}
+                          {appointment.status === 'cancelled' && 'Đã hủy'}
                         </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </Card.Content>
-            </Card>
-          ))}
-        </div>
-      )}
+                      </td>
+                      <td className="px-4 py-4">
+                        <div className="flex gap-2">
+                          {appointment.status === 'pending' && (
+                            <button
+                              onClick={() => handleApproveBooking(appointment.id)}
+                              className="px-3 py-1 text-xs font-medium bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+                            >
+                              Xác nhận
+                            </button>
+                          )}
+                          {appointment.status === 'approved' && !appointment.technician && (
+                            <button
+                              onClick={() => handleShowAssignModal(appointment)}
+                              className="px-3 py-1 text-xs font-medium bg-gray-400 text-white rounded hover:bg-gray-500 transition-colors"
+                            >
+                              Đã xác nhận
+                            </button>
+                          )}
+                          {(appointment.status === 'assigned' || appointment.status === 'in-progress') && (
+                            <button
+                              className="px-3 py-1 text-xs font-medium bg-gray-400 text-white rounded cursor-default"
+                            >
+                              Đã xác nhận
+                            </button>
+                          )}
+                          {appointment.status === 'completed' && (
+                            <button
+                              className="px-3 py-1 text-xs font-medium bg-gray-400 text-white rounded cursor-default"
+                            >
+                              Đã xác nhận
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </Card.Content>
+      </Card>
+
+      {/* Pagination */}
+      <div className="mt-6 flex justify-center items-center gap-2">
+        <button className="px-3 py-1 text-sm text-gray-600 hover:text-gray-900">Trang trước</button>
+        <button className="px-3 py-1 text-sm bg-gray-200 text-gray-900 rounded">Trang 1/3</button>
+        <button className="px-3 py-1 text-sm text-gray-600 hover:text-gray-900">Trang sau</button>
+      </div>
       {showAddModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto">
@@ -877,6 +808,8 @@ const StaffAppointments = () => {
           </div>
         </div>
       )}
+
+      {/* Detail Modal */}
       {showDetailModal && selectedBooking && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
@@ -896,6 +829,7 @@ const StaffAppointments = () => {
             </div>
 
             <div className="p-6">
+              {/* Booking Status */}
               <div className="mb-6">
                 <div className="flex items-center justify-between mb-4">
                   <h4 className="text-lg font-semibold text-gray-900">Trạng thái</h4>
@@ -904,6 +838,8 @@ const StaffAppointments = () => {
                   </span>
                 </div>
               </div>
+
+              {/* Customer Information */}
               <div className="mb-6 p-4 bg-blue-50 rounded-lg">
                 <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                   <FiUser className="mr-2" />
@@ -924,6 +860,8 @@ const StaffAppointments = () => {
                   </div>
                 </div>
               </div>
+
+              {/* Vehicle Information */}
               <div className="mb-6 p-4 bg-green-50 rounded-lg">
                 <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                   <FiTruck className="mr-2" />
@@ -944,6 +882,8 @@ const StaffAppointments = () => {
                   </div>
                 </div>
               </div>
+
+              {/* Booking Information */}
               <div className="mb-6 p-4 bg-yellow-50 rounded-lg">
                 <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                   <FiCalendar className="mr-2" />
@@ -996,6 +936,8 @@ const StaffAppointments = () => {
                   </div>
                 )}
               </div>
+
+              {/* Action Buttons */}
               <div className="flex justify-end gap-3 mt-6 pt-6 border-t">
                 <Button
                   variant="outline"
@@ -1048,6 +990,8 @@ const StaffAppointments = () => {
           </div>
         </div>
       )}
+
+      {/* Assign Technician Modal */}
       {showAssignModal && selectedBooking && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg max-w-md w-full">
