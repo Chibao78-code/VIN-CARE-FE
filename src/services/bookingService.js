@@ -1,6 +1,16 @@
 import api from './api';
-// Dịch vụ đặt lịch
+
+/**
+ * Booking Service
+ * Handles all booking related API calls
+ */
+
 const bookingService = {
+  /**
+   * Create a new booking
+   * @param {Object} bookingData - { eVId, centerId, bookingDate, bookingTime, offerTypeId, packageId, problemDescription, notes }
+   * @returns {Promise} - BookingResponseDTO
+   */
   createBooking: async (bookingData) => {
     try {
       const payload = {
@@ -13,7 +23,7 @@ const bookingService = {
         problemDescription: bookingData.problemDescription || null,
         notes: bookingData.notes || null
       };
-      // Debug log payload
+      
       console.log('📤 Sending booking payload to backend:', payload);
       const response = await api.post('/bookings', payload);
       return {
@@ -27,7 +37,13 @@ const bookingService = {
       };
     }
   },
-  // Lấy danh sách khung giờ có sẵn cho trung tâm và ngày đã chọn
+
+  /**
+   * Get available time slots for a specific center and date
+   * @param {number} centerId - Service center ID
+   * @param {string} date - Date in format YYYY-MM-DD
+   * @returns {Promise} - TimeSlotResponseDTO
+   */
   getAvailableTimeSlots: async (centerId, date) => {
     try {
       const response = await api.get(`/bookings/${centerId}/${date}`);
@@ -42,7 +58,11 @@ const bookingService = {
       };
     }
   },
-  // Lấy danh sách loại dịch vụ
+
+  /**
+   * Get all offer types (service types)
+   * @returns {Promise} - List<OfferTypeDTO>
+   */
   getOfferTypes: async () => {
     try {
       const response = await api.get('/offer-types');
@@ -57,7 +77,11 @@ const bookingService = {
       };
     }
   },
-  // Lấy tất cả booking (admin)
+
+  /**
+   * Get all bookings (for technician, staff, admin)
+   * @returns {Promise} - List of all bookings
+   */
   getAllBookings: async () => {
     try {
       const response = await api.get('/bookings');
@@ -72,7 +96,12 @@ const bookingService = {
       };
     }
   },
-  // Lấy booking của người dùng hiện tại
+
+  /**
+   * Get customer's bookings
+   * @param {string} status - 'upcoming', 'completed', 'cancelled', or 'all'
+   * @returns {Promise} - List of bookings
+   */
   getMyBookings: async (status = 'all') => {
     try {
       const endpoint = status === 'all' 
@@ -91,7 +120,12 @@ const bookingService = {
       };
     }
   },
-  // Lấy chi tiết booking theo ID
+
+  /**
+   * Get booking details by ID
+   * @param {number} bookingId - Booking ID
+   * @returns {Promise} - Booking details
+   */
   getBookingById: async (bookingId) => {
     try {
       const response = await api.get(`/bookings/${bookingId}`);
@@ -106,7 +140,13 @@ const bookingService = {
       };
     }
   },
-  // huy booking
+
+  /**
+   * Cancel a booking
+   * @param {number} bookingId - Booking ID
+   * @param {string} reason - Cancellation reason
+   * @returns {Promise}
+   */
   cancelBooking: async (bookingId, reason) => {
     try {
       const response = await api.put(`/bookings/${bookingId}/cancel`, { reason });
@@ -121,7 +161,13 @@ const bookingService = {
       };
     }
   },
-  // doi lich booking
+
+  /**
+   * Reschedule a booking
+   * @param {number} bookingId - Booking ID
+   * @param {Object} newSchedule - { bookingDate, bookingTime }
+   * @returns {Promise}
+   */
   rescheduleBooking: async (bookingId, newSchedule) => {
     try {
       const response = await api.put(`/bookings/${bookingId}/reschedule`, newSchedule);
@@ -136,7 +182,16 @@ const bookingService = {
       };
     }
   },
-  // Lấy danh sách booking theo trạng thái (admin)
+
+  // ======================
+  // STAFF WORKFLOW METHODS
+  // ======================
+  
+  /**
+   * Get bookings by status
+   * @param {string} status - PENDING, APPROVED, ASSIGNED, IN_PROGRESS, COMPLETED, REJECTED, CANCELLED
+   * @returns {Promise}
+   */
   getBookingsByStatus: async (status) => {
     try {
       const response = await api.get(`/bookings/status/${status}`);
@@ -151,7 +206,12 @@ const bookingService = {
       };
     }
   },
-  // Duyệt booking
+
+  /**
+   * Staff approve booking
+   * @param {number} bookingId
+   * @returns {Promise}
+   */
   approveBooking: async (bookingId) => {
     try {
       const response = await api.post(`/bookings/${bookingId}/approve`);
@@ -166,7 +226,13 @@ const bookingService = {
       };
     }
   },
-  // cancell booking
+
+  /**
+   * Staff reject booking
+   * @param {number} bookingId
+   * @param {string} reason
+   * @returns {Promise}
+   */
   rejectBooking: async (bookingId, reason) => {
     try {
       const response = await api.post(`/bookings/${bookingId}/reject`, reason);
@@ -181,7 +247,13 @@ const bookingService = {
       };
     }
   },
-  // Phân công technician cho booking
+
+  /**
+   * Staff assign technician to booking
+   * @param {number} bookingId
+   * @param {number} technicianId
+   * @returns {Promise}
+   */
   assignTechnician: async (bookingId, technicianId) => {
     try {
       const response = await api.post(`/bookings/${bookingId}/assign?technicianId=${technicianId}`);
@@ -196,7 +268,12 @@ const bookingService = {
       };
     }
   },
-  // Lấy danh sách công việc của technician
+
+  /**
+   * Get technician's assigned bookings
+   * @param {number} technicianId
+   * @returns {Promise}
+   */
   getTechnicianBookings: async (technicianId) => {
     try {
       const response = await api.get(`/bookings/technician/${technicianId}`);
@@ -211,7 +288,11 @@ const bookingService = {
       };
     }
   },
-  // Lấy danh sách technician
+
+  /**
+   * Get all technicians for staff to assign
+   * @returns {Promise}
+   */
   getTechnicians: async () => {
     try {
       const response = await api.get('/technicians');
@@ -223,6 +304,25 @@ const bookingService = {
       return {
         success: false,
         error: error.response?.data?.message || 'Không thể lấy danh sách technician'
+      };
+    }
+  },
+  
+  /**
+   * Get booking statistics
+   * @returns {Promise} Statistics with counts by status
+   */
+  getBookingStatistics: async () => {
+    try {
+      const response = await api.get('/bookings/statistics');
+      return {
+        success: true,
+        data: response
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Không thể lấy thống kê booking'
       };
     }
   }
