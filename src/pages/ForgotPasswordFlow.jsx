@@ -15,7 +15,7 @@ const ForgotPasswordFlow = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  // gui otp
+  // Step 1: Send OTP to email
   const handleSendOTP = async (e) => {
     e.preventDefault();
     setError('');
@@ -38,7 +38,7 @@ const ForgotPasswordFlow = () => {
     }
   };
 
-  // xac thuc otp
+  // Step 2: Verify OTP
   const handleVerifyOTP = async (e) => {
     e.preventDefault();
     setError('');
@@ -62,7 +62,7 @@ const ForgotPasswordFlow = () => {
     }
   };
 
-  // doi mk moi
+  // Step 3: Reset Password
   const handleResetPassword = async (e) => {
     e.preventDefault();
     setError('');
@@ -103,6 +103,7 @@ const ForgotPasswordFlow = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100 flex items-center justify-center px-4 py-12">
       <div className="max-w-md w-full">
+        {/* Logo and Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl mb-4">
             <span className="text-3xl">🔒</span>
@@ -114,6 +115,8 @@ const ForgotPasswordFlow = () => {
             {step === 3 && 'Nhập mật khẩu mới của bạn'}
           </p>
         </div>
+
+        {/* Progress Steps */}
         <div className="flex items-center justify-center mb-8">
           <div className="flex items-center">
             <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all ${
@@ -135,17 +138,24 @@ const ForgotPasswordFlow = () => {
             </div>
           </div>
         </div>
+
+        {/* Form Card */}
         <div className="bg-white rounded-2xl shadow-xl p-8">
+          {/* Error Alert */}
           {error && (
             <div className="mb-4 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded animate-shake">
               <p className="font-medium">❌ {error}</p>
             </div>
           )}
+
+          {/* Success Alert */}
           {success && (
             <div className="mb-4 p-4 bg-green-50 border-l-4 border-green-500 text-green-700 rounded animate-pulse">
               <p className="font-medium">✅ {success}</p>
             </div>
           )}
+
+          {/* Step 1: Email Input */}
           {step === 1 && (
             <form onSubmit={handleSendOTP} className="space-y-6">
               <div>
@@ -195,6 +205,8 @@ const ForgotPasswordFlow = () => {
               </div>
             </form>
           )}
+
+          {/* Step 2: OTP Verification */}
           {step === 2 && (
             <form onSubmit={handleVerifyOTP} className="space-y-6">
               <div>
@@ -249,6 +261,8 @@ const ForgotPasswordFlow = () => {
               </div>
             </form>
           )}
+
+          {/* Step 3: New Password */}
           {step === 3 && (
             <form onSubmit={handleResetPassword} className="space-y-6">
               <div>
@@ -296,6 +310,8 @@ const ForgotPasswordFlow = () => {
             </form>
           )}
         </div>
+
+        {/* Footer */}
         <p className="text-center text-gray-600 mt-6 text-sm">
           © 2025 EV Service System
         </p>
