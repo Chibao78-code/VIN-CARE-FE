@@ -20,7 +20,7 @@ const TechnicianWorkOrders = () => {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // call api de lay danh sach work order cua technician
+  // Fetch real bookings from API
   useEffect(() => {
     if (user && user.userId) {
       fetchWorkOrders();
@@ -40,13 +40,13 @@ const TechnicianWorkOrders = () => {
       
       console.log('🔄 Fetching work orders for technician ID:', user.userId);
       
-      // call api de lay danh sach work order
+      // Fetch only bookings assigned to this technician
       const result = await bookingService.getTechnicianBookings(user.userId);
       
       if (result.success) {
         console.log('✅ Fetched assigned bookings:', result.data);
         
-        // data transform de phu hop voi work order
+        // Transform backend data to frontend format
         const transformedOrders = result.data.map((booking, index) => ({
           id: `WO-${String(booking.bookingId).padStart(3, '0')}`,
           appointmentId: `APT-${String(booking.bookingId).padStart(3, '0')}`,
@@ -54,7 +54,7 @@ const TechnicianWorkOrders = () => {
           customerName: booking.customerName,
           customerPhone: booking.customerPhone,
           vehicle: {
-            make: 'VinFast', 
+            make: 'VinFast', // Extracted from model name
             model: booking.eVModel,
             plate: booking.licensePlate,
             year: 2023,
@@ -63,7 +63,7 @@ const TechnicianWorkOrders = () => {
           service: booking.offerType || 'Dịch vụ',
           serviceDetails: booking.maintenancePackage ? [booking.maintenancePackage] : [],
           problemDescription: booking.problemDescription,
-          priority: 'normal',
+          priority: 'normal', // Default priority
           status: booking.status.toLowerCase() === 'pending' ? 'pending' : 'in-progress',
           scheduledDate: booking.date,
           scheduledTime: booking.time,
@@ -83,6 +83,7 @@ const TechnicianWorkOrders = () => {
       } else {
         console.error('❌ Error:', result.error);
         toast.error(result.error);
+        // Fallback to mock data if API fails
         setWorkOrders(getMockOrders());
       }
     } catch (error) {
@@ -93,6 +94,8 @@ const TechnicianWorkOrders = () => {
       setLoading(false);
     }
   };
+  
+  // Mock data as fallback
   const getMockOrders = () => {
     return [
         //fake data
