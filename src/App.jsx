@@ -21,7 +21,7 @@ import MyVehicles from './pages/MyVehicles';
 import Settings from './pages/Settings';
 import Notifications from './pages/Notifications';
 
-// admin 
+// Admin 
 import AdminLayout from './layouts/AdminLayout';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminAnalytics from './pages/admin/AdminAnalytics';
@@ -29,13 +29,18 @@ import AdminInventory from './pages/admin/AdminInventory';
 import AdminUsers from './pages/admin/AdminUsers';
 import AdminSettings from './pages/admin/AdminSettings';
 
-// staff 
+// Staff 
 import StaffLayout from './layouts/StaffLayout';
 import StaffDashboard from './pages/staff/StaffDashboard';
 import StaffCustomers from './pages/staff/StaffCustomers';
 import StaffAppointments from './pages/staff/StaffAppointments';
+import StaffVehicleReception from './pages/staff/StaffVehicleReception';
+import StaffReceptionTracking from './pages/staff/StaffReceptionTracking';
+import StaffSpareParts from './pages/staff/StaffSpareParts';
+import StaffPayments from './pages/staff/StaffPayments';
+import VNPayReturn from './pages/staff/VNPayReturn';
 
-// technician 
+// Technician 
 import TechnicianLayout from './layouts/TechnicianLayout';
 import TechnicianDashboard from './pages/technician/TechnicianDashboard';
 import TechnicianWorkOrders from './pages/technician/TechnicianWorkOrders';
@@ -167,6 +172,11 @@ function App() {
           <Route path="customers" element={<StaffCustomers />} />
           <Route path="appointments" element={<StaffAppointments />} />
           <Route path="appointments/new" element={<StaffAppointments />} />
+          <Route path="vehicle-reception" element={<StaffVehicleReception />} />
+          <Route path="reception-tracking" element={<StaffReceptionTracking />} />
+          <Route path="spare-parts" element={<StaffSpareParts />} />
+          <Route path="payments" element={<StaffPayments />} />
+          <Route path="vnpay-return" element={<VNPayReturn />} />
         </Route>
 
         <Route
