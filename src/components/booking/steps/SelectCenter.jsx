@@ -68,7 +68,7 @@ const SelectCenter = ({ data, onNext }) => {
           phone: center.centerPhone,
           openTime: center.startTime || '07:30',
           closeTime: center.endTime || '18:30',
-          workingDays: ['T2', 'T3', 'T4', 'T5', 'T6', 'T7'], ]
+          workingDays: ['T2', 'T3', 'T4', 'T5', 'T6', 'T7'], 
           rating: 4.7, // danh gia mac dinh
           technicians: 6, // so luong ky thuat vien mac dinh
           services: ['maintenance', 'repair', 'parts'], // dich vu mac dinh
