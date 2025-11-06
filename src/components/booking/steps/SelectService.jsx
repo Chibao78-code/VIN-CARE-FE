@@ -23,33 +23,37 @@ const SelectService = ({ data, onNext, onBack }) => {
   const [apiSpareParts, setApiSpareParts] = useState([]);
   const [loadingParts, setLoadingParts] = useState(false);
   
-  // map data service id dung vs du lieu backend
+  // Map service IDs to offer type IDs from backend
   const OFFER_TYPE_IDS = {
     'maintenance': 1, // Bảo dưỡng định kỳ
     'parts': 2,       // Thay thế phụ tùng
     'repair': 3       // Sửa chữa
   };
 
-  // chon xe mac dinh neu co
+  // Initialize selectedVehicle only if data.vehicle is a valid number
   useEffect(() => {
     if (data.vehicle && !isNaN(parseInt(data.vehicle))) {
       setSelectedVehicle(data.vehicle);
     }
   }, [data.vehicle]);
 
-  // call api de lay danh sach xe cua khach hang
+  // Fetch customer's vehicles from backend
   useEffect(() => {
     const fetchMyVehicles = async () => {
       try {
         console.log('🚗 Fetching customer vehicles from API...');
         setLoadingVehicles(true);
-        // test api
+        // TEST: Use phone-based endpoint since JWT is disabled
         const response = await api.get('/vehicles/test/0905111111');
         console.log('✅ My Vehicles Response:', response);
+        
+        // Response should be array of vehicles
         const vehicles = Array.isArray(response) ? response : (response.data || response);
         console.log('🎯 Customer vehicles:', vehicles);
-        // Be id,model,licensePlate,vin
-        // Fe vehicleId,modelName,licensePlate
+        
+        // Transform backend response to match frontend expectations
+        // Backend: { id, model, licensePlate, vin }
+        // Frontend: { vehicleId, modelName, licensePlate }
         const transformedVehicles = vehicles.map(v => ({
           vehicleId: v.id,
           modelName: v.model,
@@ -63,6 +67,7 @@ const SelectService = ({ data, onNext, onBack }) => {
       } catch (error) {
         console.error('❌ Error fetching customer vehicles:', error);
         console.error('Error details:', error.response);
+        // Fallback to empty array if API fails
         setMyVehicles([]);
       } finally {
         setLoadingVehicles(false);
@@ -71,16 +76,15 @@ const SelectService = ({ data, onNext, onBack }) => {
 
     fetchMyVehicles();
   }, []);
-  // call api de lay goi bao duong khi chon dich vu bao duong
+  
+  // Fetch maintenance packages when maintenance service is selected
   useEffect(() => {
     const fetchMaintenancePackages = async () => {
       if (selectedService?.id === 'maintenance') {
         try {
           setLoadingPackages(true);
           const packages = await api.get('/maintenance-packages');
-          // chuyen doi data backend ve dinh dang frontend
-          // be packageId,packageName,price,durationMinutes,includes
-          // Fe id,name,price,duration,includes
+          // Transform backend data to match frontend structure
           const transformedPackages = packages.map(pkg => ({
             id: pkg.packageId,
             name: pkg.packageName,
@@ -100,7 +104,8 @@ const SelectService = ({ data, onNext, onBack }) => {
     
     fetchMaintenancePackages();
   }, [selectedService]);
-   //call api de lay van de sua chua khi chon dich vu sua chua
+  
+  // Fetch repair issues when repair service is selected
   useEffect(() => {
     const fetchRepairIssues = async () => {
       if (selectedService?.id === 'repair') {
@@ -109,14 +114,12 @@ const SelectService = ({ data, onNext, onBack }) => {
           const offerTypeId = OFFER_TYPE_IDS[selectedService.id];
           const issues = await issueService.getIssuesByOfferType(offerTypeId);
           console.log('✅ Fetched repair issues:', issues);
-          // chuyen doi data backend ve dinh dang frontend
-          // Be issueId,issueName,offerTypeId
-          // Fe just need issueName
+          // Transform to simple string array for compatibility
           const issueNames = issues.map(issue => issue.issueName);
           setRepairIssues(issueNames);
         } catch (error) {
           console.error('❌ Error fetching repair issues:', error);
-          // call api khong thanh cong thi lay du lieu co san
+          // Fallback to hardcoded issues if API fails
           setRepairIssues(serviceDetails.repair.commonIssues);
         } finally {
           setLoadingIssues(false);
@@ -126,7 +129,8 @@ const SelectService = ({ data, onNext, onBack }) => {
     
     fetchRepairIssues();
   }, [selectedService]);
-  // call api de lay phu tung khi chon dich vu thay the phu tung
+  
+  // Fetch spare parts when parts service is selected
   useEffect(() => {
     const fetchSpareParts = async () => {
       if (selectedService?.id === 'parts') {
@@ -134,8 +138,9 @@ const SelectService = ({ data, onNext, onBack }) => {
           setLoadingParts(true);
           const parts = await sparePartService.getAllSpareParts();
           console.log('✅ Fetched spare parts:', parts);
-          // Be sparePartId,sparePartName,price,inStock,category,description
-          // Fe id,name,price,inStock
+          // Transform backend data to match frontend structure
+          // Backend: { sparePartId, sparePartName, price, inStock, category, description }
+          // Frontend: { id, name, price, inStock }
           const transformedParts = parts.map(part => ({
             id: part.sparePartId,
             name: part.sparePartName,
@@ -147,6 +152,7 @@ const SelectService = ({ data, onNext, onBack }) => {
           setApiSpareParts(transformedParts);
         } catch (error) {
           console.error('❌ Error fetching spare parts:', error);
+          // Fallback to hardcoded parts if API fails
           setApiSpareParts(serviceDetails.parts.commonParts);
         } finally {
           setLoadingParts(false);
@@ -189,7 +195,7 @@ const SelectService = ({ data, onNext, onBack }) => {
   const handleNext = () => {
     const serviceData = {
       service: selectedService,
-      vehicle: selectedVehicle // Truyen vehicleId sang buoc tiep theo
+      vehicle: selectedVehicle // This should be the vehicleId (number)
     };
 
     console.log('📤 Passing vehicle to next step:', selectedVehicle, 'Type:', typeof selectedVehicle);
@@ -200,7 +206,7 @@ const SelectService = ({ data, onNext, onBack }) => {
       serviceData.parts = selectedParts;
     } else if (selectedService?.id === 'repair') {
       serviceData.problemDescription = problemDescription;
-      serviceData.selectedIssue = selectedIssue; // luu van de chon
+      serviceData.selectedIssue = selectedIssue; // Save selected issue
     }
 
     onNext(serviceData);
