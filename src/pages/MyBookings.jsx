@@ -15,7 +15,7 @@ const MyBookings = () => {
       {
         id: 1,
         service: 'Bảo dưỡng định kỳ',
-        vehicle: 'VinFast - 30A-12345',
+        vehicle: 'VinFast VF8 - 30A-12345',
         date: '2024-02-15',
         time: '09:00',
         station: 'EV Service Center Quận 1',
@@ -28,7 +28,7 @@ const MyBookings = () => {
       {
         id: 2,
         service: 'Sạc xe điện',
-        vehicle: 'Vinfast - 51G-67890',
+        vehicle: 'Tesla Model 3 - 51G-67890',
         date: '2024-02-10',
         time: '14:30',
         station: 'EV Charging Hub Thủ Đức',
@@ -43,7 +43,7 @@ const MyBookings = () => {
       {
         id: 3,
         service: 'Kiểm tra pin',
-        vehicle: 'VinFast - 30A-12345',
+        vehicle: 'VinFast VF8 - 30A-12345',
         date: '2024-01-20',
         time: '10:00',
         station: 'EV Service Center Quận 1',
@@ -59,7 +59,7 @@ const MyBookings = () => {
       {
         id: 5,
         service: 'Bảo dưỡng định kỳ',
-        vehicle: 'VinFast - 30A-12345',
+        vehicle: 'VinFast VF8 - 30A-12345',
         date: '2024-01-10',
         time: '11:00',
         station: 'EV Service Center Quận 1',
@@ -189,6 +189,8 @@ const MyBookings = () => {
           ))
         )}
       </div>
+
+      {/* Note for upcoming */}
       {activeTab === 'upcoming' && (
         <div className="mt-8 p-4 bg-red-50 border border-red-300 rounded-lg flex items-start gap-3">
           <FiAlertCircle className="text-red-600 mt-0.5" />
@@ -198,6 +200,8 @@ const MyBookings = () => {
           </p>
         </div>
       )}
+
+      {/* Modal đặt lịch */}
       <MultiStepBooking 
         isOpen={isBookingOpen} 
         onClose={closeBookingModal}

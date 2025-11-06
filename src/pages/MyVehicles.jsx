@@ -12,13 +12,13 @@ const MyVehicles = () => {
 
   // Trạng thái mở/đóng modal đặt lịch
   const [isBookingOpen, setIsBookingOpen] = useState(false);
-  // Xe được chọn để đặt lịch
+  // Xe được chọn để đặt lịch (nếu muốn dùng)
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // call api lay danh sach xe cua nguoi dung
+  // Fetch vehicles from API
   useEffect(() => {
     const fetchVehicles = async () => {
       try {
@@ -55,7 +55,7 @@ const MyVehicles = () => {
     if (!vehicle.warrantyEndDate) return false;
     const today = new Date();
     
-    // format ngay thang
+    // Parse dd-MM-yyyy format from backend
     let endDate;
     const dateStr = vehicle.warrantyEndDate;
     if (dateStr.includes('-') && dateStr.split('-')[0].length === 2) {
@@ -149,6 +149,8 @@ const MyVehicles = () => {
           ))}
         </div>
       )}
+
+      {/* Modal đặt lịch */}
       <MultiStepBooking
         isOpen={isBookingOpen}
         onClose={closeBookingModal}
