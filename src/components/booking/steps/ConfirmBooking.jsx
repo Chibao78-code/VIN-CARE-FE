@@ -112,25 +112,37 @@ const ConfirmBooking = ({ data, onNext, onBack }) => {
       const response = await bookingService.createBooking(bookingPayload);
       
       if (response.success && response.data) {
-        // Lưu thông tin đầy đủ từ backend
-        const finalBookingData = {
-          ...data,
-          customerInfo,
-          notes,
-          // Nếu backend không trả về bookingId, tự generate
-          bookingId: response.data.bookingId || 'VF' + Date.now().toString().slice(-8),
-          status: response.data.status || 'confirmed',
-          createdAt: response.data.createdAt || new Date().toISOString(),
-          backendData: response.data // Lưu toàn bộ response từ backend
-        };
+        const bookingId = response.data.bookingId;
         
-        // Optional: Lưu vào localStorage để tracking
-        const existingBookings = JSON.parse(localStorage.getItem('bookings') || '[]');
-        existingBookings.push(finalBookingData);
-        localStorage.setItem('bookings', JSON.stringify(existingBookings));
+        // Tạo payment URL cho đặt cọc
+        console.log('💳 Creating deposit payment for booking:', bookingId);
         
-        toast.success('Đặt lịch thành công!');
-        onNext(finalBookingData);
+        try {
+          const paymentResponse = await bookingService.createDepositPayment(bookingId);
+          
+          if (paymentResponse.success && paymentResponse.paymentUrl) {
+            // Lưu booking info vào sessionStorage để sử dụng sau khi thanh toán
+            const finalBookingData = {
+              ...data,
+              customerInfo,
+              notes,
+              bookingId: bookingId,
+              depositAmount: paymentResponse.depositAmount,
+              backendData: response.data
+            };
+            sessionStorage.setItem('pendingBooking', JSON.stringify(finalBookingData));
+            
+            toast.success('Đang chuyển đến trang thanh toán...');
+            
+            // Redirect đến VNPay
+            window.location.href = paymentResponse.paymentUrl;
+          } else {
+            throw new Error('Không tạo được link thanh toán');
+          }
+        } catch (paymentError) {
+          console.error('Payment error:', paymentError);
+          toast.error('Không thể tạo thanh toán. Vui lòng liên hệ hỗ trợ.');
+        }
       } else {
         toast.error(response.error || 'Không thể tạo lịch hẹn');
       }
@@ -306,6 +318,22 @@ const ConfirmBooking = ({ data, onNext, onBack }) => {
           />
         </div>
       </div>
+      {/* Deposit Payment Info */}
+      <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+        <div className="flex items-start">
+          <FiAlertCircle className="text-blue-600 mt-0.5 mr-2 flex-shrink-0" />
+          <div className="text-sm">
+            <p className="font-semibold text-blue-900 mb-2">💳 Thanh toán đặt cọc</p>
+            <p className="text-blue-800 mb-2">
+              Sau khi xác nhận, bạn sẽ được chuyển đến trang thanh toán VNPay để thanh toán <strong className="text-blue-900">200,000đ</strong> để giữ chỗ.
+            </p>
+            <p className="text-red-600 font-medium">
+              ⚠️ Chúng tôi chỉ giữ chỗ cho bạn trong 15 phút. Nếu đến sau thời gian đó, chúng tôi không có trách nhiệm hoàn tiền.
+            </p>
+          </div>
+        </div>
+      </div>
+
       <div className="mb-6 p-4 bg-amber-50 rounded-lg">
         <div className="flex items-start">
           <FiAlertCircle className="text-amber-600 mt-0.5 mr-2 flex-shrink-0" />

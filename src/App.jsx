@@ -20,11 +20,14 @@ import Profile from './pages/Profile';
 import MyVehicles from './pages/MyVehicles';
 import Settings from './pages/Settings';
 import Notifications from './pages/Notifications';
+import CustomerInspectionApproval from './pages/CustomerInspectionApproval';
+import PublicInspectionView from './pages/PublicInspectionView';
 
 // Admin 
 import AdminLayout from './layouts/AdminLayout';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminAnalytics from './pages/admin/AdminAnalytics';
+import AdminEnhancedAnalytics from './pages/admin/AdminEnhancedAnalytics';
 import AdminInventory from './pages/admin/AdminInventory';
 import AdminUsers from './pages/admin/AdminUsers';
 import AdminSettings from './pages/admin/AdminSettings';
@@ -38,12 +41,15 @@ import StaffVehicleReception from './pages/staff/StaffVehicleReception';
 import StaffReceptionTracking from './pages/staff/StaffReceptionTracking';
 import StaffSpareParts from './pages/staff/StaffSpareParts';
 import StaffPayments from './pages/staff/StaffPayments';
-import VNPayReturn from './pages/staff/VNPayReturn';
+import StaffVNPayReturn from './pages/staff/VNPayReturn';
+import StaffBookingSearch from './pages/staff/StaffBookingSearch';
+import CustomerVNPayReturn from './pages/VNPayReturn';
 
 // Technician 
 import TechnicianLayout from './layouts/TechnicianLayout';
 import TechnicianDashboard from './pages/technician/TechnicianDashboard';
 import TechnicianWorkOrders from './pages/technician/TechnicianWorkOrders';
+import TechnicianVehicleInspection from './pages/technician/TechnicianVehicleInspection';
 
 
 const ProtectedRoute = ({ children }) => {
@@ -91,6 +97,8 @@ function App() {
         <Route element={<PublicLayout />}>
           <Route path="/" element={<Landing />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/vnpay-return" element={<CustomerVNPayReturn />} />
+          <Route path="/inspection/reception/:receptionId" element={<PublicInspectionView />} />
         </Route>
         <Route 
           path="/login" 
@@ -141,6 +149,7 @@ function App() {
           <Route path="profile" element={<Profile />} />
           <Route path="settings" element={<Settings />} />
           <Route path="notifications" element={<Notifications />} />
+          <Route path="inspection/:bookingId" element={<CustomerInspectionApproval />} />
         </Route>
 
         <Route
@@ -154,6 +163,7 @@ function App() {
           <Route index element={<Navigate to="/admin/dashboard" replace />} />
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="analytics" element={<AdminAnalytics />} />
+          <Route path="enhanced-analytics" element={<AdminEnhancedAnalytics />} />
           <Route path="inventory" element={<AdminInventory />} />
           <Route path="users" element={<AdminUsers />} />
           <Route path="settings" element={<AdminSettings />} />
@@ -176,7 +186,8 @@ function App() {
           <Route path="reception-tracking" element={<StaffReceptionTracking />} />
           <Route path="spare-parts" element={<StaffSpareParts />} />
           <Route path="payments" element={<StaffPayments />} />
-          <Route path="vnpay-return" element={<VNPayReturn />} />
+          <Route path="booking-search" element={<StaffBookingSearch />} />
+          <Route path="vnpay-return" element={<StaffVNPayReturn />} />
         </Route>
 
         <Route
@@ -191,6 +202,8 @@ function App() {
           <Route path="dashboard" element={<TechnicianDashboard />} />
           <Route path="work-orders" element={<TechnicianWorkOrders />} />
           <Route path="work-orders/:id" element={<TechnicianWorkOrders />} />
+          <Route path="inspection/:bookingId" element={<TechnicianVehicleInspection />} />
+          <Route path="inspection/reception/:receptionId" element={<TechnicianVehicleInspection />} />
           <Route path="inventory" element={<div>Inventory Page</div>} />
           <Route path="history" element={<div>Service History Page</div>} />
           <Route path="resources" element={<div>Tools & Manuals Page</div>} />
