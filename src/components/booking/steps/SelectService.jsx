@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { FiChevronRight, FiTool, FiPackage, FiSettings, FiCheck, FiSearch, FiAlertCircle } from 'react-icons/fi';
 import { serviceDetails } from '../../../data/serviceCenters';
 import Button from '../../ui/Button';
@@ -22,6 +22,8 @@ const SelectService = ({ data, onNext, onBack }) => {
   const [loadingIssues, setLoadingIssues] = useState(false);
   const [apiSpareParts, setApiSpareParts] = useState([]);
   const [loadingParts, setLoadingParts] = useState(false);
+  const [selectedVehicleDetails, setSelectedVehicleDetails] = useState(null);
+  const [vehicleBookingHistory, setVehicleBookingHistory] = useState([]);
   
   // Map service IDs to offer type IDs from backend
   const OFFER_TYPE_IDS = {
@@ -52,13 +54,15 @@ const SelectService = ({ data, onNext, onBack }) => {
         console.log('🎯 Customer vehicles:', vehicles);
         
         // Transform backend response to match frontend expectations
-        // Backend: { id, model, licensePlate, vin }
-        // Frontend: { vehicleId, modelName, licensePlate }
+        // Backend: { id, model, licensePlate, vin, hasWarranty, warrantyEndDate }
+        // Frontend: { vehicleId, modelName, licensePlate, hasWarranty, warrantyEndDate }
         const transformedVehicles = vehicles.map(v => ({
           vehicleId: v.id,
           modelName: v.model,
           licensePlate: v.licensePlate,
-          vin: v.vin
+          vin: v.vin,
+          hasWarranty: v.hasWarranty,
+          warrantyEndDate: v.warrantyEndDate
         }));
         
         console.log('✅ Transformed vehicles:', transformedVehicles);
@@ -76,6 +80,29 @@ const SelectService = ({ data, onNext, onBack }) => {
 
     fetchMyVehicles();
   }, []);
+  
+  // Fetch selected vehicle details and booking history
+  useEffect(() => {
+    const fetchVehicleData = async () => {
+      if (selectedVehicle && myVehicles.length > 0) {
+        // Get vehicle details from myVehicles
+        const vehicleDetails = myVehicles.find(v => String(v.vehicleId) === String(selectedVehicle));
+        setSelectedVehicleDetails(vehicleDetails);
+        
+        // Fetch booking history for this vehicle
+        try {
+          const history = await api.get(`/bookings/vehicle/${selectedVehicle}`);
+          setVehicleBookingHistory(Array.isArray(history) ? history : []);
+          console.log('✅ Vehicle booking history:', history);
+        } catch (error) {
+          console.error('❌ Error fetching booking history:', error);
+          setVehicleBookingHistory([]);
+        }
+      }
+    };
+    
+    fetchVehicleData();
+  }, [selectedVehicle, myVehicles]);
   
   // Fetch maintenance packages when maintenance service is selected
   useEffect(() => {
@@ -137,15 +164,15 @@ const SelectService = ({ data, onNext, onBack }) => {
         try {
           setLoadingParts(true);
           const parts = await sparePartService.getAllSpareParts();
-          console.log('✅ Fetched spare parts:', parts);
+          console.log('\u2705 Fetched spare parts:', parts);
           // Transform backend data to match frontend structure
-          // Backend: { sparePartId, sparePartName, price, inStock, category, description }
+          // Backend: { partId, partName, unitPrice, status, stockQuantity, category, description }
           // Frontend: { id, name, price, inStock }
           const transformedParts = parts.map(part => ({
-            id: part.sparePartId,
-            name: part.sparePartName,
-            price: part.price,
-            inStock: part.inStock,
+            id: part.partId,
+            name: part.partName,
+            price: part.unitPrice,
+            inStock: part.status === 'in-stock' && part.stockQuantity > 0,
             category: part.category,
             description: part.description
           }));
@@ -191,6 +218,46 @@ const SelectService = ({ data, onNext, onBack }) => {
     console.log('🚗 Full vehicle data:', selectedVehicleData);
     setSelectedVehicle(vehicleId);
   };
+  
+  // Check if vehicle warranty is active
+  const isVehicleWarrantyActive = (vehicleDetails) => {
+    if (!vehicleDetails || !vehicleDetails.hasWarranty || !vehicleDetails.warrantyEndDate) {
+      return false;
+    }
+    
+    const today = new Date();
+    let endDate;
+    const dateStr = vehicleDetails.warrantyEndDate;
+    
+    // Parse date from backend (dd-MM-yyyy or ISO format)
+    if (dateStr.includes('-') && dateStr.split('-')[0].length === 2) {
+      const [day, month, year] = dateStr.split('-');
+      endDate = new Date(`${year}-${month}-${day}`);
+    } else {
+      endDate = new Date(dateStr);
+    }
+    
+    return endDate >= today;
+  };
+  
+  // Check if vehicle has used basic package
+  const hasUsedBasicPackage = () => {
+    return vehicleBookingHistory.some(booking => 
+      booking.maintenancePackage === 'G\u00f3i c\u01a1 b\u1ea3n' &&
+      booking.status === 'COMPLETED'
+    );
+  };
+  
+  // Check if package should be disabled
+  const isPackageDisabled = (pkg) => {
+    // Disable basic package if vehicle has active warranty
+    if (pkg.name === 'G\u00f3i c\u01a1 b\u1ea3n') {
+      const hasWarranty = isVehicleWarrantyActive(selectedVehicleDetails);
+      console.log('\ud83d\udd12 Basic package check:', { hasWarranty, vehicleDetails: selectedVehicleDetails });
+      return hasWarranty; // Disable if warranty is active
+    }
+    return false;
+  };
 
   const handleNext = () => {
     const serviceData = {
@@ -227,7 +294,7 @@ const SelectService = ({ data, onNext, onBack }) => {
 
   const filteredParts = selectedService?.id === 'parts' 
     ? apiSpareParts.filter(part => 
-        part.name.toLowerCase().includes(partsSearch.toLowerCase())
+        part.name?.toLowerCase().includes(partsSearch.toLowerCase())
       )
     : [];
 
@@ -304,42 +371,63 @@ const SelectService = ({ data, onNext, onBack }) => {
         <div className="border-t pt-6">
           {selectedService.id === 'maintenance' && (
             <div>
-              <h4 className="font-medium text-gray-900 mb-4">Chọn gói bảo dưỡng:</h4>
+              <h4 className="font-medium text-gray-900 mb-4">Chá»n gĂ³i báº£o dÆ°á»¡ng:</h4>
               {loadingPackages ? (
                 <p className="text-gray-600">Loading packages...</p>
               ) : maintenancePackages.length === 0 ? (
-                <p className="text-red-600">Không có gói bảo dưỡng nào.</p>
+                <p className="text-red-600">Kh\u00f4ng c\u00f3 g\u00f3i b\u1ea3o d\u01b0\u1ee1ng n\u00e0o.</p>
               ) : (
+              <>
+              {isVehicleWarrantyActive(selectedVehicleDetails) && (
+                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-sm text-blue-800">
+                    <strong>Lưu ý:</strong> Xe còn bảo hành chỉ được sử dụng <strong>Gói nâng cao</strong> cho lần bảo dưỡng tiếp theo.
+                  </p>
+                </div>
+              )}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {maintenancePackages.map((pkg) => (
+                {maintenancePackages.map((pkg) => {
+                  const disabled = isPackageDisabled(pkg);
+                  return (
                   <div
                     key={pkg.id}
-                    onClick={() => setSelectedPackage(pkg)}
-                    className={`p-4 border-2 rounded-lg cursor-pointer transition-all
-                      ${selectedPackage?.id === pkg.id 
-                        ? 'border-blue-500 bg-blue-50' 
-                        : 'border-gray-200 hover:border-blue-300'}`}
+                    onClick={() => !disabled && setSelectedPackage(pkg)}
+                    title={disabled ? "G\u00f3i n\u00e0y d\u00e0nh cho xe h\u1ebft b\u1ea3o h\u00e0nh" : ""}
+                    className={`p-4 border-2 rounded-lg transition-all relative ${
+                      disabled 
+                        ? 'opacity-50 cursor-not-allowed bg-gray-50 border-gray-300' 
+                        : selectedPackage?.id === pkg.id 
+                        ? 'border-blue-500 bg-blue-50 cursor-pointer' 
+                        : 'border-gray-200 hover:border-blue-300 cursor-pointer'
+                    }`}
                   >
+                    {disabled && (
+                      <div className="absolute top-2 right-2 bg-red-100 text-red-700 text-xs px-2 py-1 rounded-full">
+                        Kh\u00f4ng kh\u1ea3 d\u1ee5ng
+                      </div>
+                    )}
                     <div className="flex justify-between items-start mb-2">
-                      <h5 className="font-semibold text-gray-900">{pkg.name}</h5>
-                      <span className="text-blue-600 font-bold">
-                        {pkg.price.toLocaleString('vi-VN')}đ
+                      <h5 className={`font-semibold ${disabled ? 'text-gray-500' : 'text-gray-900'}`}>{pkg.name}</h5>
+                      <span className={`font-bold ${disabled ? 'text-gray-400' : 'text-blue-600'}`}>
+                        {pkg.price.toLocaleString('vi-VN')}\u0111
                       </span>
                     </div>
                     <p className="text-sm text-gray-500 mb-3">
-                      Thời gian: {pkg.duration} phút
+                      Th\u1eddi gian: {pkg.duration} ph\u00fat
                     </p>
                     <ul className="space-y-1">
                       {pkg.includes.map((item, idx) => (
                         <li key={idx} className="text-sm text-gray-600 flex items-start">
-                          <FiCheck className="text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                          <FiCheck className={`mr-2 mt-0.5 flex-shrink-0 ${disabled ? 'text-gray-400' : 'text-green-500'}`} />
                           {item}
                         </li>
                       ))}
                     </ul>
                   </div>
-                ))}
+                  );
+                })}
               </div>
+              </>
               )}
             </div>
           )}
@@ -489,3 +577,4 @@ const SelectService = ({ data, onNext, onBack }) => {
 };
 
 export default SelectService;
+
