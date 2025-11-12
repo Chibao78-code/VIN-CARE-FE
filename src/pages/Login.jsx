@@ -30,7 +30,7 @@ const Login = () => {
     if (result.success) {
       toast.success('Đăng nhập thành công!');
       
-      // role user de dieu huong
+      // Route based on user role from backend
       const userRole = result.user?.role || 'CUSTOMER';
       
       switch(userRole) {

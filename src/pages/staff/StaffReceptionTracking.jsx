@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FiSearch, FiEye, FiEdit, FiPackage, FiCheck, FiClock, FiAlertCircle } from 'react-icons/fi';
+import { FiSearch, FiEye, FiEdit, FiPackage, FiCheck, FiClock, FiAlertCircle, FiDollarSign } from 'react-icons/fi';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import toast from 'react-hot-toast';
@@ -156,17 +156,6 @@ const StaffReceptionTracking = () => {
       const result = await vehicleReceptionService.updateReceptionStatus(receptionId, newStatus);
       if (result.success) {
         toast.success('Đã cập nhật trạng thái');
-        
-        // If marking as COMPLETED, automatically create a payment
-        if (newStatus === 'COMPLETED') {
-          const paymentResult = await paymentService.createPaymentFromReception(receptionId);
-          if (paymentResult.success) {
-            toast.success('Đã tạo hóa đơn thanh toán tự động!');
-          } else {
-            toast.error('Cảnh báo: Không thể tạo hóa đơn - ' + paymentResult.error);
-          }
-        }
-        
         fetchReceptions();
       } else {
         toast.error(result.error);
@@ -174,6 +163,21 @@ const StaffReceptionTracking = () => {
     } catch (error) {
       console.error('Error updating status:', error);
       toast.error('Không thể cập nhật trạng thái');
+    }
+  };
+
+  const handleCreatePayment = async (receptionId) => {
+    try {
+      const paymentResult = await paymentService.createPaymentFromReception(receptionId);
+      if (paymentResult.success) {
+        toast.success(`Đã tạo hóa đơn ${paymentResult.data.invoiceNumber}!`);
+        fetchReceptions();
+      } else {
+        toast.error('Không thể tạo hóa đơn: ' + paymentResult.error);
+      }
+    } catch (error) {
+      console.error('Error creating payment:', error);
+      toast.error('Không thể tạo hóa đơn thanh toán');
     }
   };
 
@@ -211,6 +215,7 @@ const StaffReceptionTracking = () => {
               <option value="RECEIVED">Đã tiếp nhận</option>
               <option value="IN_PROGRESS">Đang xử lý</option>
               <option value="COMPLETED">Hoàn thành</option>
+              <option value="CANCELLED">Đã hủy</option>
             </select>
           </div>
         </Card.Content>
@@ -310,6 +315,17 @@ const StaffReceptionTracking = () => {
                         Hoàn thành
                       </Button>
                     </>
+                  )}
+                  {reception.status === 'COMPLETED' && (
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={() => handleCreatePayment(reception.receptionId)}
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      <FiDollarSign className="mr-1" />
+                      Tạo hóa đơn
+                    </Button>
                   )}
                 </div>
               </Card.Content>
