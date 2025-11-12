@@ -325,6 +325,29 @@ const bookingService = {
         error: error.response?.data?.message || 'Không thể lấy thống kê booking'
       };
     }
+  },
+
+  /**
+   * Create deposit payment for booking
+   * @param {number} bookingId - Booking ID
+   * @returns {Promise} - Payment URL and deposit info
+   */
+  createDepositPayment: async (bookingId) => {
+    try {
+      const response = await api.post(`/bookings/${bookingId}/create-deposit-payment`);
+      return {
+        success: true,
+        paymentUrl: response.paymentUrl,
+        depositAmount: response.depositAmount,
+        depositPolicy: response.depositPolicy,
+        invoiceNumber: response.invoiceNumber
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Không thể tạo thanh toán đặt cọc'
+      };
+    }
   }
 };
 
