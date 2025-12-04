@@ -16,12 +16,12 @@ export const formatDate = (date, formatStr = 'dd/MM/yyyy') => {
   
   let dateObj;
   if (typeof date === 'string') {
-    // Handle dd-MM-yyyy format from backend
+    // format dd-MM-yyyy from backend
     if (date.includes('-') && date.split('-')[0].length === 2) {
       const [day, month, year] = date.split('-');
       dateObj = new Date(`${year}-${month}-${day}`);
     } else {
-      // Handle ISO format YYYY-MM-DD
+      // format ISO
       dateObj = parseISO(date);
     }
   } else {
@@ -57,11 +57,12 @@ export const formatLicensePlate = (plate) => {
   }
   return plate;
 };
+// cat ngan van ban 100 ky tu
 export const truncateText = (text, maxLength = 100) => {
   if (!text || text.length <= maxLength) return text;
   return text.slice(0, maxLength) + '...';
 };
-//lay chu cai dau tien
+//lay chu cai dau tien va viet hoa 
 export const getInitials = (name) => {
   if (!name) return '';  
   const words = name.split(' ');
