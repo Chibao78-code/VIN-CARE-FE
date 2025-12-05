@@ -13,7 +13,7 @@ const TechnicianVehicleInspection = () => {
   const [booking, setBooking] = useState(null);
   const [loading, setLoading] = useState(false);
   const [spareParts, setSpareParts] = useState([]);
-  
+  // state bao cao kiem tra
   const [inspection, setInspection] = useState({
     bookingId: id || '',
     generalNotes: '',
@@ -26,17 +26,17 @@ const TechnicianVehicleInspection = () => {
     estimatedTimeHours: 1,
     items: []
   });
-
+  // load booking hoac reception va phu tung
   useEffect(() => {
     if (id) {
       loadBooking(id);
       loadSpareParts();
     }
   }, [id]);
-
+  // load thong tin booking hoac reception
   const loadBooking = async (id) => {
     try {
-      // Load reception or booking based on type
+      //  su dung endpoint khac nhau cho reception va booking
       const endpoint = isReception ? `/vehicle-receptions/${id}` : `/bookings/${id}`;
       const response = await api.get(endpoint);
       setBooking(response);
@@ -46,7 +46,7 @@ const TechnicianVehicleInspection = () => {
       toast.error('Không thể tải thông tin');
     }
   };
-
+  // load danh sach phu tung
   const loadSpareParts = async () => {
     try {
       const response = await api.get('/spare-parts');
@@ -55,7 +55,7 @@ const TechnicianVehicleInspection = () => {
       console.error('Load spare parts error:', error);
     }
   };
-
+  // them moi muc phu tung can thay
   const addItem = () => {
     setInspection(prev => ({
       ...prev,
@@ -68,14 +68,14 @@ const TechnicianVehicleInspection = () => {
       }]
     }));
   };
-
+   // xoa muc phu tung
   const removeItem = (index) => {
     setInspection(prev => ({
       ...prev,
       items: prev.items.filter((_, i) => i !== index)
     }));
   };
-
+   // cap nhat muc phu tung
   const updateItem = (index, field, value) => {
     setInspection(prev => ({
       ...prev,
@@ -83,7 +83,7 @@ const TechnicianVehicleInspection = () => {
         if (i === index) {
           const updated = { ...item, [field]: value };
           
-          // Auto-calculate unit price when spare part is selected
+          //  nếu thay đổi phụ tùng, cập nhật đơn giá
           if (field === 'sparePartId') {
             const part = spareParts.find(p => p.partId === parseInt(value));
             if (part) {
@@ -97,20 +97,20 @@ const TechnicianVehicleInspection = () => {
       })
     }));
   };
-
+  // tinh tong chi phi
   const calculateTotalCost = () => {
     const itemsCost = inspection.items.reduce((sum, item) => {
       return sum + (item.unitPrice * item.quantity);
     }, 0);
     return itemsCost;
   };
-
+  // xu ly gui bao cao kiem tra
   const handleSubmit = async () => {
     if (!inspection.bookingId) {
       toast.error('Thiếu thông tin booking ID');
       return;
     }
-
+  
     const totalCost = calculateTotalCost();
     const payload = {
       ...inspection,
@@ -119,13 +119,13 @@ const TechnicianVehicleInspection = () => {
 
     setLoading(true);
     try {
-      // Use different endpoint for reception vs booking
+      // Sử dụng endpoint khác nhau cho reception và booking
       const endpoint = isReception ? '/inspections/reception' : '/inspections';
       const response = await api.post(endpoint, payload);
       console.log('✅ Inspection created:', response);
       toast.success('Đã tạo báo cáo kiểm tra!');
       
-      // Navigate back to work orders
+      // Quay lại trang đơn làm việc
       setTimeout(() => {
         navigate('/technician/work-orders');
       }, 1500);
@@ -136,7 +136,7 @@ const TechnicianVehicleInspection = () => {
       setLoading(false);
     }
   };
-
+  // nếu chưa load dc booking
   if (!booking) {
     return (
       <div className="p-6">
