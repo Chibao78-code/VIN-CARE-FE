@@ -9,7 +9,7 @@ import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import toast from 'react-hot-toast';
 import { sparePartService } from '../../services/sparePartService';
-
+// Admin Inventory Management Page
 const AdminInventory = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -28,7 +28,7 @@ const AdminInventory = () => {
     supplier: '',
     description: ''
   });
-
+  // danh sach linh kien
   const [inventoryItems, setInventoryItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -44,14 +44,14 @@ const AdminInventory = () => {
   useEffect(() => {
     fetchSpareParts();
   }, []);
-
+  //  lay du lieu linh kien
   const fetchSpareParts = async () => {
     try {
       setLoading(true);
       const data = await sparePartService.getAllSpareParts();
       console.log('✅ Fetched spare parts:', data);
       
-      // Transform backend data to frontend format
+      //  Transform backend data to frontend format
       const transformedData = data.map(item => ({
         id: item.sparePartId,
         name: item.sparePartName,
@@ -273,7 +273,7 @@ const AdminInventory = () => {
     });
     setShowEditModal(true);
   };
-
+ // Render page
   return (
     <div>
       <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
