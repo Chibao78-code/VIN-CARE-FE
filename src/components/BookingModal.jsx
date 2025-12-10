@@ -55,7 +55,7 @@ const BookingModal = ({ isOpen, onClose }) => {
   };
 
   if (!isOpen) return null;
-
+  // giao dien modal
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div 
@@ -131,7 +131,6 @@ const BookingModal = ({ isOpen, onClose }) => {
                   placeholder="email@example.com"
                   error={errors.email?.message}
                   {...register('email', {
-                    required: 'Vui lòng nhập email',
                     pattern: {
                       value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
                       message: 'Email không hợp lệ'

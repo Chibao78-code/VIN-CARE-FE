@@ -26,9 +26,9 @@ const Sidebar = () => {
   const navigation = [
     { name: "Tổng quan", href: "/app/dashboard", icon: FiHome },
     { name: "Xe của tôi", href: "/app/vehicles", icon: FiTruck },
-    { name: "Dịch vụ", href: "/app/services", icon: FiPackage },
-    { name: "Lịch hẹn", href: "/app/my-bookings", icon: FiCalendar },
+    { name: "Dịch vụ của tôi", href: "/app/my-bookings", icon: FiCalendar },
     { name: "Lịch sử bảo dưỡng", href: "/app/vehicle-history", icon: FiClipboard },
+    { name: "Dịch vụ", href: "/app/services", icon: FiPackage },
   ];
 
   //  admin
