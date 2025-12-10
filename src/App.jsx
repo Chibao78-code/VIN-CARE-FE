@@ -28,9 +28,8 @@ import AdminLayout from './layouts/AdminLayout';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminAnalytics from './pages/admin/AdminAnalytics';
 import AdminEnhancedAnalytics from './pages/admin/AdminEnhancedAnalytics';
-import AdminInventory from './pages/admin/AdminInventory';
 import AdminUsers from './pages/admin/AdminUsers';
-import AdminSettings from './pages/admin/AdminSettings';
+import AdminSpareParts from './pages/admin/AdminSpareParts';
 
 // Staff 
 import StaffLayout from './layouts/StaffLayout';
@@ -41,7 +40,7 @@ import StaffVehicleReception from './pages/staff/StaffVehicleReception';
 import StaffReceptionTracking from './pages/staff/StaffReceptionTracking';
 import StaffSpareParts from './pages/staff/StaffSpareParts';
 import StaffPayments from './pages/staff/StaffPayments';
-import StaffVNPayReturn from './pages/staff/VNPayReturn';
+import StaffPaymentSuccess from './pages/staff/PaymentSuccess';
 import StaffBookingSearch from './pages/staff/StaffBookingSearch';
 import CustomerVNPayReturn from './pages/VNPayReturn';
 
@@ -50,13 +49,41 @@ import TechnicianLayout from './layouts/TechnicianLayout';
 import TechnicianDashboard from './pages/technician/TechnicianDashboard';
 import TechnicianWorkOrders from './pages/technician/TechnicianWorkOrders';
 import TechnicianVehicleInspection from './pages/technician/TechnicianVehicleInspection';
+import TechnicianWorkHistory from './pages/technician/TechnicianWorkHistory';
+import TechnicianInspectionChecklist from './pages/technician/TechnicianInspectionChecklist';
+import TechnicianWorkDetail from './pages/technician/TechnicianWorkDetail';
 
 
 const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated } = useAuthStore();
+  const store = useAuthStore();
+  const { isAuthenticated, _hasHydrated, initializeAuth } = store;
+  
+  React.useEffect(() => {
+    // xac thuc thu cong sau khi rehydrate
+    if (_hasHydrated) {
+      const hasAuth = initializeAuth();
+      console.log('🔐 Manual auth check:', hasAuth, 'Store auth:', isAuthenticated);
+    }
+  }, [_hasHydrated, initializeAuth, isAuthenticated]);
+  
+  // Đợi Zustand persist hoàn tất rehydrate
+  if (!_hasHydrated) {
+    console.log('⏳ Waiting for Zustand rehydration...');
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
+      </div>
+    );
+  }
+   // Kiểm tra xác thực sau khi rehydrate
+  console.log('✅ Hydration complete. isAuthenticated:', isAuthenticated);
+  
   if (!isAuthenticated) {
+    console.log('❌ Not authenticated, redirecting to login');
     return <Navigate to="/login" replace />;
-  } 
+  }
+  
+  console.log('✅ Authenticated, rendering protected content');
   return children;
 };
 
@@ -68,7 +95,7 @@ const PublicRoute = ({ children }) => {
   }  
   return children;
 };
-
+// trang chu app 
 function App() {
   return (
     <Router>
@@ -164,9 +191,8 @@ function App() {
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="analytics" element={<AdminAnalytics />} />
           <Route path="enhanced-analytics" element={<AdminEnhancedAnalytics />} />
-          <Route path="inventory" element={<AdminInventory />} />
+          <Route path="spare-parts" element={<AdminSpareParts />} />
           <Route path="users" element={<AdminUsers />} />
-          <Route path="settings" element={<AdminSettings />} />
         </Route>
         
         <Route
@@ -187,7 +213,7 @@ function App() {
           <Route path="spare-parts" element={<StaffSpareParts />} />
           <Route path="payments" element={<StaffPayments />} />
           <Route path="booking-search" element={<StaffBookingSearch />} />
-          <Route path="vnpay-return" element={<StaffVNPayReturn />} />
+          <Route path="payment-success" element={<StaffPaymentSuccess />} />
         </Route>
 
         <Route
@@ -202,10 +228,12 @@ function App() {
           <Route path="dashboard" element={<TechnicianDashboard />} />
           <Route path="work-orders" element={<TechnicianWorkOrders />} />
           <Route path="work-orders/:id" element={<TechnicianWorkOrders />} />
+          <Route path="work-detail/:receptionId" element={<TechnicianWorkDetail />} />
           <Route path="inspection/:bookingId" element={<TechnicianVehicleInspection />} />
           <Route path="inspection/reception/:receptionId" element={<TechnicianVehicleInspection />} />
+          <Route path="checklist/:receptionId" element={<TechnicianInspectionChecklist />} />
+          <Route path="history" element={<TechnicianWorkHistory />} />
           <Route path="inventory" element={<div>Inventory Page</div>} />
-          <Route path="history" element={<div>Service History Page</div>} />
           <Route path="resources" element={<div>Tools & Manuals Page</div>} />
         </Route>
         
