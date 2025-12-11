@@ -10,7 +10,11 @@
   body {
     @apply bg-gray-50 text-gray-900 antialiased;
   }
-} 
+  
+  #root {
+    min-height: 100vh;
+  }
+}
 @layer components {
   .btn {
     @apply inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200;
@@ -36,6 +40,19 @@
   .input-error {
     @apply border-red-500 focus:ring-red-500 focus:border-red-500;
   }
+  
+  /* Better select styling */
+  select {
+    @apply bg-white;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.75rem center;
+    background-repeat: no-repeat;
+    background-size: 1.25em 1.25em;
+    padding-right: 2.75rem !important;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+  }
   .badge {
     @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
   }  
@@ -53,24 +70,96 @@
   }
 }
 @layer utilities {
+  /* Custom scrollbar styles */
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #9ca3af #f3f4f6;
+  }
+  
   .custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 8px;
+    height: 8px;
   } 
+  
   .custom-scrollbar::-webkit-scrollbar-track {
-    @apply bg-gray-100 rounded-lg;
+    @apply bg-gray-100;
   }  
+  
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    @apply bg-gray-400 rounded-lg;
+    @apply bg-gray-400 rounded-full;
   }  
+  
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     @apply bg-gray-500;
   }
+
+  /* Always show scrollbar to prevent layout shift */
+  .scrollbar-gutter {
+    scrollbar-gutter: stable;
+  }
+  
   .loading-spin {
     animation: spin 1s linear infinite;
   }  
+  
   @keyframes spin {
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
   }
+
+  .animate-fadeIn {
+    animation: fadeIn 0.3s ease-in-out;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+/* Vietnamese date format for date inputs */
+input[type="date"]::-webkit-datetime-edit-text,
+input[type="date"]::-webkit-datetime-edit-month-field,
+input[type="date"]::-webkit-datetime-edit-day-field,
+input[type="date"]::-webkit-datetime-edit-year-field {
+  color: #111827;
+  font-weight: 500;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+/* Format date display as DD/MM/YYYY for Vietnamese locale */
+input[type="date"] {
+  position: relative;
+}
+
+input[type="date"]::-webkit-datetime-edit-fields-wrapper {
+  display: flex;
+  flex-direction: row;
+}
+
+input[type="date"]::-webkit-datetime-edit-day-field {
+  order: 1;
+}
+
+input[type="date"]::-webkit-datetime-edit-month-field {
+  order: 2;
+}
+
+input[type="date"]::-webkit-datetime-edit-year-field {
+  order: 3;
 }

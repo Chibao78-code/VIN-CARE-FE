@@ -1,15 +1,16 @@
+//api 
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
 
 export const APP_NAME = 'EV Service';
 export const APP_VERSION = '1.0.0';
-
+// key trong may chu
 export const STORAGE_KEYS = {
   AUTH_TOKEN: 'ev_auth_token',
   USER_DATA: 'ev_user_data',
   THEME: 'ev_theme',
   LANGUAGE: 'ev_language',
 };
-
+// key de truy van react query
 export const QUERY_KEYS = {
   USER: 'user',
   VEHICLES: 'vehicles',
@@ -18,7 +19,7 @@ export const QUERY_KEYS = {
   STATIONS: 'stations',
   NOTIFICATIONS: 'notifications',
 };
-
+// cau hinh phan trang mac dinh
 export const PAGINATION = {
   DEFAULT_PAGE: 1,
   DEFAULT_LIMIT: 10,
