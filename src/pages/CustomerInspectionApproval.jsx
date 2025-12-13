@@ -3,20 +3,20 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { CheckCircle, XCircle, AlertTriangle, DollarSign } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../services/api';
-
+// trang xac nhan bao cao kiem tra cua khach hang
 const CustomerInspectionApproval = () => {
   const { bookingId } = useParams();
   const navigate = useNavigate();
-  
+  // state
   const [inspection, setInspection] = useState(null);
   const [loading, setLoading] = useState(false);
-
+ // call data khi bookingId thay doi
   useEffect(() => {
     if (bookingId) {
       loadInspection();
     }
   }, [bookingId]);
-
+  // load bao cao kiem tra
   const loadInspection = async () => {
     try {
       const response = await api.get(`/inspections/booking/${bookingId}`);
@@ -26,12 +26,12 @@ const CustomerInspectionApproval = () => {
       toast.error('Không tìm thấy báo cáo kiểm tra');
     }
   };
-
+  // xu ly dong y bao cao
   const handleApprove = async () => {
     if (!window.confirm('Bạn đồng ý với báo cáo kiểm tra và chi phí sửa chữa?')) {
       return;
     }
-
+   // gui yeu cau dong y
     setLoading(true);
     try {
       await api.post(`/inspections/${inspection.inspectionId}/approve`);
@@ -44,12 +44,12 @@ const CustomerInspectionApproval = () => {
       setLoading(false);
     }
   };
-
+  // xu ly tu choi bao cao
   const handleReject = async () => {
     if (!window.confirm('Bạn từ chối báo cáo này? Kỹ thuật viên sẽ phải kiểm tra lại.')) {
       return;
     }
-
+   // loading tu choi bao cao
     setLoading(true);
     try {
       await api.post(`/inspections/${inspection.inspectionId}/reject`);
@@ -62,11 +62,11 @@ const CustomerInspectionApproval = () => {
       setLoading(false);
     }
   };
-
+  // nếu chưa có bao cao
   if (!inspection) {
     return <div className="p-6"><div className="text-center">Đang tải...</div></div>;
   }
-
+  // ham hien thi mau sac theo tinh trang
   const getConditionBadge = (condition) => {
     const colors = {
       GOOD: 'bg-green-100 text-green-800',
@@ -76,12 +76,12 @@ const CustomerInspectionApproval = () => {
     };
     return colors[condition] || 'bg-gray-100 text-gray-800';
   };
-
+  // ham hien thi text theo tinh trang
   const getConditionText = (condition) => {
     const texts = { GOOD: 'Tốt', FAIR: 'Trung bình', POOR: 'Kém', CRITICAL: 'Nguy hiểm' };
     return texts[condition] || condition;
   };
-
+  //  hien thi trang
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-4xl mx-auto">

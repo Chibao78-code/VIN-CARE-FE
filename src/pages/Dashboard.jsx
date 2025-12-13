@@ -1,84 +1,153 @@
 import React, { useState, useEffect } from "react";
-import { FiTruck, FiCalendar, FiBattery, FiTrendingUp } from "react-icons/fi";
+import { FiTruck, FiCalendar, FiDollarSign } from "react-icons/fi";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 import { formatCurrency, formatDate } from "../utils/format";
 import { useNavigate } from "react-router-dom";
-
+import useAuthStore from "../store/authStore";
+import vehicleService from "../services/vehicleService";
+import bookingService from "../services/bookingService";
+import toast from "react-hot-toast";
+// dashboard page
 const iconMap = {
   truck: FiTruck,
   calendar: FiCalendar,
-  battery: FiBattery,
-  trendingUp: FiTrendingUp,
+  dollar: FiDollarSign,
 };
-
-const fetchUserInfo = () =>
-  new Promise((resolve) =>
-    setTimeout(() => resolve({ name: "Dinh Chi Bao" }), 500)
-  );
-const fetchStats = () =>
-  new Promise((resolve) =>
-    setTimeout(
-      () =>
-        resolve([
-          { title: "Xe của bạn", value: "2", iconKey: "truck" },
-          { title: "Lịch hẹn", value: "5", iconKey: "calendar" },
-          { title: "Điện năng đã sạc", value: "450 kWh", iconKey: "battery" },
-          {
-            title: "Chi phí tháng này",
-            value: formatCurrency(2500000),
-            iconKey: null,
-          },
-        ]),
-      700
-    )
-  );
-const fetchRecentBookings = () =>
-  new Promise((resolve) =>
-    setTimeout(
-      () =>
-        resolve([
-          {
-            id: 1,
-            service: "Bảo dưỡng định kỳ",
-            vehicle: "VinFast Evo 200",
-            date: "2024-01-15",
-            status: "completed",
-            amount: 500000,
-          },
-          {
-            id: 2,
-            service: "Sạc nhanh",
-            vehicle: "VinFast Evo 200 Lite",
-            date: "2024-01-18",
-            status: "upcoming",
-            amount: 150000,
-          },
-          {
-            id: 3,
-            service: "Kiểm tra pin",
-            vehicle: "VinFast Evo 200",
-            date: "2024-01-20",
-            status: "cancelled",
-            amount: 300000,
-          },
-        ]),
-      800
-    )
-  );
-
+ // hien thi trang dashboard
 const Dashboard = () => {
-  const [userName, setUserName] = useState("");
+  const { user } = useAuthStore();
   const [stats, setStats] = useState([]);
   const [recentBookings, setRecentBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  // Lấy tên người dùng từ authStore
+  const userName = user?.fullName || user?.name || user?.email || "Người dùng";
+  // fetch du lieu dashboard
   useEffect(() => {
-    fetchUserInfo().then((data) => setUserName(data.name));
-    fetchStats().then((data) => setStats(data));
-    fetchRecentBookings().then((data) => setRecentBookings(data));
+    fetchDashboardData();
   }, []);
-
+  // fetch du lieu
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      
+      // Lấy danh sách xe
+      const vehiclesResult = await vehicleService.getMyVehicles();
+      const vehicleCount = vehiclesResult?.length || 0;
+      
+      // Lấy danh sách lịch hẹn
+      const bookingsResult = await bookingService.getMyBookings('all');
+      const allBookings = bookingsResult.data || [];
+      
+      console.log('📊 Dashboard - All bookings:', allBookings);
+      console.log('📊 Dashboard - Bookings count:', allBookings.length);
+      
+      // Đếm lịch hẹn sắp tới (bao gồm tất cả trạng thái chưa hoàn thành/hủy)
+      const upcomingBookings = allBookings.filter(b => {
+        const isUpcoming = b.status === 'PENDING' || 
+                          b.status === 'APPROVED' || 
+                          b.status === 'ASSIGNED' ||
+                          b.status === 'IN_PROGRESS' ||
+                          b.status === 'DEPOSIT_PAID' ||
+                          b.status === 'UPCOMING'; // Add UPCOMING status
+        console.log(`📊 Booking ${b.bookingId} - Status: ${b.status}, IsUpcoming: ${isUpcoming}`);
+        return isUpcoming;
+      }).length;
+      
+      console.log('📊 Dashboard - Upcoming bookings count:', upcomingBookings);
+      
+      // Tính tổng chi phí trong tháng hiện tại
+      const now = new Date();
+      const currentMonth = now.getMonth();
+      const currentYear = now.getFullYear();
+      // Lọc và tính tổng chi phí
+      const monthlySpent = allBookings
+        .filter(b => {
+          if (!b.bookingDate) return false;
+          const bookingDate = new Date(b.bookingDate);
+          return bookingDate.getMonth() === currentMonth && 
+                 bookingDate.getFullYear() === currentYear &&
+                 b.status === 'COMPLETED';
+        })
+        .reduce((sum, b) => sum + (b.totalCost || 0), 0);
+      
+      //  Cập nhật trạng thái thống kê
+      setStats([
+        { 
+          title: "Xe của bạn", 
+          value: vehicleCount.toString(), 
+          iconKey: "truck",
+          change: vehicleCount > 0 ? `${vehicleCount} xe đang hoạt động` : "Chưa có xe"
+        },
+        { 
+          title: "Lịch hẹn", 
+          value: upcomingBookings.toString(), 
+          iconKey: "calendar",
+          change: upcomingBookings > 0 ? `${upcomingBookings} lịch sắp tới` : "Không có lịch"
+        },
+        {
+          title: "Chi phí tháng này",
+          value: formatCurrency(monthlySpent),
+          iconKey: "dollar",
+          change: monthlySpent > 0 ? `Đã thanh toán` : "Chưa có chi phí"
+        },
+      ]);
+      
+      // Lấy danh sách lịch hẹn sắp tới (đã sắp xếp theo ngày, sớm nhất trước)
+      const upcomingBookingsList = allBookings
+        .filter(b => {
+          const isUpcoming = b.status === 'PENDING' || 
+                            b.status === 'APPROVED' || 
+                            b.status === 'ASSIGNED' ||
+                            b.status === 'IN_PROGRESS' ||
+                            b.status === 'DEPOSIT_PAID' ||
+                            b.status === 'UPCOMING';
+          return isUpcoming;
+        })
+        .sort((a, b) => new Date(a.bookingDate) - new Date(b.bookingDate)) // Earliest first
+        .slice(0, 5)
+        .map(booking => ({
+          id: booking.bookingId,
+          vehicle: booking.licensePlate || 'N/A',
+          center: booking.centerName || 'Trung tâm',
+          date: booking.bookingDate,
+          time: booking.bookingTime || '',
+          status: mapBookingStatus(booking.status)
+        }));
+      
+      setRecentBookings(upcomingBookingsList);
+      
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      toast.error('Không thể tải dữ liệu dashboard');
+      // Thiết lập trạng thái thống kê rỗng khi có lỗi
+      setStats([
+        { title: "Xe của bạn", value: "0", iconKey: "truck", change: "Chưa có xe" },
+        { title: "Lịch hẹn", value: "0", iconKey: "calendar", change: "Không có lịch" },
+        { title: "Chi phí tháng này", value: formatCurrency(0), iconKey: "dollar", change: "Chưa có chi phí" },
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
+  // map trang thai lich hen
+  const mapBookingStatus = (status) => {
+    const statusMap = {
+      'PENDING': 'upcoming',
+      'APPROVED': 'upcoming',
+      'ASSIGNED': 'upcoming',
+      'IN_PROGRESS': 'upcoming',
+      'DEPOSIT_PAID': 'upcoming',
+      'UPCOMING': 'upcoming', // Add UPCOMING status
+      'COMPLETED': 'completed',
+      'CANCELLED': 'cancelled',
+      'REJECTED': 'cancelled'
+    };
+    return statusMap[status] || 'upcoming';
+  };
+  // hien thi badge trang thai
   const getStatusBadge = (status) => {
     const badges = {
       completed: "bg-green-400 text-white",
@@ -99,7 +168,7 @@ const Dashboard = () => {
       </span>
     );
   };
-
+  // render trang dashboard
   return (
     <div className="p-6 max-w-7xl mx-auto min-h-screen bg-gradient-to-br from-[#B8ECFF] via-[#80D3EF] to-[#027C9D] rounded-xl text-gray-900">
       <div className="mb-8 text-white animate-fade-in">
@@ -112,64 +181,67 @@ const Dashboard = () => {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-7 mb-9">
-        {stats.map(({ title, value, iconKey }, idx) => {
-          let bgClass = "bg-white";
-          let textColor = "text-[#027C9D]";
-          let iconColor = "text-[#027C9D]";
-          let changeTxt = "";
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7 mb-9">
+        {loading ? (
+          <div className="col-span-3 text-center text-white">Đang tải...</div>
+        ) : (
+          stats.map(({ title, value, iconKey, change }, idx) => {
+            // Color scheme for 3 cards - lighter and more cohesive
+            const cardStyles = [
+              {
+                bgClass: "bg-white",
+                textColor: "text-[#027C9D]",
+                iconColor: "text-[#027C9D]"
+              },
+              {
+                bgClass: "bg-gradient-to-br from-[#0891B2] to-[#0E7490]",
+                textColor: "text-white",
+                iconColor: "text-white"
+              },
+              {
+                bgClass: "bg-gradient-to-br from-[#0D9488] to-[#0F766E]",
+                textColor: "text-white",
+                iconColor: "text-white"
+              }
+            ];
 
-          if (idx === 1) {
-            bgClass = "bg-gradient-to-tr from-[#2A5077] to-[#0F2A3D]";
-            textColor = "text-white";
-            iconColor = "text-white";
-            changeTxt = "+1 lịch mới";
-          } else if (idx === 3) {
-            bgClass = "bg-gradient-to-br from-[#034058] to-[#022838]";
-            textColor = "text-white";
-            iconColor = "text-white";
-            changeTxt = "+200k chi phí";
-          } else if (idx % 2 === 0) {
-            changeTxt = "+12% so với tháng trước";
-          } else {
-            changeTxt = "+1 tháng này";
-          }
+            const { bgClass, textColor, iconColor } = cardStyles[idx] || cardStyles[0];
+            const IconComponent = iconKey ? iconMap[iconKey] : null;
 
-          const IconComponent = iconKey ? iconMap[iconKey] : null;
-
-          return (
-            <Card
-              key={idx}
-              hoverable
-              className={`p-7 flex flex-col sm:flex-row items-center justify-between rounded-xl shadow-md ${bgClass}
-                transition duration-200 transform
-                hover:scale-105 hover:shadow-2xl hover:z-10
-                hover:border-2 hover:border-blue-400`}
-            >
-              <div>
-                <p className={`text-sm font-medium ${textColor}`}>{title}</p>
-                <p className={`text-3xl font-extrabold mt-2 ${textColor}`}>
-                  {value}
-                </p>
-                <p className={`text-xs mt-1 ${textColor} opacity-80`}>
-                  {changeTxt}
-                </p>
-              </div>
-              <div className="p-4 rounded-md bg-white/20 drop-shadow-md">
-                {IconComponent && (
-                  <IconComponent className={`h-10 w-10 ${iconColor}`} />
-                )}
-              </div>
-            </Card>
-          );
-        })}
+            return (
+              <Card
+                key={idx}
+                hoverable
+                className={`p-7 flex flex-col sm:flex-row items-center justify-between rounded-xl shadow-md ${bgClass}
+                  transition duration-200 transform
+                  hover:scale-105 hover:shadow-2xl hover:z-10
+                  hover:border-2 hover:border-blue-400`}
+              >
+                <div>
+                  <p className={`text-sm font-medium ${textColor}`}>{title}</p>
+                  <p className={`text-3xl font-extrabold mt-2 ${textColor}`}>
+                    {value}
+                  </p>
+                  <p className={`text-xs mt-1 ${textColor} opacity-80`}>
+                    {change}
+                  </p>
+                </div>
+                <div className="p-4 rounded-md bg-white/20 drop-shadow-md">
+                  {IconComponent && (
+                    <IconComponent className={`h-10 w-10 ${iconColor}`} />
+                  )}
+                </div>
+              </Card>
+            );
+          })
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-7 text-white">
         <Card className="bg-white rounded-2xl shadow-lg text-gray-900">
           <Card.Header>
             <Card.Title className="text-lg text-[#027C9D] font-bold drop-shadow">
-              Dịch vụ gần đây
+              Lịch hẹn sắp tới
             </Card.Title>
           </Card.Header>
           <Card.Content className="p-0 overflow-x-auto">
@@ -177,10 +249,10 @@ const Dashboard = () => {
               <thead className="bg-gray-50 border-b border-gray-300">
                 <tr>
                   <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wide">
-                    Dịch vụ
+                    Xe
                   </th>
                   <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wide">
-                    Xe
+                    Trung tâm
                   </th>
                   <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wide">
                     Ngày
@@ -191,23 +263,39 @@ const Dashboard = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {recentBookings.map(
-                  ({ id, service, vehicle, date, status }) => (
-                    <tr
-                      key={id}
-                      className="hover:bg-blue-50/40 cursor-pointer transition"
-                    >
-                      <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                        {service}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-teal-700">
-                        {vehicle}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-700">
-                        {formatDate(date)}
-                      </td>
-                      <td className="px-6 py-4">{getStatusBadge(status)}</td>
-                    </tr>
+                {loading ? (
+                  <tr>
+                    <td colSpan="4" className="px-6 py-4 text-center text-gray-500">
+                      Đang tải...
+                    </td>
+                  </tr>
+                ) : recentBookings.length === 0 ? (
+                  <tr>
+                    <td colSpan="4" className="px-6 py-4 text-center text-gray-500">
+                      Chưa có lịch hẹn sắp tới
+                    </td>
+                  </tr>
+                ) : (
+                  recentBookings.map(
+                    ({ id, vehicle, center, date, time, status }) => (
+                      <tr
+                        key={id}
+                        className="hover:bg-blue-50/40 cursor-pointer transition"
+                        onClick={() => navigate('/app/my-bookings')}
+                      >
+                        <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                          {vehicle}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-teal-700">
+                          {center}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-700">
+                          {formatDate(date)}
+                          {time && <span className="block text-xs text-gray-500">{time}</span>}
+                        </td>
+                        <td className="px-6 py-4">{getStatusBadge(status)}</td>
+                      </tr>
+                    )
                   )
                 )}
               </tbody>
@@ -217,9 +305,9 @@ const Dashboard = () => {
             variant="outline"
             size="sm"
             className="w-full font-semibold text-[#027C9D] hover:bg-[#80D3EF]"
-            onClick={() => navigate("/app/vehicle-history")} // đến trang lịch sử bảo dưỡng
+            onClick={() => navigate("/app/my-bookings")}
           >
-            Xem tất cả
+            Xem tất cả lịch hẹn
           </Button>
         </Card>
 
@@ -229,29 +317,22 @@ const Dashboard = () => {
               Thông báo
             </Card.Title>
           </Card.Header>
-          <Card.Content className="space-y-6 text-gray-900">
-            <NotificationItem
-              color="bg-[#02617A]"
-              title="Lịch bảo dưỡng xe VinFast Evo 200 sắp tới"
-              time="2 giờ trước"
-            />
-            <NotificationItem
-              color="bg-green-600"
-              title="Sạc xe thành công"
-              time="1 ngày trước"
-            />
-            <NotificationItem
-              color="bg-yellow-400"
-              title="Khuyến mãi 20% cho dịch vụ bảo dưỡng"
-              time="3 ngày trước"
-            />
+          <Card.Content className="text-gray-900">
+            <div className="flex flex-col items-center justify-center py-12">
+              <div className="text-gray-400 mb-4">
+                <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+              </div>
+              <p className="text-gray-500 text-sm">Chưa có thông báo mới</p>
+            </div>
           </Card.Content>
           <Card.Footer>
             <Button
               variant="outline"
               size="sm"
               className="w-full font-semibold text-[#027C9D] hover:bg-[#80D3EF]"
-              onClick={() => navigate("/app/notifications")}// đến thông báo
+              onClick={() => navigate("/app/notifications")}
             >
               Xem tất cả thông báo
             </Button>
@@ -261,15 +342,5 @@ const Dashboard = () => {
     </div>
   );
 };
-
-const NotificationItem = ({ color, title, time }) => (
-  <div className="flex items-start space-x-3">
-    <div className={`flex-shrink-0 w-3 h-3 mt-3 rounded-full ${color}`}></div>
-    <div>
-      <p className="text-sm font-semibold">{title}</p>
-      <p className="text-xs opacity-80 mt-1">{time}</p>
-    </div>
-  </div>
-);
 
 export default Dashboard;
