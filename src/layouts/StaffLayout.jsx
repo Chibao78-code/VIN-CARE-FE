@@ -2,21 +2,30 @@ import React, { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { 
   FiGrid, FiUsers, FiCalendar, FiMenu, FiX, 
-  FiLogOut, FiBell, FiPlus, FiTruck, FiPackage, FiDollarSign, FiClock
+  FiLogOut, FiBell, FiTruck, FiPackage, FiDollarSign, FiClock
 } from 'react-icons/fi';
 import useAuthStore from '../store/authStore';
-import Button from '../components/ui/Button';
-
+ // layout cho ky thuat vien
 const StaffLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [centerName, setCenterName] = useState('');
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
 
+  //  set ten trung tam neu co
+  React.useEffect(() => {
+    if (user?.centerName) {
+      setCenterName(user.centerName);
+    } else if (user?.center?.name) {
+      setCenterName(user.center.name);
+    }
+  }, [user]);
+  // xu ly dang xuat
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
-
+  // menu items cho staff
   const menuItems = [
     { path: '/staff/dashboard', label: 'Tổng quan', icon: FiGrid },
     { path: '/staff/customers', label: 'Khách hàng', icon: FiUsers },
@@ -26,9 +35,9 @@ const StaffLayout = () => {
     { path: '/staff/spare-parts', label: 'Quản lý phụ tùng', icon: FiPackage },
     { path: '/staff/payments', label: 'Thanh toán', icon: FiDollarSign },
   ];
-
+  // giao dien layout chinh
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="h-screen bg-gray-50 flex overflow-hidden">
       <aside className={`${
         isSidebarOpen ? 'w-64' : 'w-20'
       } transition-all duration-300 bg-white border-r border-gray-200 flex flex-col`}>
@@ -38,10 +47,7 @@ const StaffLayout = () => {
               EV
             </div>
             {isSidebarOpen && (
-              <div>
-                <h2 className="font-bold text-gray-900">EV Service</h2>
-                <p className="text-xs text-gray-500">Staff Portal</p>
-              </div>
+              <h2 className="font-bold text-gray-900">EV Service</h2>
             )}
           </div>
         </div>
@@ -68,13 +74,17 @@ const StaffLayout = () => {
         </nav>
         <div className="p-4 border-t border-gray-200">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-medium">
-              {user?.name?.charAt(0)?.toUpperCase() || 'S'}
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-teal-600 flex items-center justify-center text-white font-bold text-lg">
+              {user?.fullName?.charAt(0)?.toUpperCase() || user?.name?.charAt(0)?.toUpperCase() || 'S'}
             </div>
             {isSidebarOpen && (
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">{user?.name || 'DINH BAO'}</p>
-                <p className="text-xs text-gray-500">{user?.email || 'ddinhchibao@gmail.com'}</p>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-900 truncate">
+                  {user?.fullName || user?.name || 'Nhân viên'}
+                </p>
+                <p className="text-xs text-gray-500 truncate">
+                  {user?.role === 'STAFF' ? 'Nhân viên' : user?.role || 'Staff'}
+                </p>
               </div>
             )}
           </div>
@@ -83,12 +93,12 @@ const StaffLayout = () => {
             className="w-full flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
           >
             <FiLogOut className="text-xl" />
-            {isSidebarOpen && <span className="font-medium">Logout</span>}
+            {isSidebarOpen && <span className="font-medium">Đăng xuất</span>}
           </button>
         </div>
       </aside>
       <div className="flex-1 flex flex-col">
-        <header className="h-16 bg-white border-b border-gray-200 px-6 flex items-center justify-between">
+        <header className="h-16 bg-white border-b border-gray-200 px-6 flex items-center justify-between flex-shrink-0">
           <button
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
             className="p-2 hover:bg-gray-100 rounded-lg"
@@ -96,22 +106,20 @@ const StaffLayout = () => {
             {isSidebarOpen ? <FiX className="text-xl" /> : <FiMenu className="text-xl" />}
           </button>
 
+          <div className="absolute left-1/2 transform -translate-x-1/2 text-center">
+            <p className="text-base font-bold text-gray-900">
+              {centerName || 'Trung tâm Dịch vụ'}
+            </p>
+          </div>
+
           <div className="flex items-center gap-4">
             <button className="relative p-2 hover:bg-gray-100 rounded-lg">
               <FiBell className="text-xl text-gray-600" />
               <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
             </button>
-            <Button
-              variant="primary"
-              icon={<FiPlus />}
-              onClick={() => navigate('/staff/appointments/new')}
-              className="bg-gradient-to-r from-green-500 to-teal-600"
-            >
-              New Appointment
-            </Button>
           </div>
         </header>
-        <main className="flex-1 p-6">
+        <main className="flex-1 p-6 overflow-y-auto custom-scrollbar">
           <Outlet />
         </main>
       </div>
