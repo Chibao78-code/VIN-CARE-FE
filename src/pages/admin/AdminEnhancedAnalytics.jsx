@@ -9,7 +9,7 @@ import {
 } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import api from '../../services/api';
-
+//  Admin Enhanced Analytics Page
 const AdminEnhancedAnalytics = () => {
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -18,7 +18,7 @@ const AdminEnhancedAnalytics = () => {
   const [periodType, setPeriodType] = useState('MONTH'); // MONTH, QUARTER, YEAR
   const [year, setYear] = useState(new Date().getFullYear());
   const [period, setPeriod] = useState(new Date().getMonth() + 1);
-
+  // load analytics on filter change
   useEffect(() => {
     loadAnalytics();
   }, [periodType, year, period]);
@@ -30,8 +30,8 @@ const AdminEnhancedAnalytics = () => {
         periodType,
         year,
         ...(periodType !== 'YEAR' && { period })
-      };
-      
+      }; 
+      // goi be lay du lieu thong ke
       const response = await api.get('/admin/analytics', { params });
       setAnalytics(response);
       console.log('Analytics loaded:', response);
@@ -42,7 +42,7 @@ const AdminEnhancedAnalytics = () => {
       setLoading(false);
     }
   };
-
+  // dinh dang tien te VND
   const formatCurrency = (value) => {
     return new Intl.NumberFormat('vi-VN', {
       style: 'currency',
@@ -51,7 +51,7 @@ const AdminEnhancedAnalytics = () => {
   };
 
   const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
-
+  // hien thi loading
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -70,7 +70,7 @@ const AdminEnhancedAnalytics = () => {
       </div>
     );
   }
-
+  // hien thi du lieu thong ke
   const { overview, revenueByPeriod, bookingAnalytics, employeePerformance } = analytics;
 
   return (
