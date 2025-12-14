@@ -14,8 +14,10 @@ import {
 import Button from "../components/ui/Button";
 import ImageSlider from "../components/imgLangding/imageSlider";
 import ImageSlider_1 from "../components/imgLangding/imageSlider_1";
+import useAuthStore from "../store/authStore";
 const Landing = () => {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuthStore();
   const [searchTerm, setSearchTerm] = useState("");
   // tim kiem dich vu
   const handleSearch = (e) => {
@@ -58,13 +60,13 @@ const Landing = () => {
                 Giới thiệu
               </Link>
               <Link
-                to="/login"
+                to={isAuthenticated ? "/app/services" : "/login"}
                 className="text-gray-700 hover:text-blue-600 transition-colors"
               >
                 Đặt lịch
               </Link>
               <Link
-                to="/login"
+                to={isAuthenticated ? "/app/services" : "/login"}
                 className="text-gray-700 hover:text-blue-600 transition-colors"
               >
                 Dịch vụ
@@ -77,12 +79,24 @@ const Landing = () => {
               </Link>
             </div>
             <div className="flex items-center space-x-3">
-              <Link
-                to="/login"
-                className="bg-[#027C9D] text-white px-4 py-2 rounded-lg hover:bg-[#02617A] transition-colors font-semibold"
-              >
-                Đăng nhập
-              </Link>
+              {isAuthenticated ? (
+                <button
+                  onClick={() => navigate('/app/dashboard')}
+                  className="bg-[#027C9D] text-white px-4 py-2 rounded-lg hover:bg-[#02617A] transition-colors font-semibold"
+                >
+                  Trang chủ
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    console.log('Navigating to login...');
+                    navigate('/login');
+                  }}
+                  className="bg-[#027C9D] text-white px-4 py-2 rounded-lg hover:bg-[#02617A] transition-colors font-semibold"
+                >
+                  Đăng nhập
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -113,8 +127,7 @@ const Landing = () => {
               </div>
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                 <button
-                  onClick={() => navigate("/login")
-                  }
+                  onClick={() => navigate(isAuthenticated ? "/app/services" : "/login")}
                   className="bg-[#027C9D] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#02617A] transition-all transform hover:scale-105 shadow-lg animate-pulse"
                 >
                   Đặt Lịch Ngay →
@@ -306,7 +319,7 @@ const Landing = () => {
                   <li>✔ Tư vấn kỹ thuật</li>
                 </ul>
                 <button className="mt-6 bg-blue-600 text-white py-2 px-6 rounded-lg hover:bg-blue-700"
-                onClick={() => navigate("/login")}>
+                onClick={() => navigate(isAuthenticated ? "/app/services" : "/login")}>
                   Chọn gói này
                 </button>
               </div>
@@ -331,7 +344,7 @@ const Landing = () => {
                 </ul>
                 <button
                   className="mt-6 bg-blue-600 text-white py-2 px-6 rounded-lg hover:bg-blue-700"
-                  onClick={() => navigate("/login")}
+                  onClick={() => navigate(isAuthenticated ? "/app/services" : "/login")}
                 >
                   Chọn gói này
                 </button>
@@ -357,7 +370,7 @@ const Landing = () => {
                   <li>✔ Hỗ trợ kỹ thuật VIP</li>
                 </ul>
                 <button className="mt-6 bg-blue-600 text-white py-2 px-6 rounded-lg hover:bg-blue-700"
-                onClick={() => navigate("/login")}>
+                onClick={() => navigate(isAuthenticated ? "/app/services" : "/login")}>
                   Chọn gói này
                 </button>
               </div>

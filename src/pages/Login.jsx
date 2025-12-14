@@ -1,5 +1,5 @@
-import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { FiMail, FiLock, FiArrowLeft, FiHome } from 'react-icons/fi';
 import toast from 'react-hot-toast';
@@ -7,11 +7,13 @@ import useAuthStore from '../store/authStore';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import Card from '../components/ui/Card';
-
+// trang dang nhap
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login, isLoading } = useAuthStore();
-  
+  const returnUrl = location.state?.returnUrl;
+   // form hook
   const {
     register,
     handleSubmit,
@@ -24,13 +26,35 @@ const Login = () => {
     }
   });
   
+  useEffect(() => {
+    // kiểm tra nếu đến từ thanh toán thành công
+    const paymentSuccess = sessionStorage.getItem('paymentSuccess');
+    if (paymentSuccess === 'true') {
+      toast.success('Thanh toán thành công! Vui lòng đăng nhập.');
+      sessionStorage.removeItem('paymentSuccess');
+    }
+  }, []);
+  
   const onSubmit = async (data) => {
     const result = await login(data);
     
     if (result.success) {
       toast.success('Đăng nhập thành công!');
       
-      // Route based on user role from backend
+      // kiểm tra nếu đến từ thanh toán thành công
+      const paymentSuccess = sessionStorage.getItem('paymentSuccess');
+      if (paymentSuccess === 'true') {
+        toast.success('Chào mừng bạn! Lịch hẹn của bạn đã được xác nhận.');
+        sessionStorage.removeItem('paymentSuccess');
+      }
+      
+      // nếu có return URL (ví dụ: từ thanh toán), điều hướng đến đó
+      if (returnUrl) {
+        navigate(returnUrl, { replace: true });
+        return;
+      }
+      
+      //  điều hướng theo vai trò người dùng
       const userRole = result.user?.role || 'CUSTOMER';
       
       switch(userRole) {
@@ -52,7 +76,7 @@ const Login = () => {
       toast.error(result.error || 'Đăng nhập thất bại');
     }
   };
-  
+  // hiển thị trang đăng nhập
   return (
     <div className="min-h-screen bg-gradient-to-br from-teal-50 to-cyan-50 flex items-center justify-center px-4 py-12">
       <div className="max-w-md w-full">
@@ -67,20 +91,18 @@ const Login = () => {
         </div>
         
         <Card className="p-8">
-          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="text-sm text-blue-700 font-semibold mb-2">
-              🔑 Tài khoản test:
-            </p>
-            <ul className="text-xs text-blue-600 space-y-1">
-              <li>• <strong>Admin:</strong> dinhdinhchibao@gmail.com / admin123</li>
-              <li>• <strong>Customer:</strong> quangphap931@gmail.com / user1@</li>
-              <li>• <strong>Staff:</strong> ddinhchibao@gmail.com / staff123</li>
-              <li>• <strong>Technician 1:</strong> zzz.dinhchibao.15@gmail.com / tech123</li>
-              <li>• <strong>Technician 2:</strong> technician2@evservice.com / tech123</li>
-              <li>• <strong>Technician 3:</strong> technician3@evservice.com / tech123</li>
-              <li className="text-xs text-blue-500 mt-1">⚠️ Hoặc dùng số điện thoại thay vì email</li>
-            </ul>
-          </div>
+          {returnUrl && (
+            <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+              <p className="text-sm text-green-700 font-semibold mb-1">
+                ✅ Thanh toán thành công!
+              </p>
+              <p className="text-xs text-green-600">
+                Vui lòng đăng nhập để xem lịch hẹn của bạn.
+              </p>
+            </div>
+          )}
+          
+          
           
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <Input
