@@ -9,7 +9,7 @@ const PublicInspectionView = () => {
   const [inspection, setInspection] = useState(null);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
-
+  // Load data
   useEffect(() => {
     loadInspection();
   }, [receptionId]);
@@ -25,13 +25,13 @@ const PublicInspectionView = () => {
       setLoading(false);
     }
   };
-
+  // Xử lý chấp nhận/từ chối thay thế
   const handleApprove = async (itemId) => {
     setProcessing(true);
     try {
       await api.post(`/inspections/items/${itemId}/approve`);
       toast.success('Đã chấp nhận thay thế');
-      loadInspection(); // Reload to get updated data
+      loadInspection(); // Tải lại dữ liệu sau khi cập nhật
     } catch (error) {
       console.error('Approve error:', error);
       toast.error('Không thể chấp nhận');
@@ -39,13 +39,13 @@ const PublicInspectionView = () => {
       setProcessing(false);
     }
   };
-
+  //  Xử lý từ chối thay thế
   const handleReject = async (itemId) => {
     setProcessing(true);
     try {
       await api.post(`/inspections/items/${itemId}/reject`);
       toast.success('Đã từ chối thay thế');
-      loadInspection(); // Reload to get updated data
+      loadInspection(); // Tải lại dữ liệu sau khi cập nhật
     } catch (error) {
       console.error('Reject error:', error);
       toast.error('Không thể từ chối');
@@ -53,7 +53,7 @@ const PublicInspectionView = () => {
       setProcessing(false);
     }
   };
-
+  // trang thai nhan xet
   const getStatusBadge = (status) => {
     const styles = {
       PENDING: 'bg-yellow-100 text-yellow-800',
@@ -71,7 +71,7 @@ const PublicInspectionView = () => {
       </span>
     );
   };
-
+  // mau sac tinh trang
   const getConditionColor = (condition) => {
     switch (condition) {
       case 'GOOD': return 'text-green-600';
@@ -81,7 +81,7 @@ const PublicInspectionView = () => {
       default: return 'text-gray-600';
     }
   };
-
+  // nhan xet tinh trang
   const getConditionLabel = (condition) => {
     const labels = {
       GOOD: 'Tốt',
@@ -91,7 +91,7 @@ const PublicInspectionView = () => {
     };
     return labels[condition] || condition;
   };
-
+  // hien thi trang
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -102,7 +102,7 @@ const PublicInspectionView = () => {
       </div>
     );
   }
-
+  // khong tim thay bao cao
   if (!inspection) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -113,7 +113,7 @@ const PublicInspectionView = () => {
       </div>
     );
   }
-
+  // hien thi bao cao
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4">

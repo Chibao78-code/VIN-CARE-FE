@@ -10,7 +10,7 @@ import Input from '../components/ui/Input';
 const Profile = () => {
   const { user, updateUser } = useAuthStore();
   const [isEditing, setIsEditing] = useState(false);
-  
+   // form hook
   const {
     register,
     handleSubmit,
@@ -46,7 +46,7 @@ const Profile = () => {
     reset();
     setIsEditing(false);
   };
-
+  // hien thi trang profile
   return (
     <div className="max-w-4xl mx-auto">
       <h1 className="text-2xl font-bold text-gray-900 mb-6">

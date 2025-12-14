@@ -7,7 +7,7 @@ import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import Card from '../components/ui/Card';
 import { authService } from '../services/authService';
-
+ // trang dat lai mk
 function ResetPassword() {
   const { token } = useParams(); // lay token tu url
   const navigate = useNavigate();
@@ -53,7 +53,7 @@ function ResetPassword() {
       }
 
       try {
-        // fake check token, goi api sau neu be xong
+        //  goi api ktra token
         await new Promise(resolve => setTimeout(resolve, 500));
         //neu token khong hop le
         setTokenValid(true);

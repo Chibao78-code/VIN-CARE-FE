@@ -1,5 +1,5 @@
 import React from "react";
-
+ // Dịch vụ bảo dưỡng xe điện 
 const ServiceSection = ({ number, imgSrc, title, children }) => (
   <section style={{ display: "flex", alignItems: "flex-start", marginBottom: "40px" }}>
     <div style={{ fontSize: "2rem", fontWeight: "bold", color: "#027C9D", marginRight: "20px", userSelect: "none" }}>
@@ -18,7 +18,7 @@ const ServiceSection = ({ number, imgSrc, title, children }) => (
     </div>
   </section>
 );
-
+ // Footer component
 const Footer = () => (
   <footer style={{
     background: "linear-gradient(to right, #6BBFD4, #4CAFC4, #027C9D)",
@@ -33,7 +33,7 @@ const Footer = () => (
     </p>
   </footer>
 );
-
+ // trang dịch vụ bảo dưỡng xe điện
 export default function Service() {
   return (
     <div style={{ fontFamily: "sans-serif", color: "#263238", backgroundColor: "#f7fafd", padding: "32px", maxWidth: "960px", margin: "0 auto" }}>
