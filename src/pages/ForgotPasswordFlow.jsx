@@ -15,7 +15,7 @@ const ForgotPasswordFlow = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  // Step 1: Send OTP to email
+  //  Step 1: Send OTP
   const handleSendOTP = async (e) => {
     e.preventDefault();
     setError('');
@@ -23,7 +23,7 @@ const ForgotPasswordFlow = () => {
     setLoading(true);
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/auth/password/forgot`, {
+      const response = await axios.post(`${API_BASE_URL}/password/forgot`, {
         email: email
       });
 
@@ -46,7 +46,7 @@ const ForgotPasswordFlow = () => {
     setLoading(true);
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/auth/password/verify-otp`, {
+      const response = await axios.post(`${API_BASE_URL}/password/verify-otp`, {
         email: email,
         otpCode: otpCode
       });
@@ -79,9 +79,9 @@ const ForgotPasswordFlow = () => {
     }
 
     setLoading(true);
-
+    // Gọi API đặt lại mật khẩu
     try {
-      const response = await axios.post(`${API_BASE_URL}/auth/password/reset`, {
+      const response = await axios.post(`${API_BASE_URL}/password/reset`, {
         email: email,
         otpCode: otpCode,
         newPassword: newPassword
@@ -99,7 +99,7 @@ const ForgotPasswordFlow = () => {
       setLoading(false);
     }
   };
-
+  // hiển thị trang
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100 flex items-center justify-center px-4 py-12">
       <div className="max-w-md w-full">

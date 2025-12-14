@@ -7,7 +7,7 @@ import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import Card from '../components/ui/Card';
 import { authService } from '../services/authService';
-
+ // trang quen mat khau
 function ForgotPassword() {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -20,13 +20,13 @@ function ForgotPassword() {
     setIsSubmitting(true);
     
     try {
-      // Call real API to send OTP
+      // Gọi API thực để gửi OTP
       const response = await authService.forgotPassword(data.email);
       
       if (response.success !== false) {
         toast.success('Mã OTP đã được gửi đến email của bạn!');
         
-        // Navigate to OTP verification page with email
+        // Điều hướng đến trang xác minh OTP với email
         navigate('/verify-otp', { state: { email: data.email } });
       }
     } catch (error) {
@@ -46,7 +46,7 @@ function ForgotPassword() {
 
     setIsSubmitting(true);
     try {
-      // fake api call
+      // Gọi API gửi lại email
       await new Promise(resolve => setTimeout(resolve, 1000));
       toast.success('Email đã được gửi lại!');
     } catch (error) {

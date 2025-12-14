@@ -9,19 +9,19 @@ import {
   FiArrowLeft,
 } from "react-icons/fi";
 import { Link } from "react-router-dom";
-
+// trang lien he
 function Contact() {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
-
+  // form hook
   const {
     register,
     handleSubmit,
     formState: { errors },
     reset,
   } = useForm();
-
+  // xu ly gui form lien he
   const onSubmit = async (data) => {
     try {
       console.log("Contact form data:", data);
@@ -33,7 +33,7 @@ function Contact() {
       console.error(error);
     }
   };
-
+  // hien thi trang lien he
   return (
     <div className="min-h-screen bg-gray-50 relative">
       {/* Nút quay lại */}
