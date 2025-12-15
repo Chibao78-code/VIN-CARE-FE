@@ -34,8 +34,14 @@ const StaffPayments = () => {
     try {
       const result = await paymentService.getAllPayments();
       if (result.success && result.data) {
+        // Filter: Only show service payments (from reception), not booking deposits
+        // Booking deposits have bookingId but no receptionId
+        const servicePayments = result.data.filter(payment => 
+          payment.receptionId != null // Only payments linked to vehicle reception
+        );
+        
         // Transform payment data to match UI format
-        const transformedInvoices = result.data.map(payment => ({
+        const transformedInvoices = servicePayments.map(payment => ({
           id: payment.paymentId,
           invoiceNumber: payment.invoiceNumber,
           customerName: payment.customerName,
@@ -44,7 +50,9 @@ const StaffPayments = () => {
           licensePlate: payment.licensePlate,
           serviceName: payment.serviceName,
           serviceDate: payment.serviceDate ? new Date(payment.serviceDate).toLocaleDateString('vi-VN') : '',
-          totalAmount: payment.finalAmount || payment.totalAmount,
+          totalAmount: payment.totalAmount || 0,
+          discountAmount: payment.discountAmount || 0,
+          finalAmount: payment.finalAmount || payment.totalAmount,
           paymentStatus: payment.paymentStatus.toLowerCase(),
           paymentMethod: formatPaymentMethod(payment.paymentMethod),
           createdAt: payment.createdAt
@@ -80,15 +88,40 @@ const StaffPayments = () => {
     if (!selectedInvoice) return;
 
     try {
+      // Check if final amount is 0 (fully paid by deposit)
+      if (selectedInvoice.finalAmount === 0) {
+        // Automatically mark as paid since deposit covers everything
+        const result = await paymentService.markAsPaid(selectedInvoice.id, 'CASH');
+        if (result.success) {
+          setInvoices(invoices.map(inv => 
+            inv.id === selectedInvoice.id ? { ...inv, paymentStatus: 'paid', paymentMethod: 'Tiền cọc' } : inv
+          ));
+          toast.success('Đã xác nhận thanh toán! (Đã thanh toán đủ bằng tiền cọc)');
+          setShowPaymentModal(false);
+          fetchPayments();
+        } else {
+          toast.error(result.error);
+        }
+        return;
+      }
+
       // Handle VNPay e-transfer
       if (paymentMethod === 'VNPAY') {
         console.log('🔵 Starting VNPay payment for invoice:', selectedInvoice.invoiceNumber);
-        console.log('💰 Amount:', selectedInvoice.totalAmount);
+        console.log('💰 Total amount:', selectedInvoice.totalAmount);
+        console.log('💰 Deposit deducted:', selectedInvoice.discountAmount);
+        console.log('💰 Final amount to pay:', selectedInvoice.finalAmount);
+        
+        // VNPay doesn't accept 0 amount
+        if (selectedInvoice.finalAmount <= 0) {
+          toast.error('Số tiền thanh toán phải lớn hơn 0đ để sử dụng VNPay');
+          return;
+        }
         
         toast.loading('Đang tạo liên kết thanh toán...');
         
         const vnpayResult = await vnpayService.createPaymentUrl({
-          amount: selectedInvoice.totalAmount,
+          amount: selectedInvoice.finalAmount, // Use finalAmount (after deposit deduction)
           invoiceNumber: selectedInvoice.invoiceNumber,
           paymentId: selectedInvoice.id,
           orderInfo: `Thanh toan hoa don ${selectedInvoice.invoiceNumber}`
@@ -209,9 +242,8 @@ const StaffPayments = () => {
   return (
     <div>
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-          <FiFileText className="text-purple-600" />
+      <div className="mb-6 pb-4 border-b border-gray-200">
+        <h1 className="text-2xl font-bold text-gray-900">
           Quản lý thanh toán Dịch vụ
         </h1>
         <p className="text-gray-600 mt-1">Theo dõi, cập nhật và xem chi tiết các hóa đơn sửa chữa.</p>
@@ -232,11 +264,11 @@ const StaffPayments = () => {
               />
             </div>
             <select
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white"
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white cursor-pointer hover:border-gray-400 transition-colors"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
             >
-              <option value="all">📊 Tất cả hóa đơn</option>
+              <option value="all">Tất cả hóa đơn</option>
               <option value="pending">Chờ thanh toán</option>
               <option value="paid">Đã thanh toán</option>
               <option value="completed">Hoàn tất</option>
@@ -292,8 +324,17 @@ const StaffPayments = () => {
                             <p className="text-gray-600">{invoice.licensePlate}</p>
                           </div>
                         </td>
-                        <td className="px-4 py-4 text-sm font-bold text-gray-900">
-                          {invoice.totalAmount.toLocaleString('vi-VN')} ₫
+                        <td className="px-4 py-4">
+                          <div className="text-sm">
+                            <p className="font-bold text-gray-900">
+                              {invoice.finalAmount.toLocaleString('vi-VN')} ₫
+                            </p>
+                            {invoice.discountAmount > 0 && (
+                              <p className="text-xs text-green-600">
+                                (Đã trừ cọc: {invoice.discountAmount.toLocaleString('vi-VN')} ₫)
+                              </p>
+                            )}
+                          </div>
                         </td>
                         <td className="px-4 py-4">
                           {getStatusBadge(invoice.paymentStatus, invoice.paymentMethod)}
@@ -360,10 +401,27 @@ const StaffPayments = () => {
                               </div>
                               
                               <div className="border-t pt-3">
+                                {/* Show deposit deduction if exists */}
+                                {invoice.discountAmount > 0 && (
+                                  <div className="mb-3 space-y-2">
+                                    <div className="flex justify-between items-center text-gray-700">
+                                      <span>Tổng chi phí dịch vụ:</span>
+                                      <span className="font-semibold">{invoice.totalAmount.toLocaleString('vi-VN')} ₫</span>
+                                    </div>
+                                    <div className="flex justify-between items-center text-green-700">
+                                      <span>Đã đặt cọc (trừ):</span>
+                                      <span className="font-semibold">- {invoice.discountAmount.toLocaleString('vi-VN')} ₫</span>
+                                    </div>
+                                    <div className="border-t pt-2"></div>
+                                  </div>
+                                )}
+                                
                                 <div className="flex justify-between items-center">
-                                  <span className="text-lg font-semibold text-gray-900">Tổng cộng:</span>
+                                  <span className="text-lg font-semibold text-gray-900">
+                                    {invoice.discountAmount > 0 ? 'Còn phải thanh toán:' : 'Tổng cộng:'}
+                                  </span>
                                   <span className="text-2xl font-bold text-purple-600">
-                                    {invoice.totalAmount.toLocaleString('vi-VN')} ₫
+                                    {(invoice.totalAmount - (invoice.discountAmount || 0)).toLocaleString('vi-VN')} ₫
                                   </span>
                                 </div>
                               </div>
@@ -400,16 +458,54 @@ const StaffPayments = () => {
               </div>
 
               <div className="mb-4">
-                <p className="text-sm text-gray-600 mb-2">Số tiền:</p>
-                <p className="text-2xl font-bold text-purple-600">
-                  {selectedInvoice.totalAmount.toLocaleString('vi-VN')} ₫
-                </p>
+                {selectedInvoice.discountAmount > 0 ? (
+                  <>
+                    <p className="text-sm text-gray-600 mb-2">Chi tiết thanh toán:</p>
+                    <div className="bg-gray-50 rounded-lg p-3 space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-700">Tổng chi phí dịch vụ:</span>
+                        <span className="font-semibold text-gray-900">
+                          {selectedInvoice.totalAmount.toLocaleString('vi-VN')} ₫
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-green-700">Đã đặt cọc (trừ):</span>
+                        <span className="font-semibold text-green-700">
+                          - {selectedInvoice.discountAmount.toLocaleString('vi-VN')} ₫
+                        </span>
+                      </div>
+                      <div className="border-t pt-2 flex justify-between">
+                        <span className="font-semibold text-gray-900">Còn phải thanh toán:</span>
+                        <span className="text-xl font-bold text-purple-600">
+                          {selectedInvoice.finalAmount.toLocaleString('vi-VN')} ₫
+                        </span>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-sm text-gray-600 mb-2">Số tiền:</p>
+                    <p className="text-2xl font-bold text-purple-600">
+                      {selectedInvoice.finalAmount.toLocaleString('vi-VN')} ₫
+                    </p>
+                  </>
+                )}
               </div>
 
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Phương thức thanh toán <span className="text-red-500">*</span>
                 </label>
+                
+                {/* Show message if amount is 0 */}
+                {selectedInvoice.finalAmount === 0 && (
+                  <div className="mb-4 p-4 bg-green-50 rounded-lg border border-green-200">
+                    <p className="text-sm text-green-800">
+                      ✅ <strong>Đã thanh toán đủ bằng tiền cọc!</strong> Nhấn "Xác nhận" để hoàn tất.
+                    </p>
+                  </div>
+                )}
+                
                 <div className="space-y-3">
                   {/* Cash Payment Option */}
                   <label className="flex items-center p-4 border-2 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
@@ -426,14 +522,25 @@ const StaffPayments = () => {
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
                         <span className="text-2xl">💵</span>
-                        <span className="font-semibold text-gray-900">Tiền mặt</span>
+                        <span className="font-semibold text-gray-900">
+                          {selectedInvoice.finalAmount === 0 ? 'Xác nhận hoàn tất' : 'Tiền mặt'}
+                        </span>
                       </div>
-                      <p className="text-sm text-gray-600 mt-1">Thanh toán trực tiếp bằng tiền mặt</p>
+                      <p className="text-sm text-gray-600 mt-1">
+                        {selectedInvoice.finalAmount === 0 
+                          ? 'Xác nhận đã thanh toán đủ bằng tiền cọc' 
+                          : 'Thanh toán trực tiếp bằng tiền mặt'}
+                      </p>
                     </div>
                   </label>
 
-                  {/* VNPay E-Transfer Option */}
-                  <label className="flex items-center p-4 border-2 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
+                  {/* VNPay E-Transfer Option - Disabled if amount is 0 */}
+                  <label 
+                    className={`flex items-center p-4 border-2 rounded-lg transition-colors ${
+                      selectedInvoice.finalAmount === 0 
+                        ? 'opacity-50 cursor-not-allowed bg-gray-100' 
+                        : 'cursor-pointer hover:bg-gray-50'
+                    }`}
                     style={{ borderColor: paymentMethod === 'VNPAY' ? '#9333ea' : '#d1d5db' }}
                   >
                     <input
@@ -442,21 +549,31 @@ const StaffPayments = () => {
                       value="VNPAY"
                       checked={paymentMethod === 'VNPAY'}
                       onChange={(e) => setPaymentMethod(e.target.value)}
-                      className="mr-3 text-purple-600 focus:ring-purple-500"
+                      disabled={selectedInvoice.finalAmount === 0}
+                      className="mr-3 text-purple-600 focus:ring-purple-500 disabled:cursor-not-allowed"
                     />
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
                         <FiCreditCard className="text-xl text-blue-600" />
                         <span className="font-semibold text-gray-900">VNPay E-Transfer</span>
-                        <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">Recommended</span>
+                        {selectedInvoice.finalAmount > 0 && (
+                          <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">Recommended</span>
+                        )}
+                        {selectedInvoice.finalAmount === 0 && (
+                          <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full">Không khả dụng</span>
+                        )}
                       </div>
-                      <p className="text-sm text-gray-600 mt-1">Chuyển khoản qua cổng thanh toán VNPay</p>
+                      <p className="text-sm text-gray-600 mt-1">
+                        {selectedInvoice.finalAmount === 0 
+                          ? 'VNPay không hỗ trợ thanh toán 0đ' 
+                          : 'Chuyển khoản qua cổng thanh toán VNPay'}
+                      </p>
                     </div>
                   </label>
                 </div>
 
                 {/* Payment Method Info */}
-                {paymentMethod === 'VNPAY' && (
+                {paymentMethod === 'VNPAY' && selectedInvoice.finalAmount > 0 && (
                   <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
                     <p className="text-sm text-blue-800">
                       ℹ️ Bạn sẽ được chuyển đến trang thanh toán VNPay để hoàn tất giao dịch.
@@ -478,7 +595,12 @@ const StaffPayments = () => {
                   onClick={handlePayment}
                   className="flex-1 bg-green-600 hover:bg-green-700"
                 >
-                  {paymentMethod === 'VNPAY' ? (
+                  {selectedInvoice.finalAmount === 0 ? (
+                    <>
+                      <FiCheck className="mr-1" />
+                      Xác nhận hoàn tất
+                    </>
+                  ) : paymentMethod === 'VNPAY' ? (
                     <>
                       <FiCreditCard className="mr-1" />
                       Thanh toán VNPay

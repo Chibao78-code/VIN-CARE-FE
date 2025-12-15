@@ -32,47 +32,37 @@ const StaffDashboard = () => {
   const quickActions = [
     { 
       icon: FiFileText, 
-      label: 'Manage Appointments',
+      label: 'Quản lý lịch hẹn',
       path: '/staff/appointments'
     },
     { 
       icon: FiUser, 
-      label: 'Customer Directory',
+      label: 'Danh sách khách hàng',
       path: '/staff/customers'
     },
     { 
       icon: FiTruck, 
-      label: 'Vehicle Lookup',
+      label: 'Tra cứu xe',
       path: '/staff/vehicles'
     },
     { 
       icon: FiMessageSquare, 
-      label: 'Send Message',
+      label: 'Gửi tin nhắn',
       path: '/staff/messages'
     }
   ];
 
   return (
     <div>
-      <div className="mb-6 flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Staff Dashboard</h1>
-          <p className="text-gray-600 mt-1">Welcome back, DINH! Here's today's overview.</p>
-        </div>
-        <Button
-          variant="primary"
-          icon={<FiPlus />}
-          onClick={() => navigate('/staff/appointments/new')}
-          className="bg-gradient-to-r from-green-500 to-teal-600"
-        >
-          New Appointment
-        </Button>
+      <div className="mb-6 pb-4 border-b border-gray-200">
+        <h1 className="text-2xl font-bold text-gray-900">Tổng quan</h1>
+        <p className="text-gray-600 mt-1">Xem tổng quan hoạt động và thống kê hôm nay</p>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
         <Card>
           <Card.Content className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <span className="text-sm text-gray-600">Today's Appointments</span>
+              <span className="text-sm text-gray-600">Lịch hẹn hôm nay</span>
               <div className="p-2 bg-blue-100 rounded-lg">
                 <FiCalendar className="text-blue-600 text-xl" />
               </div>
@@ -84,7 +74,7 @@ const StaffDashboard = () => {
         <Card>
           <Card.Content className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <span className="text-sm text-gray-600">Active Customers</span>
+              <span className="text-sm text-gray-600">Khách hàng hoạt động</span>
               <div className="p-2 bg-green-100 rounded-lg">
                 <FiUsers className="text-green-600 text-xl" />
               </div>
@@ -96,7 +86,7 @@ const StaffDashboard = () => {
         <Card>
           <Card.Content className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <span className="text-sm text-gray-600">Pending Services</span>
+              <span className="text-sm text-gray-600">Dịch vụ chờ xử lý</span>
               <div className="p-2 bg-yellow-100 rounded-lg">
                 <FiClock className="text-yellow-600 text-xl" />
               </div>
@@ -108,12 +98,12 @@ const StaffDashboard = () => {
         <Card>
           <Card.Content className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <span className="text-sm text-gray-600">Revenue Today</span>
+              <span className="text-sm text-gray-600">Doanh thu hôm nay</span>
               <div className="p-2 bg-teal-100 rounded-lg">
                 <FiDollarSign className="text-teal-600 text-xl" />
               </div>
             </div>
-            <p className="text-3xl font-bold text-gray-900">${stats.todayRevenue.toFixed(2)}</p>
+            <p className="text-3xl font-bold text-gray-900">{stats.todayRevenue.toLocaleString('vi-VN')} ₫</p>
           </Card.Content>
         </Card>
       </div>
@@ -123,13 +113,13 @@ const StaffDashboard = () => {
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                 <FiCalendar className="text-gray-600" />
-                Today's Schedule
+                Lịch hôm nay
               </h3>
               <button 
                 onClick={() => navigate('/staff/appointments')}
                 className="text-sm text-teal-600 hover:text-teal-700 font-medium"
               >
-                View All
+                Xem tất cả
               </button>
             </div>
           </Card.Header>
@@ -137,7 +127,7 @@ const StaffDashboard = () => {
             {todaySchedule.length === 0 ? (
               <div className="text-center py-8">
                 <FiCalendar className="mx-auto text-4xl text-gray-300 mb-3" />
-                <p className="text-gray-500">No upcoming appointments today</p>
+                <p className="text-gray-500">Không có lịch hẹn hôm nay</p>
               </div>
             ) : (
               <div className="space-y-4">
@@ -176,13 +166,13 @@ const StaffDashboard = () => {
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                 <FiUsers className="text-gray-600" />
-                Recent Customers
+                Khách hàng gần đây
               </h3>
               <button 
                 onClick={() => navigate('/staff/customers')}
                 className="text-sm text-teal-600 hover:text-teal-700 font-medium"
               >
-                View All
+                Xem tất cả
               </button>
             </div>
           </Card.Header>
@@ -190,7 +180,7 @@ const StaffDashboard = () => {
             {recentCustomers.length === 0 ? (
               <div className="text-center py-8">
                 <FiUsers className="mx-auto text-4xl text-gray-300 mb-3" />
-                <p className="text-gray-500">No customers found</p>
+                <p className="text-gray-500">Chưa có khách hàng</p>
               </div>
             ) : (
               <div className="space-y-4">
@@ -222,10 +212,10 @@ const StaffDashboard = () => {
               <div className="p-2 bg-green-100 rounded-lg">
                 <FiCheckCircle className="text-green-600 text-xl" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900">Completed Today</h3>
+              <h3 className="text-lg font-semibold text-gray-900">Hoàn thành hôm nay</h3>
             </div>
             <p className="text-3xl font-bold text-gray-900">{completedToday}</p>
-            <p className="text-sm text-gray-500 mt-1">Services completed</p>
+            <p className="text-sm text-gray-500 mt-1">Dịch vụ đã hoàn thành</p>
           </Card.Content>
         </Card>
 
@@ -235,10 +225,10 @@ const StaffDashboard = () => {
               <div className="p-2 bg-yellow-100 rounded-lg">
                 <FiProgress className="text-yellow-600 text-xl" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900">In Progress</h3>
+              <h3 className="text-lg font-semibold text-gray-900">Đang xử lý</h3>
             </div>
             <p className="text-3xl font-bold text-gray-900">{inProgress}</p>
-            <p className="text-sm text-gray-500 mt-1">Currently servicing</p>
+            <p className="text-sm text-gray-500 mt-1">Đang thực hiện dịch vụ</p>
           </Card.Content>
         </Card>
 
@@ -248,16 +238,16 @@ const StaffDashboard = () => {
               <div className="p-2 bg-red-100 rounded-lg">
                 <FiAlertTriangle className="text-red-600 text-xl" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900">Urgent Items</h3>
+              <h3 className="text-lg font-semibold text-gray-900">Cần xử lý gấp</h3>
             </div>
             <p className="text-3xl font-bold text-gray-900">{urgentItems}</p>
-            <p className="text-sm text-gray-500 mt-1">Require attention</p>
+            <p className="text-sm text-gray-500 mt-1">Cần chú ý</p>
           </Card.Content>
         </Card>
       </div>
       <Card>
         <Card.Header>
-          <h3 className="text-lg font-semibold text-gray-900">Quick Actions</h3>
+          <h3 className="text-lg font-semibold text-gray-900">Thao tác nhanh</h3>
         </Card.Header>
         <Card.Content>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
