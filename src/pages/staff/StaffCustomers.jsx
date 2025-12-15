@@ -1,36 +1,86 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
-  FiUsers, FiSearch, FiFilter, FiPlus, FiEdit2,
-  FiPhone, FiMail, FiTruck, FiCalendar, FiDollarSign,
-  FiMoreVertical, FiChevronDown, FiUser
+  FiUsers, FiSearch, FiCalendar, FiLoader
 } from 'react-icons/fi';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import toast from 'react-hot-toast';
-
+import bookingService from '../../services/bookingService';
+import customerService from '../../services/customerService';
+// Trang danh sach khach hang cho nhan vien
 const StaffCustomers = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [sortBy, setSortBy] = useState('name');
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    address: '',
-    vehicleMake: '',
-    vehicleModel: '',
-    vehicleYear: '',
-    vehiclePlate: ''
-  });
-
-  // fake data
+  const [loading, setLoading] = useState(true);
   const [customers, setCustomers] = useState([]);
+
+  // Fetch all bookings and extract customers
+  useEffect(() => {
+    fetchCustomers();
+  }, []);
+
+  const fetchCustomers = async () => {
+    setLoading(true);
+    try {
+      // Lấy cả khách hàng và booking
+      const [customersResponse, bookingsResponse] = await Promise.all([
+        customerService.getAllCustomers(),
+        bookingService.getAllBookings()
+      ]);
+      
+      if (customersResponse.success && customersResponse.data) {
+        const bookings = bookingsResponse.success ? bookingsResponse.data : [];
+        
+        //  Ghép dữ liệu khách hàng với thống kê từ booking
+        const customersWithData = customersResponse.data.map(customer => {
+          //  Tìm các booking của khách hàng này
+          const customerBookings = bookings.filter(b => 
+            b.customerPhone === customer.phone || b.customerEmail === customer.email
+          );
+          
+          // Tính toán thống kê
+          const upcomingBookings = customerBookings.filter(
+            b => b.status === 'UPCOMING' || b.status === 'PENDING_PAYMENT'
+          ).length;
+          
+          // Sử dụng vehicles từ CustomerDTO (đã bao gồm tất cả xe của khách hàng)
+          const vehicles = customer.vehicles?.map(v => ({
+            make: 'VinFast',
+            model: v.model || 'Unknown',
+            year: new Date().getFullYear(),
+            plate: v.licensePlate || 'N/A'
+          })) || [];
+          // Trả về đối tượng khách hàng với dữ liệu bổ sung
+          return {
+            id: customer.id,
+            name: customer.fullName || 'Unknown',
+            email: customer.email || 'N/A',
+            phone: customer.phone || 'N/A',
+            address: customer.address || 'N/A',
+            status: customer.status?.toLowerCase() || 'active',
+            totalServices: customerBookings.length,
+            upcomingBookings,
+            vehicles,
+            bookings: customerBookings
+          };
+        });
+        
+        setCustomers(customersWithData);
+      }
+    } catch (error) {
+      console.error('Error fetching customers:', error);
+      toast.error('Failed to load customers');
+    } finally {
+      setLoading(false);
+    }
+  };
+  // Tinh toan cac thong ke
   const stats = {
     totalCustomers: customers.length,
     activeCustomers: customers.filter(c => c.status === 'active').length,
     withVehicles: customers.filter(c => c.vehicles && c.vehicles.length > 0).length,
-    upcomingAppointments: 0
+    upcomingAppointments: customers.reduce((sum, c) => sum + c.upcomingBookings, 0)
   };
 
   // dua tren tim kiem cua khach hang
@@ -48,357 +98,180 @@ const StaffCustomers = () => {
     return matchesSearch;
   });
 
-  // khach hang
+  // Sort customers
   const sortedCustomers = [...filteredCustomers].sort((a, b) => {
     if (sortBy === 'name') return a.name.localeCompare(b.name);
-    if (sortBy === 'recent') return new Date(b.lastVisit) - new Date(a.lastVisit);
-    if (sortBy === 'spent') return b.totalSpent - a.totalSpent;
+    if (sortBy === 'services') return b.totalServices - a.totalServices;
     return 0;
   });
-
-  // them khach hang
-  const handleAddCustomer = (e) => {
-    e.preventDefault();
-    
-    const newCustomer = {
-      id: customers.length + 1,
-      name: formData.name,
-      email: formData.email,
-      phone: formData.phone,
-      address: formData.address,
-      status: 'active',
-      joinDate: new Date().toISOString().split('T')[0],
-      lastVisit: new Date().toISOString().split('T')[0],
-      totalSpent: 0,
-      totalServices: 0,
-      vehicles: formData.vehicleMake ? [{
-        make: formData.vehicleMake,
-        model: formData.vehicleModel,
-        year: formData.vehicleYear,
-        plate: formData.vehiclePlate
-      }] : [],
-      vehiclePlate: formData.vehiclePlate
-    };
-
-    setCustomers([...customers, newCustomer]);
-    setShowAddModal(false);
-    setFormData({
-      name: '',
-      email: '',
-      phone: '',
-      address: '',
-      vehicleMake: '',
-      vehicleModel: '',
-      vehicleYear: '',
-      vehiclePlate: ''
-    });
-    toast.success('Customer added successfully');
-  };
-
+  // Giao diện
   return (
     <div>
-      <div className="mb-6 flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Customer Directory</h1>
-          <p className="text-gray-600 mt-1">Manage customer information and communication</p>
-        </div>
-        <Button
-          variant="primary"
-          icon={<FiPlus />}
-          onClick={() => setShowAddModal(true)}
-          className="bg-gradient-to-r from-green-500 to-teal-600"
-        >
-          Add Customer
-        </Button>
+      <div className="mb-6 pb-4 border-b border-gray-200">
+        <h1 className="text-2xl font-bold text-gray-900">Danh Sách Khách Hàng</h1>
+        <p className="text-gray-600 mt-1">Quản lý thông tin và giao tiếp với khách hàng</p>
       </div>
-      <div className="mb-6 flex flex-col sm:flex-row gap-4">
-        <div className="flex-1 relative">
-          <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search customers by name, email, or phone..."
-            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-        <select
-          className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-          value={filterType}
-          onChange={(e) => setFilterType(e.target.value)}
-        >
-          <option value="all">All Customers</option>
-          <option value="active">Active</option>
-          <option value="withVehicles">With Vehicles</option>
-        </select>
-        <select
-          className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-          value={sortBy}
-          onChange={(e) => setSortBy(e.target.value)}
-        >
-          <option value="name">Name</option>
-          <option value="recent">Recent Visit</option>
-          <option value="spent">Total Spent</option>
-        </select>
-      </div>
+      <Card className="mb-6">
+        <Card.Content className="p-4">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1 relative">
+              <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Tìm kiếm khách hàng theo tên, email hoặc số điện thoại..."
+                className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            <select
+              className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white cursor-pointer hover:border-gray-300 transition-colors"
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value)}
+            >
+              <option value="all">Tất cả khách hàng</option>
+              <option value="active">Đang hoạt động</option>
+              <option value="withVehicles">Có xe</option>
+            </select>
+            <select
+              className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white cursor-pointer hover:border-gray-300 transition-colors"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+            >
+              <option value="name">Tên</option>
+              <option value="services">Số dịch vụ</option>
+            </select>
+          </div>
+        </Card.Content>
+      </Card>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
         <Card>
           <Card.Content className="p-6">
-            <p className="text-sm text-gray-600 mb-2">Total Customers</p>
+            <p className="text-sm text-gray-600 mb-2">Tổng khách hàng</p>
             <p className="text-3xl font-bold text-gray-900">{stats.totalCustomers}</p>
           </Card.Content>
         </Card>
 
         <Card>
           <Card.Content className="p-6">
-            <p className="text-sm text-gray-600 mb-2">Active</p>
+            <p className="text-sm text-gray-600 mb-2">Đang hoạt động</p>
             <p className="text-3xl font-bold text-gray-900">{stats.activeCustomers}</p>
           </Card.Content>
         </Card>
 
         <Card>
           <Card.Content className="p-6">
-            <p className="text-sm text-gray-600 mb-2">With Vehicles</p>
+            <p className="text-sm text-gray-600 mb-2">Có xe</p>
             <p className="text-3xl font-bold text-gray-900">{stats.withVehicles}</p>
           </Card.Content>
         </Card>
 
         <Card>
           <Card.Content className="p-6">
-            <p className="text-sm text-gray-600 mb-2">Upcoming Appts</p>
+            <p className="text-sm text-gray-600 mb-2">Lịch hẹn sắp tới</p>
             <p className="text-3xl font-bold text-gray-900">{stats.upcomingAppointments}</p>
           </Card.Content>
         </Card>
       </div>
-      {sortedCustomers.length === 0 ? (
+      {loading ? (
+        <Card>
+          <Card.Content className="p-12 text-center">
+            <FiLoader className="mx-auto text-5xl text-teal-600 mb-4 animate-spin" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Đang tải danh sách khách hàng...</h3>
+            <p className="text-gray-500">Vui lòng đợi</p>
+          </Card.Content>
+        </Card>
+      ) : sortedCustomers.length === 0 ? (
         <Card>
           <Card.Content className="p-12 text-center">
             <FiUsers className="mx-auto text-5xl text-gray-300 mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">No customers found</h3>
-            <p className="text-gray-500 mb-4">No customers have registered yet</p>
-            <Button
-              variant="primary"
-              icon={<FiPlus />}
-              onClick={() => setShowAddModal(true)}
-            >
-              Add First Customer
-            </Button>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Không tìm thấy khách hàng</h3>
+            <p className="text-gray-500 mb-4">
+              {searchQuery || filterType !== 'all' 
+                ? 'Không có khách hàng nào phù hợp với tiêu chí tìm kiếm'
+                : 'Chưa có khách hàng nào có lịch hẹn'}
+            </p>
+            {!searchQuery && filterType === 'all' && (
+              <Button
+                variant="outline"
+                icon={<FiCalendar />}
+                onClick={() => window.location.href = '/staff/appointments'}
+              >
+                Tạo lịch hẹn đầu tiên
+              </Button>
+            )}
           </Card.Content>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {sortedCustomers.map((customer) => (
-            <Card key={customer.id}>
-              <Card.Content className="p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
-                      <FiUser className="text-gray-600 text-xl" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-900">{customer.name}</h3>
-                      <div className="flex items-center gap-3 mt-1">
-                        <span className="text-sm text-gray-500 flex items-center gap-1">
-                          <FiMail className="text-xs" />
-                          {customer.email}
+        <Card>
+          <Card.Content className="p-0">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Khách hàng
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Liên hệ
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Xe
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Dịch vụ
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Trạng thái
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {sortedCustomers.map((customer) => (
+                    <tr key={customer.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">{customer.name}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">{customer.phone}</div>
+                        <div className="text-sm text-gray-500">{customer.email}</div>
+                      </td>
+                      <td className="px-6 py-4" style={{ minWidth: '200px' }}>
+                        {customer.vehicles && customer.vehicles.length > 0 ? (
+                          <div>
+                            {customer.vehicles.map((vehicle, index) => (
+                              <div key={index} className={index > 0 ? 'mt-1.5' : ''}>
+                                <span className="text-sm font-medium text-gray-900">{vehicle.plate}</span>
+                                <span className="text-sm text-gray-500"> ({vehicle.model})</span>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <span className="text-sm text-gray-400">Chưa có xe</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">{customer.totalServices}</div>
+                        {customer.upcomingBookings > 0 && (
+                          <div className="text-xs text-teal-600">{customer.upcomingBookings} sắp tới</div>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          customer.status === 'active' 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {customer.status === 'active' ? 'Hoạt động' : 'Không hoạt động'}
                         </span>
-                        <span className="text-sm text-gray-500 flex items-center gap-1">
-                          <FiPhone className="text-xs" />
-                          {customer.phone}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <button className="p-2 hover:bg-gray-100 rounded-lg">
-                    <FiMoreVertical className="text-gray-400" />
-                  </button>
-                </div>
-
-                {customer.vehicles && customer.vehicles.length > 0 && (
-                  <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-                    <div className="flex items-center gap-2 text-sm text-gray-700">
-                      <FiTruck className="text-gray-500" />
-                      <span>{customer.vehicles[0].year} {customer.vehicles[0].make} {customer.vehicles[0].model}</span>
-                      <span className="text-gray-500">•</span>
-                      <span className="font-medium">{customer.vehicles[0].plate}</span>
-                    </div>
-                  </div>
-                )}
-
-                <div className="grid grid-cols-3 gap-4 text-sm">
-                  <div>
-                    <p className="text-gray-500">Last Visit</p>
-                    <p className="font-medium text-gray-900">{customer.lastVisit}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500">Total Services</p>
-                    <p className="font-medium text-gray-900">{customer.totalServices}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500">Total Spent</p>
-                    <p className="font-medium text-gray-900">${customer.totalSpent}</p>
-                  </div>
-                </div>
-
-                <div className="flex gap-2 mt-4">
-                  <Button variant="outline" size="sm" className="flex-1">
-                    <FiCalendar className="mr-1" />
-                    Book Service
-                  </Button>
-                  <Button variant="outline" size="sm" className="flex-1">
-                    <FiEdit2 className="mr-1" />
-                    Edit
-                  </Button>
-                </div>
-              </Card.Content>
-            </Card>
-          ))}
-        </div>
-      )}
-      {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200">
-              <h3 className="text-xl font-semibold text-gray-900">Add New Customer</h3>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-
-            <form onSubmit={handleAddCustomer} className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Full Name *
-                  </label>
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                    value={formData.name}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Email *
-                  </label>
-                  <input
-                    type="email"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                    value={formData.email}
-                    onChange={(e) => setFormData({...formData, email: e.target.value})}
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Phone *
-                  </label>
-                  <input
-                    type="tel"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Address
-                  </label>
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                    value={formData.address}
-                    onChange={(e) => setFormData({...formData, address: e.target.value})}
-                  />
-                </div>
-
-                <div className="md:col-span-2">
-                  <h4 className="font-medium text-gray-900 mb-3">Vehicle Information (Optional)</h4>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Make
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g., Tesla"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                    value={formData.vehicleMake}
-                    onChange={(e) => setFormData({...formData, vehicleMake: e.target.value})}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Model
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g., Model 3"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                    value={formData.vehicleModel}
-                    onChange={(e) => setFormData({...formData, vehicleModel: e.target.value})}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Year
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g., 2023"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                    value={formData.vehicleYear}
-                    onChange={(e) => setFormData({...formData, vehicleYear: e.target.value})}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    License Plate
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g., ABC-123"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                    value={formData.vehiclePlate}
-                    onChange={(e) => setFormData({...formData, vehiclePlate: e.target.value})}
-                  />
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-3 mt-6">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setShowAddModal(false);
-                    setFormData({
-                      name: '',
-                      email: '',
-                      phone: '',
-                      address: '',
-                      vehicleMake: '',
-                      vehicleModel: '',
-                      vehicleYear: '',
-                      vehiclePlate: ''
-                    });
-                  }}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" variant="primary">
-                  Add Customer
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
+          </Card.Content>
+        </Card>
       )}
     </div>
   );

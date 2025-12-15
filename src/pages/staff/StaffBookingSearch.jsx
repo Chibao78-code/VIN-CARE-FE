@@ -18,7 +18,7 @@ const StaffBookingSearch = () => {
       toast.error('Vui lòng nhập mã booking');
       return;
     }
-
+    // Tìm booking theo mã
     setLoading(true);
     try {
       const response = await api.get(`/bookings/${bookingCode}`);
@@ -82,7 +82,7 @@ const StaffBookingSearch = () => {
       setAssigning(false);
     }
   };
-
+  // Giao diện
   return (
     <div className="p-6">
       <div className="max-w-4xl mx-auto">
