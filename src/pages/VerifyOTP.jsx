@@ -23,7 +23,7 @@ function VerifyOTP() {
   const { register, handleSubmit, formState: { errors }, watch } = useForm();
   const watchPassword = watch('password', '');
   
-  // Redirect về forgot-password nếu không có email
+  //  chuyen trang neu khong co email
   useEffect(() => {
     if (!email) {
       toast.error('Vui lòng nhập email trước');
@@ -31,7 +31,7 @@ function VerifyOTP() {
     }
   }, [email, navigate]);
   
-  // Countdown timer cho OTP
+  //  Timer đếm ngược OTP
   useEffect(() => {
     if (timeLeft <= 0) return;
     
