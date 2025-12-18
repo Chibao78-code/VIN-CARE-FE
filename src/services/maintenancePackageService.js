@@ -1,15 +1,19 @@
 import api from './api';
 
 export const maintenancePackageService = {
-  // Get all maintenance packages
+  //  Lay danh sach goi bao duong
   getAllPackages: async () => {
-    const response = await api.get('/maintenance-packages');
-    return response;
-  },
-  
-  // Get packages by offer type
-  getPackagesByOfferType: async (offerTypeId) => {
-    const response = await api.get(`/maintenance-packages/by-offer-type/${offerTypeId}`);
-    return response;
+    try {
+      const response = await api.get('/receptions/maintenance-packages');
+      return {
+        success: true,
+        data: response
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Không thể lấy danh sách gói bảo dưỡng'
+      };
+    }
   }
 };
