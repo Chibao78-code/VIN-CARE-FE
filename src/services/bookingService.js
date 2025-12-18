@@ -1,29 +1,25 @@
 import api from './api';
 
-/**
- * Booking Service
- * Handles all booking related API calls
- */
-
 const bookingService = {
-  /**
-   * Create a new booking
-   * @param {Object} bookingData - { eVId, centerId, bookingDate, bookingTime, offerTypeId, packageId, problemDescription, notes }
-   * @returns {Promise} - BookingResponseDTO
-   */
+// Tạo booking mới
   createBooking: async (bookingData) => {
     try {
+      // Chuẩn bị payload với các trường cần thiết
       const payload = {
         eVId: bookingData.eVId || bookingData.vehicleId,
         centerId: bookingData.centerId,
         bookingDate: bookingData.bookingDate || bookingData.date,
         bookingTime: bookingData.bookingTime || bookingData.time,
+        customerName: bookingData.customerName || null,
+        customerPhone: bookingData.customerPhone || null,
+        customerEmail: bookingData.customerEmail || null,
+        customerAddress: bookingData.customerAddress || null,
         offerTypeId: bookingData.offerTypeId || null,
         packageId: bookingData.packageId || null,
         problemDescription: bookingData.problemDescription || null,
         notes: bookingData.notes || null
       };
-      
+       
       console.log('📤 Sending booking payload to backend:', payload);
       const response = await api.post('/bookings', payload);
       return {
@@ -37,13 +33,7 @@ const bookingService = {
       };
     }
   },
-
-  /**
-   * Get available time slots for a specific center and date
-   * @param {number} centerId - Service center ID
-   * @param {string} date - Date in format YYYY-MM-DD
-   * @returns {Promise} - TimeSlotResponseDTO
-   */
+// Lay danh sach khung gio trong ngay cho trung tam
   getAvailableTimeSlots: async (centerId, date) => {
     try {
       const response = await api.get(`/bookings/${centerId}/${date}`);
@@ -58,14 +48,10 @@ const bookingService = {
       };
     }
   },
-
-  /**
-   * Get all offer types (service types)
-   * @returns {Promise} - List<OfferTypeDTO>
-   */
+// Lay loai dich vu (offer types)
   getOfferTypes: async () => {
     try {
-      const response = await api.get('/offer-types');
+      const response = await api.get('/receptions/offer-types');
       return {
         success: true,
         data: response
@@ -77,11 +63,7 @@ const bookingService = {
       };
     }
   },
-
-  /**
-   * Get all bookings (for technician, staff, admin)
-   * @returns {Promise} - List of all bookings
-   */
+// Lay tat ca booking (staff only)
   getAllBookings: async () => {
     try {
       const response = await api.get('/bookings');
@@ -96,17 +78,12 @@ const bookingService = {
       };
     }
   },
-
-  /**
-   * Get customer's bookings
-   * @param {string} status - 'upcoming', 'completed', 'cancelled', or 'all'
-   * @returns {Promise} - List of bookings
-   */
+// Lay booking cua khach hang dang dang nhap
   getMyBookings: async (status = 'all') => {
     try {
       const endpoint = status === 'all' 
-        ? '/bookings/my' 
-        : `/bookings/my?status=${status}`;
+        ? '/customers/my-bookings' 
+        : `/customers/my-bookings?status=${status}`;
       
       const response = await api.get(endpoint);
       return {
@@ -120,12 +97,7 @@ const bookingService = {
       };
     }
   },
-
-  /**
-   * Get booking details by ID
-   * @param {number} bookingId - Booking ID
-   * @returns {Promise} - Booking details
-   */
+// Lay booking theo id
   getBookingById: async (bookingId) => {
     try {
       const response = await api.get(`/bookings/${bookingId}`);
@@ -140,16 +112,55 @@ const bookingService = {
       };
     }
   },
-
-  /**
-   * Cancel a booking
-   * @param {number} bookingId - Booking ID
-   * @param {string} reason - Cancellation reason
-   * @returns {Promise}
-   */
+// Gui yeu cau huy booking
+  requestCancellation: async (bookingId, reason) => {
+    try {
+      const response = await api.put(`/bookings/${bookingId}/request-cancel`, reason || '');
+      return {
+        success: true,
+        data: response
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Không thể gửi yêu cầu hủy'
+      };
+    }
+  },
+// Chap thuan yeu cau huy booking
+  approveCancellation: async (bookingId) => {
+    try {
+      const response = await api.put(`/bookings/${bookingId}/approve-cancel`);
+      return {
+        success: true,
+        data: response
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Không thể chấp thuận hủy'
+      };
+    }
+  },
+// Tu choi yeu cau huy booking
+  rejectCancellation: async (bookingId, reason) => {
+    try {
+      const response = await api.put(`/bookings/${bookingId}/reject-cancel`, reason || '');
+      return {
+        success: true,
+        data: response
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Không thể từ chối hủy'
+      };
+    }
+  },
+// Huy booking
   cancelBooking: async (bookingId, reason) => {
     try {
-      const response = await api.put(`/bookings/${bookingId}/cancel`, { reason });
+      const response = await api.put(`/bookings/${bookingId}/cancel`, reason || '');
       return {
         success: true,
         data: response
@@ -162,12 +173,7 @@ const bookingService = {
     }
   },
 
-  /**
-   * Reschedule a booking
-   * @param {number} bookingId - Booking ID
-   * @param {Object} newSchedule - { bookingDate, bookingTime }
-   * @returns {Promise}
-   */
+// Doi lich booking
   rescheduleBooking: async (bookingId, newSchedule) => {
     try {
       const response = await api.put(`/bookings/${bookingId}/reschedule`, newSchedule);
@@ -182,16 +188,7 @@ const bookingService = {
       };
     }
   },
-
-  // ======================
-  // STAFF WORKFLOW METHODS
-  // ======================
-  
-  /**
-   * Get bookings by status
-   * @param {string} status - PENDING, APPROVED, ASSIGNED, IN_PROGRESS, COMPLETED, REJECTED, CANCELLED
-   * @returns {Promise}
-   */
+// Lay booking theo trang thai
   getBookingsByStatus: async (status) => {
     try {
       const response = await api.get(`/bookings/status/${status}`);
@@ -206,54 +203,7 @@ const bookingService = {
       };
     }
   },
-
-  /**
-   * Staff approve booking
-   * @param {number} bookingId
-   * @returns {Promise}
-   */
-  approveBooking: async (bookingId) => {
-    try {
-      const response = await api.post(`/bookings/${bookingId}/approve`);
-      return {
-        success: true,
-        data: response
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error.response?.data?.message || 'Không thể duyệt booking'
-      };
-    }
-  },
-
-  /**
-   * Staff reject booking
-   * @param {number} bookingId
-   * @param {string} reason
-   * @returns {Promise}
-   */
-  rejectBooking: async (bookingId, reason) => {
-    try {
-      const response = await api.post(`/bookings/${bookingId}/reject`, reason);
-      return {
-        success: true,
-        data: response
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error.response?.data?.message || 'Không thể từ chối booking'
-      };
-    }
-  },
-
-  /**
-   * Staff assign technician to booking
-   * @param {number} bookingId
-   * @param {number} technicianId
-   * @returns {Promise}
-   */
+// Phan cong technician cho booking
   assignTechnician: async (bookingId, technicianId) => {
     try {
       const response = await api.post(`/bookings/${bookingId}/assign?technicianId=${technicianId}`);
@@ -269,14 +219,11 @@ const bookingService = {
     }
   },
 
-  /**
-   * Get technician's assigned bookings
-   * @param {number} technicianId
-   * @returns {Promise}
-   */
+// Lay danh sach booking cua ky thuat vien
   getTechnicianBookings: async (technicianId) => {
     try {
-      const response = await api.get(`/bookings/technician/${technicianId}`);
+      // Use receptions endpoint instead of bookings
+      const response = await api.get(`/receptions/technician/${technicianId}`);
       return {
         success: true,
         data: response
@@ -288,14 +235,10 @@ const bookingService = {
       };
     }
   },
-
-  /**
-   * Get all technicians for staff to assign
-   * @returns {Promise}
-   */
+// Lay tat ca technician
   getTechnicians: async () => {
     try {
-      const response = await api.get('/technicians');
+      const response = await api.get('/employees/technicians');
       return {
         success: true,
         data: response
@@ -307,11 +250,39 @@ const bookingService = {
       };
     }
   },
-  
-  /**
-   * Get booking statistics
-   * @returns {Promise} Statistics with counts by status
-   */
+// Lay technician theo trung tam
+  getTechniciansByCenter: async (centerId) => {
+    try {
+      const response = await api.get(`/employees/technicians/center/${centerId}`);
+      return {
+        success: true,
+        data: response
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Không thể lấy danh sách technician'
+      };
+    }
+  },
+// Lay technician cua trung tam dang dang nhap
+  getMyTechnicians: async () => {
+    try {
+      // Add timestamp to prevent caching
+      const timestamp = new Date().getTime();
+      const response = await api.get(`/employees/technicians/my-center?_t=${timestamp}`);
+      return {
+        success: true,
+        data: response
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Không thể lấy danh sách technician'
+      };
+    }
+  },
+// Lay thong ke booking
   getBookingStatistics: async () => {
     try {
       const response = await api.get('/bookings/statistics');
@@ -326,12 +297,23 @@ const bookingService = {
       };
     }
   },
-
-  /**
-   * Create deposit payment for booking
-   * @param {number} bookingId - Booking ID
-   * @returns {Promise} - Payment URL and deposit info
-   */
+// Lay cac khung gio booking cua trung tam dang dang nhap
+  getMyBookingSlots: async (date = null) => {
+    try {
+      const dateParam = date ? `?date=${date}` : '';
+      const response = await api.get(`/bookings/my-center/slots${dateParam}`);
+      return {
+        success: true,
+        data: response
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Không thể lấy thông tin booking slots'
+      };
+    }
+  },
+// Tao thanh toan dat coc cho booking
   createDepositPayment: async (bookingId) => {
     try {
       const response = await api.post(`/bookings/${bookingId}/create-deposit-payment`);
@@ -346,6 +328,21 @@ const bookingService = {
       return {
         success: false,
         error: error.response?.data?.message || 'Không thể tạo thanh toán đặt cọc'
+      };
+    }
+  },
+// Tiep nhan xe
+  receiveVehicle: async (bookingId, receptionData) => {
+    try {
+      const response = await api.post(`/bookings/${bookingId}/receive`, receptionData);
+      return {
+        success: true,
+        data: response
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Không thể tiếp nhận xe'
       };
     }
   }
